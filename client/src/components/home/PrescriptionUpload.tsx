@@ -52,52 +52,44 @@ const PrescriptionUpload = () => {
   };
 
   return (
-    <section className="py-8 bg-gradient-to-r from-[#f8f9fa] to-[#e9f5f4]">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="md:w-2/3">
-            <h2 className="text-2xl font-bold mb-3">Upload your prescription</h2>
-            <p className="text-gray-600 mb-4">
-              Get your medicines delivered at your doorstep. We'll contact you for confirmation and process your order.
-            </p>
-            <ul className="list-disc list-inside mb-4 text-gray-600">
-              <li>Quick upload & processing</li>
-              <li>Secure & confidential</li>
-              <li>Prescription verification by licensed pharmacists</li>
-            </ul>
-            <Button 
-              onClick={() => setIsDialogOpen(true)}
-              className="bg-[#ff6f61] text-white hover:bg-[#ff6f61]/90 flex items-center gap-2"
-            >
-              <Upload size={16} /> Upload Prescription
-            </Button>
-          </div>
-          
-          <div className="md:w-1/3">
-            <Card className="shadow-lg border-none">
-              <CardContent className="pt-6">
-                <div className="rounded-lg bg-[#10847e]/10 p-6 text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white flex items-center justify-center">
-                    <FileText size={32} className="text-[#10847e]" />
-                  </div>
-                  <h3 className="font-medium text-lg mb-2">Have a prescription?</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Upload it now to order your medicines quickly and securely
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsDialogOpen(true)}
-                    className="border-[#10847e] text-[#10847e] hover:bg-[#10847e]/10 w-full"
-                  >
-                    Upload Now
-                  </Button>
+    <>
+      <Card className="flex-1 w-full bg-gradient-to-r from-[#f8f9fa] to-[#e9f5f4] border-[#d4e9e7] shadow-md hover:shadow-lg transition-shadow">
+        <CardContent className="px-5 py-6">
+          <div className="flex flex-col h-full">
+            <div className="flex-1">
+              <h2 className="text-xl font-bold mb-3">Upload your prescription</h2>
+              <p className="text-gray-600 mb-4">
+                Get your medicines delivered at your doorstep. We'll contact you for confirmation and process your order.
+              </p>
+              <ul className="list-disc list-inside mb-4 text-gray-600">
+                <li>Quick upload & processing</li>
+                <li>Secure & confidential</li>
+                <li>Prescription verification by licensed pharmacists</li>
+              </ul>
+            </div>
+            
+            <div className="mt-4 flex justify-between items-end">
+              <div className="flex items-center">
+                <div className="w-10 h-10 rounded-full bg-[#10847e]/10 flex items-center justify-center mr-3">
+                  <FileText size={20} className="text-[#10847e]" />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <p className="text-sm font-medium">Have a prescription?</p>
+                  <p className="text-xs text-gray-500">Upload now for quick processing</p>
+                </div>
+              </div>
+              
+              <Button 
+                onClick={() => setIsDialogOpen(true)}
+                className="bg-[#ff6f61] text-white hover:bg-[#ff6f61]/90 flex items-center gap-2"
+              >
+                <Upload size={16} /> Upload Now
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
-      
+        </CardContent>
+      </Card>
+        
       {/* Prescription Upload Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -107,7 +99,7 @@ const PrescriptionUpload = () => {
               Upload your prescription image or PDF file. We accept .jpg, .png, and .pdf files.
             </DialogDescription>
           </DialogHeader>
-          
+            
           <div className="grid gap-4 py-4">
             <div className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors">
               {fileName ? (
@@ -208,7 +200,7 @@ const PrescriptionUpload = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </section>
+    </>
   );
 };
 
