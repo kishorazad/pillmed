@@ -1,0 +1,438 @@
+import { 
+  users, type User, type InsertUser,
+  products, type Product, type InsertProduct,
+  categories, type Category, type InsertCategory,
+  cartItems, type CartItem, type InsertCartItem,
+  articles, type Article, type InsertArticle,
+  testimonials, type Testimonial, type InsertTestimonial,
+  labTests, type LabTest, type InsertLabTest
+} from "@shared/schema";
+
+export interface IStorage {
+  // User related methods
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  
+  // Product related methods
+  getProducts(): Promise<Product[]>;
+  getProductById(id: number): Promise<Product | undefined>;
+  getProductsByCategory(categoryId: number): Promise<Product[]>;
+  getFeaturedProducts(): Promise<Product[]>;
+  createProduct(product: InsertProduct): Promise<Product>;
+  
+  // Category related methods
+  getCategories(): Promise<Category[]>;
+  getCategoryById(id: number): Promise<Category | undefined>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  
+  // Cart related methods
+  getCartItems(userId: number): Promise<CartItem[]>;
+  getCartItemWithProductDetails(userId: number): Promise<any[]>;
+  addToCart(cartItem: InsertCartItem): Promise<CartItem>;
+  updateCartItem(id: number, quantity: number): Promise<CartItem | undefined>;
+  removeFromCart(id: number): Promise<boolean>;
+  clearCart(userId: number): Promise<boolean>;
+  
+  // Article related methods
+  getArticles(): Promise<Article[]>;
+  createArticle(article: InsertArticle): Promise<Article>;
+  
+  // Testimonial related methods
+  getTestimonials(): Promise<Testimonial[]>;
+  createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
+  
+  // Lab test related methods
+  getLabTests(): Promise<LabTest[]>;
+  createLabTest(labTest: InsertLabTest): Promise<LabTest>;
+}
+
+export class MemStorage implements IStorage {
+  private users: Map<number, User>;
+  private products: Map<number, Product>;
+  private categories: Map<number, Category>;
+  private cartItems: Map<number, CartItem>;
+  private articles: Map<number, Article>;
+  private testimonials: Map<number, Testimonial>;
+  private labTests: Map<number, LabTest>;
+  
+  currentUserId: number;
+  currentProductId: number;
+  currentCategoryId: number;
+  currentCartItemId: number;
+  currentArticleId: number;
+  currentTestimonialId: number;
+  currentLabTestId: number;
+
+  constructor() {
+    this.users = new Map();
+    this.products = new Map();
+    this.categories = new Map();
+    this.cartItems = new Map();
+    this.articles = new Map();
+    this.testimonials = new Map();
+    this.labTests = new Map();
+    
+    this.currentUserId = 1;
+    this.currentProductId = 1;
+    this.currentCategoryId = 1;
+    this.currentCartItemId = 1;
+    this.currentArticleId = 1;
+    this.currentTestimonialId = 1;
+    this.currentLabTestId = 1;
+    
+    // Initialize with seed data
+    this.seedData();
+  }
+
+  private seedData() {
+    // Seed categories
+    const categoriesData: InsertCategory[] = [
+      { name: 'Diabetes Care', description: 'Products for managing diabetes', imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae' },
+      { name: 'Heart Care', description: 'Products for heart health', imageUrl: 'https://images.unsplash.com/photo-1576671234524-ed58c95eab38' },
+      { name: 'Vitamins', description: 'Vitamins and supplements', imageUrl: 'https://images.unsplash.com/photo-1605289982774-9a6fef564df8' },
+      { name: 'COVID Essentials', description: 'Essential supplies for COVID protection', imageUrl: 'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2' },
+      { name: 'Ayurveda', description: 'Traditional Ayurvedic remedies', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b' },
+      { name: 'Devices', description: 'Healthcare devices and equipment', imageUrl: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e' }
+    ];
+    
+    categoriesData.forEach(category => {
+      this.createCategory(category);
+    });
+    
+    // Seed products
+    const productsData: InsertProduct[] = [
+      {
+        name: 'HealthVit Multivitamin Tablets with Minerals',
+        description: 'A daily multivitamin supplement with essential minerals for overall health',
+        price: 429,
+        discountedPrice: 349,
+        imageUrl: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88',
+        categoryId: 3,
+        brand: 'HealthVit',
+        inStock: true,
+        quantity: 'Bottle of 60 tablets',
+        rating: 4.5,
+        ratingCount: 120,
+        isFeatured: true
+      },
+      {
+        name: 'Accu-Check Active Glucometer Kit with 10 Strips',
+        description: 'Accurate blood glucose monitoring device with test strips',
+        price: 1499,
+        discountedPrice: 1249,
+        imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae',
+        categoryId: 1,
+        brand: 'Accu-Check',
+        inStock: true,
+        quantity: 'Device with strips',
+        rating: 4.2,
+        ratingCount: 85,
+        isFeatured: true
+      },
+      {
+        name: 'Omron HEM-7124 BP Monitor with Adapter',
+        description: 'Digital blood pressure monitor for home use',
+        price: 2499,
+        discountedPrice: 1899,
+        imageUrl: 'https://images.unsplash.com/photo-1631549916768-4119b4123a21',
+        categoryId: 2,
+        brand: 'Omron',
+        inStock: true,
+        quantity: 'Digital monitor',
+        rating: 4.7,
+        ratingCount: 208,
+        isFeatured: true
+      },
+      {
+        name: 'Healthy Heart Omega 3 Fish Oil Capsules',
+        description: 'Omega 3 fatty acids supplement for heart health',
+        price: 899,
+        discountedPrice: 799,
+        imageUrl: 'https://images.unsplash.com/photo-1576671234524-ed58c95eab38',
+        categoryId: 2,
+        brand: 'Healthy Heart',
+        inStock: true,
+        quantity: 'Bottle of 90 capsules',
+        rating: 4.4,
+        ratingCount: 156,
+        isFeatured: true
+      },
+      {
+        name: 'Premium N95 Masks Pack of 10',
+        description: 'High-quality N95 masks for protection against airborne particles',
+        price: 429,
+        discountedPrice: 299,
+        imageUrl: 'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2',
+        categoryId: 4,
+        brand: 'SafeBreath',
+        inStock: true,
+        quantity: 'Reusable with 5 layers',
+        rating: 4.6,
+        ratingCount: 324,
+        isFeatured: true
+      },
+      {
+        name: 'Ayush Kadha Herbal Mix',
+        description: 'Traditional Ayurvedic herbal mixture for immunity',
+        price: 299,
+        discountedPrice: 249,
+        imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b',
+        categoryId: 5,
+        brand: 'Ayush',
+        inStock: true,
+        quantity: 'Pack of 10 sachets',
+        rating: 4.3,
+        ratingCount: 98,
+        isFeatured: false
+      }
+    ];
+    
+    productsData.forEach(product => {
+      this.createProduct(product);
+    });
+
+    // Seed articles
+    const articlesData: InsertArticle[] = [
+      {
+        title: 'The Importance of a Balanced Diet',
+        content: 'Learn about how a balanced diet contributes to overall health and wellbeing, and discover tips for maintaining healthy eating habits.',
+        imageUrl: 'https://images.unsplash.com/photo-1505576399279-565b52d4ac71'
+      },
+      {
+        title: 'Exercise Tips for Busy Professionals',
+        content: 'Discover effective exercise routines that can be incorporated into even the busiest schedules, helping you stay fit despite time constraints.',
+        imageUrl: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c'
+      },
+      {
+        title: 'Managing Stress in Modern Life',
+        content: 'Explore effective techniques for managing stress and anxiety in today\'s fast-paced world, and learn how to prioritize your mental wellbeing.',
+        imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b'
+      }
+    ];
+    
+    articlesData.forEach(article => {
+      this.createArticle(article);
+    });
+
+    // Seed testimonials
+    const testimonialsData: InsertTestimonial[] = [
+      {
+        name: 'Rajesh Singh',
+        content: 'I\'ve been using 1mg for ordering my monthly medicines for over a year now. The service is prompt, and the discounts help me save a lot on my recurring medical expenses.',
+        rating: 5,
+        initials: 'RS'
+      },
+      {
+        name: 'Anjali Patel',
+        content: 'The lab test service is excellent! They came to my home for sample collection, and I received the reports on the same day. Very convenient for busy professionals like me.',
+        rating: 4,
+        initials: 'AP'
+      },
+      {
+        name: 'Varun Kumar',
+        content: 'I consulted with a doctor through the app when I was traveling and couldn\'t visit a clinic. The video consultation was smooth, and I got the prescription digitally. Really helpful service!',
+        rating: 5,
+        initials: 'VK'
+      }
+    ];
+    
+    testimonialsData.forEach(testimonial => {
+      this.createTestimonial(testimonial);
+    });
+
+    // Seed lab tests
+    const labTestsData: InsertLabTest[] = [
+      {
+        name: 'Complete Body Checkup',
+        description: 'Includes 70+ tests',
+        price: 3999,
+        discountedPrice: 1999,
+        testCount: 70
+      },
+      {
+        name: 'Diabetes Screening',
+        description: 'Includes 15+ tests',
+        price: 1499,
+        discountedPrice: 799,
+        testCount: 15
+      },
+      {
+        name: 'Women\'s Health',
+        description: 'Includes 40+ tests',
+        price: 2999,
+        discountedPrice: 1599,
+        testCount: 40
+      }
+    ];
+    
+    labTestsData.forEach(labTest => {
+      this.createLabTest(labTest);
+    });
+  }
+
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.username === username,
+    );
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = this.currentUserId++;
+    const user: User = { ...insertUser, id };
+    this.users.set(id, user);
+    return user;
+  }
+
+  // Product methods
+  async getProducts(): Promise<Product[]> {
+    return Array.from(this.products.values());
+  }
+
+  async getProductById(id: number): Promise<Product | undefined> {
+    return this.products.get(id);
+  }
+
+  async getProductsByCategory(categoryId: number): Promise<Product[]> {
+    return Array.from(this.products.values()).filter(
+      (product) => product.categoryId === categoryId
+    );
+  }
+
+  async getFeaturedProducts(): Promise<Product[]> {
+    return Array.from(this.products.values()).filter(
+      (product) => product.isFeatured
+    );
+  }
+
+  async createProduct(insertProduct: InsertProduct): Promise<Product> {
+    const id = this.currentProductId++;
+    const product: Product = { ...insertProduct, id };
+    this.products.set(id, product);
+    return product;
+  }
+
+  // Category methods
+  async getCategories(): Promise<Category[]> {
+    return Array.from(this.categories.values());
+  }
+
+  async getCategoryById(id: number): Promise<Category | undefined> {
+    return this.categories.get(id);
+  }
+
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    const id = this.currentCategoryId++;
+    const category: Category = { ...insertCategory, id };
+    this.categories.set(id, category);
+    return category;
+  }
+
+  // Cart methods
+  async getCartItems(userId: number): Promise<CartItem[]> {
+    return Array.from(this.cartItems.values()).filter(
+      (item) => item.userId === userId
+    );
+  }
+
+  async getCartItemWithProductDetails(userId: number): Promise<any[]> {
+    const cartItems = await this.getCartItems(userId);
+    return Promise.all(
+      cartItems.map(async (item) => {
+        const product = await this.getProductById(item.productId);
+        return {
+          ...item,
+          product,
+        };
+      })
+    );
+  }
+
+  async addToCart(insertCartItem: InsertCartItem): Promise<CartItem> {
+    // Check if this product is already in the cart
+    const existingItem = Array.from(this.cartItems.values()).find(
+      (item) => item.userId === insertCartItem.userId && item.productId === insertCartItem.productId
+    );
+
+    if (existingItem) {
+      // Update the quantity instead of adding a new item
+      return this.updateCartItem(existingItem.id, existingItem.quantity + insertCartItem.quantity) as Promise<CartItem>;
+    }
+
+    // Add new item to cart
+    const id = this.currentCartItemId++;
+    const cartItem: CartItem = { ...insertCartItem, id };
+    this.cartItems.set(id, cartItem);
+    return cartItem;
+  }
+
+  async updateCartItem(id: number, quantity: number): Promise<CartItem | undefined> {
+    const cartItem = this.cartItems.get(id);
+    if (cartItem) {
+      const updatedItem = { ...cartItem, quantity };
+      this.cartItems.set(id, updatedItem);
+      return updatedItem;
+    }
+    return undefined;
+  }
+
+  async removeFromCart(id: number): Promise<boolean> {
+    return this.cartItems.delete(id);
+  }
+
+  async clearCart(userId: number): Promise<boolean> {
+    const userCartItems = Array.from(this.cartItems.values()).filter(
+      (item) => item.userId === userId
+    );
+    
+    userCartItems.forEach(item => {
+      this.cartItems.delete(item.id);
+    });
+    
+    return true;
+  }
+
+  // Article methods
+  async getArticles(): Promise<Article[]> {
+    return Array.from(this.articles.values());
+  }
+
+  async createArticle(insertArticle: InsertArticle): Promise<Article> {
+    const id = this.currentArticleId++;
+    const now = new Date();
+    const article: Article = { ...insertArticle, id, createdAt: now };
+    this.articles.set(id, article);
+    return article;
+  }
+
+  // Testimonial methods
+  async getTestimonials(): Promise<Testimonial[]> {
+    return Array.from(this.testimonials.values());
+  }
+
+  async createTestimonial(insertTestimonial: InsertTestimonial): Promise<Testimonial> {
+    const id = this.currentTestimonialId++;
+    const testimonial: Testimonial = { ...insertTestimonial, id };
+    this.testimonials.set(id, testimonial);
+    return testimonial;
+  }
+
+  // Lab test methods
+  async getLabTests(): Promise<LabTest[]> {
+    return Array.from(this.labTests.values());
+  }
+
+  async createLabTest(insertLabTest: InsertLabTest): Promise<LabTest> {
+    const id = this.currentLabTestId++;
+    const labTest: LabTest = { ...insertLabTest, id };
+    this.labTests.set(id, labTest);
+    return labTest;
+  }
+}
+
+export const storage = new MemStorage();
