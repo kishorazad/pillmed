@@ -5,7 +5,14 @@ import {
   cartItems, type CartItem, type InsertCartItem,
   articles, type Article, type InsertArticle,
   testimonials, type Testimonial, type InsertTestimonial,
-  labTests, type LabTest, type InsertLabTest
+  labTests, type LabTest, type InsertLabTest,
+  doctors, type Doctor, type InsertDoctor,
+  pharmacies, type Pharmacy, type InsertPharmacy,
+  laboratories, type Laboratory, type InsertLaboratory,
+  appointments, type Appointment, type InsertAppointment,
+  labBookings, type LabBooking, type InsertLabBooking,
+  orders, type Order, type InsertOrder,
+  orderItems, type OrderItem, type InsertOrderItem
 } from "@shared/schema";
 
 export interface IStorage {
@@ -13,6 +20,8 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getUsersByRole(role: string): Promise<User[]>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
   
   // Product related methods
   getProducts(): Promise<Product[]>;
@@ -20,11 +29,15 @@ export interface IStorage {
   getProductsByCategory(categoryId: number): Promise<Product[]>;
   getFeaturedProducts(): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
+  updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product | undefined>;
+  deleteProduct(id: number): Promise<boolean>;
   
   // Category related methods
   getCategories(): Promise<Category[]>;
   getCategoryById(id: number): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
   
   // Cart related methods
   getCartItems(userId: number): Promise<CartItem[]>;
@@ -37,6 +50,8 @@ export interface IStorage {
   // Article related methods
   getArticles(): Promise<Article[]>;
   createArticle(article: InsertArticle): Promise<Article>;
+  updateArticle(id: number, article: Partial<InsertArticle>): Promise<Article | undefined>;
+  deleteArticle(id: number): Promise<boolean>;
   
   // Testimonial related methods
   getTestimonials(): Promise<Testimonial[]>;
@@ -45,6 +60,59 @@ export interface IStorage {
   // Lab test related methods
   getLabTests(): Promise<LabTest[]>;
   createLabTest(labTest: InsertLabTest): Promise<LabTest>;
+  updateLabTest(id: number, labTest: Partial<InsertLabTest>): Promise<LabTest | undefined>;
+  deleteLabTest(id: number): Promise<boolean>;
+  
+  // Doctor related methods
+  getDoctors(): Promise<Doctor[]>;
+  getDoctorById(id: number): Promise<Doctor | undefined>;
+  getDoctorWithUserDetails(id: number): Promise<any | undefined>;
+  getAllDoctorsWithUserDetails(): Promise<any[]>;
+  createDoctor(doctor: InsertDoctor): Promise<Doctor>;
+  updateDoctor(id: number, doctor: Partial<InsertDoctor>): Promise<Doctor | undefined>;
+  
+  // Pharmacy related methods
+  getPharmacies(): Promise<Pharmacy[]>;
+  getPharmacyById(id: number): Promise<Pharmacy | undefined>;
+  getPharmacyWithUserDetails(id: number): Promise<any | undefined>;
+  getAllPharmaciesWithUserDetails(): Promise<any[]>;
+  createPharmacy(pharmacy: InsertPharmacy): Promise<Pharmacy>;
+  updatePharmacy(id: number, pharmacy: Partial<InsertPharmacy>): Promise<Pharmacy | undefined>;
+  
+  // Laboratory related methods
+  getLaboratories(): Promise<Laboratory[]>;
+  getLaboratoryById(id: number): Promise<Laboratory | undefined>;
+  getLaboratoryWithUserDetails(id: number): Promise<any | undefined>;
+  getAllLaboratoriesWithUserDetails(): Promise<any[]>;
+  createLaboratory(laboratory: InsertLaboratory): Promise<Laboratory>;
+  updateLaboratory(id: number, laboratory: Partial<InsertLaboratory>): Promise<Laboratory | undefined>;
+  
+  // Appointment related methods
+  getAppointments(): Promise<Appointment[]>;
+  getAppointmentById(id: number): Promise<Appointment | undefined>;
+  getAppointmentsByUser(userId: number): Promise<Appointment[]>;
+  getAppointmentsByDoctor(doctorId: number): Promise<Appointment[]>;
+  createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+  updateAppointmentStatus(id: number, status: string): Promise<Appointment | undefined>;
+  
+  // Lab Booking related methods
+  getLabBookings(): Promise<LabBooking[]>;
+  getLabBookingById(id: number): Promise<LabBooking | undefined>;
+  getLabBookingsByUser(userId: number): Promise<LabBooking[]>;
+  getLabBookingsByLaboratory(laboratoryId: number): Promise<LabBooking[]>;
+  createLabBooking(labBooking: InsertLabBooking): Promise<LabBooking>;
+  updateLabBookingStatus(id: number, status: string): Promise<LabBooking | undefined>;
+  
+  // Order related methods
+  getOrders(): Promise<Order[]>;
+  getOrderById(id: number): Promise<Order | undefined>;
+  getOrdersByUser(userId: number): Promise<Order[]>;
+  createOrder(order: InsertOrder): Promise<Order>;
+  updateOrderStatus(id: number, status: string): Promise<Order | undefined>;
+  
+  // Order Item related methods
+  getOrderItems(orderId: number): Promise<OrderItem[]>;
+  createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem>;
 }
 
 export class MemStorage implements IStorage {
@@ -55,6 +123,13 @@ export class MemStorage implements IStorage {
   private articles: Map<number, Article>;
   private testimonials: Map<number, Testimonial>;
   private labTests: Map<number, LabTest>;
+  private doctors: Map<number, Doctor>;
+  private pharmacies: Map<number, Pharmacy>;
+  private laboratories: Map<number, Laboratory>;
+  private appointments: Map<number, Appointment>;
+  private labBookings: Map<number, LabBooking>;
+  private orders: Map<number, Order>;
+  private orderItems: Map<number, OrderItem>;
   
   currentUserId: number;
   currentProductId: number;
@@ -63,6 +138,13 @@ export class MemStorage implements IStorage {
   currentArticleId: number;
   currentTestimonialId: number;
   currentLabTestId: number;
+  currentDoctorId: number;
+  currentPharmacyId: number;
+  currentLaboratoryId: number;
+  currentAppointmentId: number;
+  currentLabBookingId: number;
+  currentOrderId: number;
+  currentOrderItemId: number;
 
   constructor() {
     this.users = new Map();
@@ -72,6 +154,13 @@ export class MemStorage implements IStorage {
     this.articles = new Map();
     this.testimonials = new Map();
     this.labTests = new Map();
+    this.doctors = new Map();
+    this.pharmacies = new Map();
+    this.laboratories = new Map();
+    this.appointments = new Map();
+    this.labBookings = new Map();
+    this.orders = new Map();
+    this.orderItems = new Map();
     
     this.currentUserId = 1;
     this.currentProductId = 1;
@@ -80,6 +169,13 @@ export class MemStorage implements IStorage {
     this.currentArticleId = 1;
     this.currentTestimonialId = 1;
     this.currentLabTestId = 1;
+    this.currentDoctorId = 1;
+    this.currentPharmacyId = 1;
+    this.currentLaboratoryId = 1;
+    this.currentAppointmentId = 1;
+    this.currentLabBookingId = 1;
+    this.currentOrderId = 1;
+    this.currentOrderItemId = 1;
     
     // Initialize with seed data
     this.seedData();
