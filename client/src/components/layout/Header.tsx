@@ -138,6 +138,9 @@ const Header = () => {
             <li><Link href="/products" className="hover:text-[#ff6f61]">Medicines</Link></li>
             <li><Link href="/lab-tests" className="hover:text-[#ff6f61]">Lab Tests</Link></li>
             <li><Link href="/consult" className="hover:text-[#ff6f61]">Consult Doctors</Link></li>
+            <li><Link href="/ai-healthcare" className="text-[#14bef0] font-semibold flex items-center">
+              <i className="fas fa-robot mr-1"></i> AI Health Assistant
+            </Link></li>
             <li><Link href="/products/category/4" className="hover:text-[#ff6f61]">COVID-19</Link></li>
             <li><Link href="/products/category/5" className="hover:text-[#ff6f61]">Ayurveda</Link></li>
             <li><Link href="/products/category/6" className="hover:text-[#ff6f61]">Healthcare Devices</Link></li>
@@ -190,9 +193,9 @@ const Header = () => {
             <span>Medicines</span>
           </Link>
           
-          <Link href="/consult" className="flex flex-col items-center text-xs">
-            <i className="fas fa-user-md"></i>
-            <span>Consult</span>
+          <Link href="/ai-healthcare" className="flex flex-col items-center text-xs">
+            <i className="fas fa-robot text-[#14bef0]"></i>
+            <span className="text-[#14bef0]">AI Chat</span>
           </Link>
           
           <Link href="/profile" className="flex flex-col items-center text-xs">

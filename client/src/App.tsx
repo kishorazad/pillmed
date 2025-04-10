@@ -18,6 +18,7 @@ import Cart from "./pages/Cart";
 import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
 import NotFound from "@/pages/not-found";
+import AIHealthcare from "./pages/AIHealthcare";
 
 // Admin and Professional Dashboards
 import AdminDashboard from "./pages/Admin/Dashboard";
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/cart" component={Cart} />
       <Route path="/profile" component={Profile} />
       <Route path="/checkout" component={Checkout} />
+      <Route path="/ai-healthcare" component={AIHealthcare} />
       
       {/* Admin and Professional Dashboard Routes */}
       <Route path="/admin" component={AdminDashboard} />
