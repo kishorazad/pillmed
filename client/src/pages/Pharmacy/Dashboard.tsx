@@ -790,14 +790,22 @@ const PharmacyDashboard = () => {
                                       </Button>
                                     </div>
                                     <div className="flex space-x-2">
-                                      <Button size="sm" className="bg-[#10847e] hover:bg-[#10847e]/90" onClick={() => {
-                                        toast({
-                                          title: "Prescription Verified",
-                                          description: "Prescription has been verified and processed.",
-                                        });
-                                      }}>
-                                        <FileCheck className="h-4 w-4 mr-2" /> Verify & Process
-                                      </Button>
+                                      <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                          <input type="checkbox" id="notifyPatient" defaultChecked />
+                                          <Label htmlFor="notifyPatient" className="text-sm cursor-pointer">
+                                            Send SMS & Email notifications to patient
+                                          </Label>
+                                        </div>
+                                        <Button size="sm" className="bg-[#10847e] hover:bg-[#10847e]/90" onClick={() => {
+                                          toast({
+                                            title: "Prescription Verified",
+                                            description: "Prescription has been verified and processed. Patient has been notified via SMS and email.",
+                                          });
+                                        }}>
+                                          <FileCheck className="h-4 w-4 mr-2" /> Verify & Process
+                                        </Button>
+                                      </div>
                                     </div>
                                   </DialogFooter>
                                 </DialogContent>
@@ -913,6 +921,55 @@ const PharmacyDashboard = () => {
                         className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         defaultValue="MedPlus Pharmacy is a trusted pharmacy chain providing quality medicines and healthcare products. We offer a wide range of prescription and over-the-counter medications at competitive prices."
                       />
+                    </div>
+                    
+                    <div className="space-y-4 border rounded-md p-4 bg-slate-50">
+                      <h3 className="font-medium text-lg">Notification Settings</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-base font-medium">Patient SMS Notifications</Label>
+                            <p className="text-sm text-muted-foreground">Send SMS notifications to patients for prescription updates</p>
+                          </div>
+                          <div className="flex items-center">
+                            <Label className="mr-2 text-sm" htmlFor="smsToggle">Enabled</Label>
+                            <input type="checkbox" id="smsToggle" defaultChecked />
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-base font-medium">Patient Email Notifications</Label>
+                            <p className="text-sm text-muted-foreground">Send email notifications to patients for prescription updates</p>
+                          </div>
+                          <div className="flex items-center">
+                            <Label className="mr-2 text-sm" htmlFor="emailToggle">Enabled</Label>
+                            <input type="checkbox" id="emailToggle" defaultChecked />
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-base font-medium">Price Update Notifications</Label>
+                            <p className="text-sm text-muted-foreground">Notify patients when medicine prices change</p>
+                          </div>
+                          <div className="flex items-center">
+                            <Label className="mr-2 text-sm" htmlFor="priceToggle">Enabled</Label>
+                            <input type="checkbox" id="priceToggle" defaultChecked />
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-base font-medium">Stock Alert Notifications</Label>
+                            <p className="text-sm text-muted-foreground">Notify patients when out-of-stock medicines become available</p>
+                          </div>
+                          <div className="flex items-center">
+                            <Label className="mr-2 text-sm" htmlFor="stockToggle">Enabled</Label>
+                            <input type="checkbox" id="stockToggle" defaultChecked />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
