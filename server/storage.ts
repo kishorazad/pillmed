@@ -188,6 +188,7 @@ export class MemStorage implements IStorage {
     this.currentLabBookingId = 1;
     this.currentOrderId = 1;
     this.currentOrderItemId = 1;
+    this.currentHealthTipId = 1;
     
     // Initialize with seed data
     this.seedData();
@@ -377,6 +378,56 @@ export class MemStorage implements IStorage {
     labTestsData.forEach(labTest => {
       this.createLabTest(labTest);
     });
+    
+    // Seed health tips
+    const healthTipsData: InsertHealthTip[] = [
+      {
+        title: "Stay Hydrated Throughout the Day",
+        content: "Drink at least 8 glasses of water daily to maintain proper hydration. Water helps regulate body temperature, keeps joints lubricated, prevents infections, delivers nutrients to cells, and keeps organs functioning properly.",
+        category: "Hydration",
+        imageUrl: "https://images.unsplash.com/photo-1546842931-886c185b4c8c"
+      },
+      {
+        title: "Importance of Regular Exercise",
+        content: "Aim for at least 30 minutes of moderate physical activity each day. Regular exercise improves cardiovascular health, strengthens muscles, enhances mental wellbeing, and reduces the risk of chronic diseases.",
+        category: "Exercise",
+        imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b"
+      },
+      {
+        title: "Get Enough Quality Sleep",
+        content: "Adults should aim for 7-9 hours of quality sleep each night. Good sleep improves concentration, productivity, immune function, and helps maintain a healthy weight.",
+        category: "Sleep",
+        imageUrl: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55"
+      },
+      {
+        title: "Add More Vegetables to Your Diet",
+        content: "Try to include vegetables in at least two meals per day. Vegetables are packed with essential vitamins, minerals, and antioxidants that help protect against chronic diseases and support overall health.",
+        category: "Nutrition",
+        imageUrl: "https://images.unsplash.com/photo-1540420773420-3366772f4999"
+      },
+      {
+        title: "Practice Mindful Breathing",
+        content: "Take 5 minutes daily to practice deep, mindful breathing. This simple practice can reduce stress, lower blood pressure, and improve mental clarity and focus.",
+        category: "Mental Health",
+        imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773"
+      },
+      {
+        title: "Limit Processed Foods",
+        content: "Reduce consumption of highly processed foods that are often high in sugar, unhealthy fats, and sodium. Choose whole, unprocessed foods whenever possible for better nutrition and health.",
+        category: "Nutrition",
+        imageUrl: "https://images.unsplash.com/photo-1511909525232-61113c912358"
+      },
+      {
+        title: "Take Regular Breaks From Screens",
+        content: "Follow the 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20 seconds. This helps reduce eye strain and fatigue from prolonged screen time.",
+        category: "Eye Health",
+        imageUrl: "https://images.unsplash.com/photo-1581290141480-8b007f94642f"
+      }
+    ];
+    
+    healthTipsData.forEach(healthTip => {
+      this.createHealthTip(healthTip);
+    });
   }
 
   // User methods
@@ -540,6 +591,44 @@ export class MemStorage implements IStorage {
     const labTest: LabTest = { ...insertLabTest, id };
     this.labTests.set(id, labTest);
     return labTest;
+  }
+
+  // Health tip methods
+  async getHealthTips(): Promise<HealthTip[]> {
+    return Array.from(this.healthTips.values());
+  }
+
+  async getHealthTipById(id: number): Promise<HealthTip | undefined> {
+    return this.healthTips.get(id);
+  }
+
+  async getRandomHealthTip(): Promise<HealthTip | undefined> {
+    const healthTips = Array.from(this.healthTips.values());
+    if (healthTips.length === 0) return undefined;
+    
+    const randomIndex = Math.floor(Math.random() * healthTips.length);
+    return healthTips[randomIndex];
+  }
+
+  async createHealthTip(insertHealthTip: InsertHealthTip): Promise<HealthTip> {
+    const id = this.currentHealthTipId++;
+    const now = new Date();
+    const healthTip: HealthTip = { ...insertHealthTip, id, createdAt: now };
+    this.healthTips.set(id, healthTip);
+    return healthTip;
+  }
+
+  async updateHealthTip(id: number, updateHealthTip: Partial<InsertHealthTip>): Promise<HealthTip | undefined> {
+    const healthTip = this.healthTips.get(id);
+    if (!healthTip) return undefined;
+    
+    const updatedHealthTip = { ...healthTip, ...updateHealthTip };
+    this.healthTips.set(id, updatedHealthTip);
+    return updatedHealthTip;
+  }
+
+  async deleteHealthTip(id: number): Promise<boolean> {
+    return this.healthTips.delete(id);
   }
 }
 

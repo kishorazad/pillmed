@@ -130,6 +130,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(labTests);
   });
   
+  // Get all health tips
+  app.get("/api/health-tips", async (_req: Request, res: Response) => {
+    try {
+      const healthTips = await storage.getHealthTips();
+      res.json(healthTips);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch health tips" });
+    }
+  });
+  
+  // Get random health tip
+  app.get("/api/health-tips/random", async (_req: Request, res: Response) => {
+    try {
+      const healthTip = await storage.getRandomHealthTip();
+      if (!healthTip) {
+        return res.status(404).json({ error: "No health tips found" });
+      }
+      res.json(healthTip);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch random health tip" });
+    }
+  });
+  
+  // Get health tip by ID
+  app.get("/api/health-tips/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid ID format" });
+      }
+      
+      const healthTip = await storage.getHealthTipById(id);
+      if (!healthTip) {
+        return res.status(404).json({ error: "Health tip not found" });
+      }
+      
+      res.json(healthTip);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch health tip" });
+    }
+  });
+  
   // User registration
   app.post("/api/register", async (req: Request, res: Response) => {
     try {

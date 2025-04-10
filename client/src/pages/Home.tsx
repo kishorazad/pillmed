@@ -11,6 +11,8 @@ import ConsultDoctors from '@/components/services/ConsultDoctors';
 import HealthArticles from '@/components/home/HealthArticles';
 import Testimonials from '@/components/home/Testimonials';
 import AppPromotion from '@/components/home/AppPromotion';
+import HealthTipOfTheDay from '@/components/home/HealthTipOfTheDay';
+import PrescriptionUpload from '@/components/home/PrescriptionUpload';
 
 // Categories
 import { useQuery } from '@tanstack/react-query';
@@ -38,6 +40,14 @@ const Home = () => {
       
       <HeroSection />
       <ServicesSection />
+      
+      <section className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <PrescriptionUpload />
+          <HealthTipOfTheDay />
+        </div>
+      </section>
+      
       <PromotionalBanner />
       
       {/* Top Categories */}
