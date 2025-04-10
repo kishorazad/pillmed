@@ -6,12 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Award, Calendar, CheckCircle, Clock, Heart, Medal, Star, 
-  Zap, Shield, Gift, Activity, TrendingUp, Trophy
+  Zap, Shield, Gift, Activity, TrendingUp, Trophy, Share2
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import SocialShare from './SocialShare';
 
 // Types
 interface Achievement {
@@ -356,6 +357,7 @@ const AchievementBadges = () => {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [viewDetailsOpen, setViewDetailsOpen] = useState<boolean>(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false);
   const { toast } = useToast();
   
   // Filter achievements based on selected category
@@ -383,10 +385,7 @@ const AchievementBadges = () => {
   // Share achievement
   const handleShareAchievement = () => {
     if (selectedAchievement) {
-      toast({
-        title: "Achievement Shared!",
-        description: `You've shared your "${selectedAchievement.name}" achievement with your friends.`,
-      });
+      setShareDialogOpen(true);
     }
   };
   
@@ -663,6 +662,7 @@ const AchievementBadges = () => {
           <CardFooter className="flex justify-between">
             {selectedAchievement.isCompleted && (
               <Button variant="outline" onClick={handleShareAchievement}>
+                <Share2 className="h-4 w-4 mr-2" />
                 Share Achievement
               </Button>
             )}
@@ -673,6 +673,23 @@ const AchievementBadges = () => {
             )}
           </CardFooter>
         </Card>
+      )}
+      
+      {/* Social Sharing Dialog */}
+      {selectedAchievement && (
+        <SocialShare 
+          achievement={{
+            id: selectedAchievement.id,
+            name: selectedAchievement.name,
+            description: selectedAchievement.description,
+            level: selectedAchievement.level,
+            isUnlocked: selectedAchievement.isCompleted,
+            unlockedDate: selectedAchievement.completedDate,
+            points: selectedAchievement.pointsAwarded
+          }}
+          open={shareDialogOpen}
+          onClose={() => setShareDialogOpen(false)}
+        />
       )}
     </div>
   );

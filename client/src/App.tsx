@@ -21,6 +21,7 @@ import NotFound from "@/pages/not-found";
 import AIHealthcare from "./pages/AIHealthcare";
 import Achievements from "./pages/Achievements";
 import MedicationTracking from "./pages/MedicationTracking";
+import OrderHistory from "./pages/OrderHistory";
 
 // Admin and Professional Dashboards
 import AdminDashboard from "./pages/Admin/Dashboard";
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/nearby-hospitals" component={NearbyHospitalsPage} />
       <Route path="/achievements" component={Achievements} />
       <Route path="/medication-tracking" component={MedicationTracking} />
+      <Route path="/orders" component={OrderHistory} />
       
       {/* Admin and Professional Dashboard Routes */}
       <Route path="/admin" component={AdminDashboard} />
