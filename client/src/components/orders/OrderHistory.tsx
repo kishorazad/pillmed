@@ -233,7 +233,7 @@ const pastOrders: Order[] = [
 ];
 
 // Helper components
-const StatusBadge = ({ status }: { status: Order['status'] }) => {
+const StatusBadge = ({ status, className = "" }: { status: Order['status']; className?: string }) => {
   const statusConfig = {
     processing: { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: <Clock className="h-3 w-3 mr-1" /> },
     shipped: { color: 'bg-purple-100 text-purple-800 border-purple-200', icon: <Truck className="h-3 w-3 mr-1" /> },
@@ -242,7 +242,7 @@ const StatusBadge = ({ status }: { status: Order['status'] }) => {
   };
   
   return (
-    <Badge className={statusConfig[status].color}>
+    <Badge className={`${statusConfig[status].color} ${className}`}>
       {statusConfig[status].icon}
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </Badge>
@@ -369,6 +369,8 @@ const OrderHistory = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [orderToReorder, setOrderToReorder] = useState<Order | null>(null);
+  // Remove the h1 heading since it's now in the parent component
+  const containerStyle = { marginTop: 0 };
   
   const { toast } = useToast();
   
@@ -403,9 +405,9 @@ const OrderHistory = () => {
   };
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={containerStyle}>
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Order History</h1>
+        <h2 className="text-2xl font-bold tracking-tight">Your Orders</h2>
         <p className="text-gray-500">View and manage your past orders</p>
       </div>
       

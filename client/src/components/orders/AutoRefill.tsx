@@ -80,7 +80,7 @@ const activeRefills: MedicationRefill[] = [
 ];
 
 // Helper components
-const RefillStatusBadge = ({ status }: { status: MedicationRefill['status'] }) => {
+const RefillStatusBadge = ({ status, className = "" }: { status: MedicationRefill['status']; className?: string }) => {
   const statusConfig = {
     active: { color: 'bg-green-100 text-green-800 border-green-200', icon: <Check className="h-3 w-3 mr-1" /> },
     paused: { color: 'bg-amber-100 text-amber-800 border-amber-200', icon: <Clock className="h-3 w-3 mr-1" /> },
@@ -88,7 +88,7 @@ const RefillStatusBadge = ({ status }: { status: MedicationRefill['status'] }) =
   };
   
   return (
-    <Badge className={statusConfig[status].color}>
+    <Badge className={`${statusConfig[status].color} ${className}`}>
       {statusConfig[status].icon}
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </Badge>
@@ -163,7 +163,7 @@ const AutoRefill = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Automatic Refills</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Medication Auto-Refills</h2>
           <p className="text-gray-500">Manage your recurring medication refills</p>
         </div>
         
