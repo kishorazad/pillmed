@@ -325,3 +325,23 @@ export const insertOrderItemSchema = createInsertSchema(orderItems).pick({
 
 export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
 export type OrderItem = typeof orderItems.$inferSelect;
+
+// Health Tips
+export const healthTips = pgTable("health_tips", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: text("category"),
+  imageUrl: text("imageUrl"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow()
+});
+
+export const insertHealthTipSchema = createInsertSchema(healthTips).pick({
+  title: true,
+  content: true,
+  category: true,
+  imageUrl: true
+});
+
+export type InsertHealthTip = z.infer<typeof insertHealthTipSchema>;
+export type HealthTip = typeof healthTips.$inferSelect;

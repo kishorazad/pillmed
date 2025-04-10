@@ -12,7 +12,8 @@ import {
   appointments, type Appointment, type InsertAppointment,
   labBookings, type LabBooking, type InsertLabBooking,
   orders, type Order, type InsertOrder,
-  orderItems, type OrderItem, type InsertOrderItem
+  orderItems, type OrderItem, type InsertOrderItem,
+  healthTips, type HealthTip, type InsertHealthTip
 } from "@shared/schema";
 
 export interface IStorage {
@@ -113,6 +114,14 @@ export interface IStorage {
   // Order Item related methods
   getOrderItems(orderId: number): Promise<OrderItem[]>;
   createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem>;
+  
+  // Health Tips related methods
+  getHealthTips(): Promise<HealthTip[]>;
+  getHealthTipById(id: number): Promise<HealthTip | undefined>;
+  getRandomHealthTip(): Promise<HealthTip | undefined>;
+  createHealthTip(healthTip: InsertHealthTip): Promise<HealthTip>;
+  updateHealthTip(id: number, healthTip: Partial<InsertHealthTip>): Promise<HealthTip | undefined>;
+  deleteHealthTip(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -130,6 +139,7 @@ export class MemStorage implements IStorage {
   private labBookings: Map<number, LabBooking>;
   private orders: Map<number, Order>;
   private orderItems: Map<number, OrderItem>;
+  private healthTips: Map<number, HealthTip>;
   
   currentUserId: number;
   currentProductId: number;
@@ -145,6 +155,7 @@ export class MemStorage implements IStorage {
   currentLabBookingId: number;
   currentOrderId: number;
   currentOrderItemId: number;
+  currentHealthTipId: number;
 
   constructor() {
     this.users = new Map();
@@ -161,6 +172,7 @@ export class MemStorage implements IStorage {
     this.labBookings = new Map();
     this.orders = new Map();
     this.orderItems = new Map();
+    this.healthTips = new Map();
     
     this.currentUserId = 1;
     this.currentProductId = 1;
