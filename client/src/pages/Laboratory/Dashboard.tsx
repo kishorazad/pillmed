@@ -159,7 +159,7 @@ const LaboratoryDashboard = () => {
                         <div className="flex justify-between items-start">
                           <div className="flex items-start space-x-4">
                             <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
-                              <Vial className="h-5 w-5" />
+                              <TestTube className="h-5 w-5" />
                             </div>
                             <div>
                               <h4 className="font-bold">Priya Singh</h4>
@@ -181,7 +181,7 @@ const LaboratoryDashboard = () => {
                         <div className="flex justify-between items-start">
                           <div className="flex items-start space-x-4">
                             <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-500">
-                              <Vial className="h-5 w-5" />
+                              <TestTube className="h-5 w-5" />
                             </div>
                             <div>
                               <h4 className="font-bold">Vikram Mehta</h4>
