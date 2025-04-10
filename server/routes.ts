@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertCartItemSchema, insertUserSchema } from "@shared/schema";
+import { processHealthQuery, getMedicationInfo, analyzeMedicationInteractions } from "./ai-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -213,6 +214,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Don't return the password
     const { password: _, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
+  });
+
+  // AI Healthcare Assistant endpoints
+  
+  // Process health query
+  app.post("/api/ai/health-query", async (req: Request, res: Response) => {
+    try {
+      const { query, messageHistory } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Valid query string is required" });
+      }
+      
+      const response = await processHealthQuery(query, messageHistory || []);
+      res.json({ response });
+    } catch (error) {
+      console.error("Error processing health query:", error);
+      res.status(500).json({ error: "Failed to process health query" });
+    }
+  });
+  
+  // Get medication information
+  app.get("/api/ai/medication/:name", async (req: Request, res: Response) => {
+    try {
+      const medicationName = req.params.name;
+      
+      if (!medicationName) {
+        return res.status(400).json({ error: "Medication name is required" });
+      }
+      
+      const medicationInfo = await getMedicationInfo(medicationName);
+      
+      if (!medicationInfo) {
+        return res.status(404).json({ error: "Could not retrieve information for this medication" });
+      }
+      
+      res.json(medicationInfo);
+    } catch (error) {
+      console.error("Error getting medication information:", error);
+      res.status(500).json({ error: "Failed to get medication information" });
+    }
+  });
+  
+  // Analyze medication interactions
+  app.post("/api/ai/medications/interactions", async (req: Request, res: Response) => {
+    try {
+      const { medications } = req.body;
+      
+      if (!Array.isArray(medications) || medications.length < 2) {
+        return res.status(400).json({ error: "At least two medication names are required" });
+      }
+      
+      const interactions = await analyzeMedicationInteractions(medications);
+      res.json(interactions);
+    } catch (error) {
+      console.error("Error analyzing medication interactions:", error);
+      res.status(500).json({ error: "Failed to analyze medication interactions" });
+    }
   });
 
   const httpServer = createServer(app);
