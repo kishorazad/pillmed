@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -6,14 +6,116 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, FileText, FilePlus, Check } from 'lucide-react';
+import { Upload, FileText, FilePlus, Check, Mic, MicOff } from 'lucide-react';
 
 const PrescriptionUpload = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [fileName, setFileName] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [voiceSearchResults, setVoiceSearchResults] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { toast } = useToast();
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      
+      // Handle results
+      recognitionRef.current.onresult = (event) => {
+        const result = event.results[0][0].transcript;
+        setTranscript(result);
+        searchMedicationsVoice(result);
+      };
+      
+      // Handle ending
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+      
+      // Handle errors
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+        toast({
+          title: "Voice search failed",
+          description: `Error: ${event.error}. Please try again or use text search.`,
+          variant: "destructive"
+        });
+      };
+    } else {
+      console.warn('Speech recognition not supported in this browser');
+    }
+    
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, [toast]);
+  
+  // Start voice search
+  const toggleVoiceSearch = () => {
+    if (!recognitionRef.current) {
+      toast({
+        title: "Voice search not available",
+        description: "Your browser doesn't support voice search. Please use text search instead.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (isListening) {
+      recognitionRef.current.abort();
+      setIsListening(false);
+    } else {
+      setVoiceSearchResults([]);
+      setTranscript('');
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
+  
+  // Process voice search
+  const searchMedicationsVoice = (query: string) => {
+    setSearchQuery(query);
+    setIsSearching(true);
+    
+    // Simulate search results
+    setTimeout(() => {
+      // Example medications that might match the voice query
+      const mockResults = [
+        "Aspirin 100mg tablets",
+        "Paracetamol 500mg",
+        "Ibuprofen 400mg",
+        "Cetirizine 10mg",
+        "Omeprazole 20mg",
+        "Amlodipine 5mg",
+        "Metformin 500mg"
+      ];
+      
+      // Filter based on query (basic simulation)
+      const filteredResults = mockResults.filter(med => 
+        med.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      // If no direct matches found, show a subset of options as suggestions
+      const results = filteredResults.length > 0 
+        ? filteredResults 
+        : mockResults.slice(0, 3);
+        
+      setVoiceSearchResults(results);
+      setIsSearching(false);
+    }, 1000);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -79,13 +181,69 @@ const PrescriptionUpload = () => {
                 </div>
               </div>
               
-              <Button 
-                onClick={() => setIsDialogOpen(true)}
-                className="bg-[#ff6f61] text-white hover:bg-[#ff6f61]/90 flex items-center gap-2"
-              >
-                <Upload size={16} /> Upload Now
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={toggleVoiceSearch}
+                  variant="outline"
+                  size="icon"
+                  className={isListening ? "bg-red-100 text-red-600 hover:bg-red-200 hover:text-red-700 animate-pulse" : "text-[#10847e] hover:text-[#10847e]/90"}
+                  title={isListening ? "Stop voice search" : "Search by voice"}
+                >
+                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+                </Button>
+                
+                <Button 
+                  onClick={() => setIsDialogOpen(true)}
+                  className="bg-[#ff6f61] text-white hover:bg-[#ff6f61]/90 flex items-center gap-2"
+                >
+                  <Upload size={16} /> Upload Now
+                </Button>
+              </div>
             </div>
+            
+            {/* Voice search detected - showing transcript */}
+            {transcript && (
+              <div className="mt-3 p-3 bg-[#f0f9f8] rounded-md border border-[#d4e9e7]">
+                <p className="text-sm font-medium mb-1">Voice search detected:</p>
+                <p className="text-sm text-gray-600">"{transcript}"</p>
+                {isSearching && (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="w-8 h-8 relative">
+                      <div className="absolute top-0 w-2 h-2 rounded-full bg-[#10847e] animate-pulse"></div>
+                      <div className="absolute top-0 left-3 w-2 h-2 rounded-full bg-[#10847e] animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="absolute top-0 left-6 w-2 h-2 rounded-full bg-[#10847e] animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <p className="ml-2 text-sm text-gray-600">Searching medicines...</p>
+                  </div>
+                )}
+                
+                {voiceSearchResults.length > 0 && !isSearching && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium mb-2">We found these medicines:</p>
+                    <div className="grid gap-2">
+                      {voiceSearchResults.map((result, index) => (
+                        <div 
+                          key={index} 
+                          className="p-2 bg-white rounded-md border border-gray-200 hover:border-[#10847e] hover:bg-[#f8f9fa] cursor-pointer transition-colors"
+                          onClick={() => {
+                            // Add to cart logic would go here
+                            toast({
+                              title: "Added to cart",
+                              description: `${result} has been added to your cart.`,
+                            });
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium">{result}</p>
+                            <Button size="sm" variant="outline" className="text-[#10847e] border-[#10847e]">Add</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
