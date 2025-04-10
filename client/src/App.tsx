@@ -26,6 +26,10 @@ import PharmacyDashboard from "./pages/Pharmacy/Dashboard";
 import DoctorDashboard from "./pages/Doctor/Dashboard";
 import LaboratoryDashboard from "./pages/Laboratory/Dashboard";
 
+// New Features
+import DeliveryDashboard from "./pages/Delivery/Dashboard";
+import NearbyHospitalsPage from "./pages/Hospitals/NearbyHospitalsPage";
+
 function Router() {
   return (
     <Switch>
@@ -37,12 +41,14 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/ai-healthcare" component={AIHealthcare} />
+      <Route path="/nearby-hospitals" component={NearbyHospitalsPage} />
       
       {/* Admin and Professional Dashboard Routes */}
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/pharmacy" component={PharmacyDashboard} />
       <Route path="/doctor" component={DoctorDashboard} />
       <Route path="/laboratory" component={LaboratoryDashboard} />
+      <Route path="/delivery" component={DeliveryDashboard} />
       
       <Route component={NotFound} />
     </Switch>
