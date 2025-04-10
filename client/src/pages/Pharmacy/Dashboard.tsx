@@ -11,9 +11,12 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingBag, Pill, Package, Calendar, Clock, Truck, TrendingUp, Edit, FileText, Plus } from 'lucide-react';
+import { ShoppingBag, Pill, Package, Calendar, Clock, Truck, TrendingUp, Edit, FileText, Plus, Upload, X, Eye, CheckCircle, AlertCircle, User, FileCheck, FilePlus, Stethoscope } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const PharmacyDashboard = () => {
   const [location, navigate] = useLocation();
@@ -68,9 +71,77 @@ const PharmacyDashboard = () => {
             <Button variant="outline" size="sm" onClick={() => navigate('/')}>
               View Site
             </Button>
-            <Button size="sm" className="bg-[#10847e] hover:bg-[#10847e]/90">
-              <Plus className="mr-2 h-4 w-4" /> Add Medicine
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" className="bg-[#10847e] hover:bg-[#10847e]/90">
+                  <Plus className="mr-2 h-4 w-4" /> Add Medicine
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[625px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Medicine</DialogTitle>
+                  <DialogDescription>
+                    Fill in the details to add a new medicine to your inventory
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="topName" className="text-right">
+                      Name
+                    </Label>
+                    <Input id="topName" placeholder="Medicine name" className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="topCategory" className="text-right">
+                      Category
+                    </Label>
+                    <Select>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="antibiotics">Antibiotics</SelectItem>
+                        <SelectItem value="painkillers">Painkillers</SelectItem>
+                        <SelectItem value="diabetes">Diabetes</SelectItem>
+                        <SelectItem value="heart">Heart Care</SelectItem>
+                        <SelectItem value="allergy">Allergy</SelectItem>
+                        <SelectItem value="vitamins">Vitamins & Supplements</SelectItem>
+                        <SelectItem value="ayurvedic">Ayurvedic</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="topDosage" className="text-right">
+                      Dosage
+                    </Label>
+                    <Input id="topDosage" placeholder="e.g. 500mg" className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="topPrice" className="text-right">
+                      Price (₹)
+                    </Label>
+                    <Input id="topPrice" type="number" placeholder="0.00" className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="topDosageInfo" className="text-right pt-2">
+                      Dosage Instructions
+                    </Label>
+                    <Textarea id="topDosageInfo" placeholder="Detailed dosage instructions (e.g., 1 tablet twice daily after meals)" className="col-span-3" rows={3} />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Cancel</Button>
+                  </DialogClose>
+                  <Button className="bg-[#10847e] hover:bg-[#10847e]/90" onClick={() => {
+                    toast({
+                      title: "Medicine Added",
+                      description: "New medicine has been added to your inventory.",
+                    });
+                  }}>Add Medicine</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         
@@ -224,9 +295,124 @@ const PharmacyDashboard = () => {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>Medicine Inventory</CardTitle>
-                    <Button className="bg-[#10847e] hover:bg-[#10847e]/90">
-                      <Plus className="mr-2 h-4 w-4" /> Add Medicine
-                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="bg-[#10847e] hover:bg-[#10847e]/90">
+                          <Plus className="mr-2 h-4 w-4" /> Add Medicine
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[625px]">
+                        <DialogHeader>
+                          <DialogTitle>Add New Medicine</DialogTitle>
+                          <DialogDescription>
+                            Fill in the details to add a new medicine to your inventory
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="name" className="text-right">
+                              Name
+                            </Label>
+                            <Input id="name" placeholder="Medicine name" className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="category" className="text-right">
+                              Category
+                            </Label>
+                            <Select>
+                              <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="antibiotics">Antibiotics</SelectItem>
+                                <SelectItem value="painkillers">Painkillers</SelectItem>
+                                <SelectItem value="diabetes">Diabetes</SelectItem>
+                                <SelectItem value="heart">Heart Care</SelectItem>
+                                <SelectItem value="allergy">Allergy</SelectItem>
+                                <SelectItem value="vitamins">Vitamins & Supplements</SelectItem>
+                                <SelectItem value="ayurvedic">Ayurvedic</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="dosage" className="text-right">
+                              Dosage
+                            </Label>
+                            <Input id="dosage" placeholder="e.g. 500mg" className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="manufacturer" className="text-right">
+                              Manufacturer
+                            </Label>
+                            <Input id="manufacturer" placeholder="Manufacturer name" className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="stock" className="text-right">
+                              Stock
+                            </Label>
+                            <Input id="stock" type="number" placeholder="Units available" className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="price" className="text-right">
+                              Price (₹)
+                            </Label>
+                            <Input id="price" type="number" placeholder="0.00" className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="discounted-price" className="text-right">
+                              Discounted Price (₹)
+                            </Label>
+                            <Input id="discounted-price" type="number" placeholder="0.00" className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="expiry" className="text-right">
+                              Expiry Date
+                            </Label>
+                            <Input id="expiry" type="month" className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-start gap-4">
+                            <Label htmlFor="description" className="text-right pt-2">
+                              Description
+                            </Label>
+                            <Textarea id="description" placeholder="Medicine description and uses" className="col-span-3" rows={3} />
+                          </div>
+                          <div className="grid grid-cols-4 items-start gap-4">
+                            <Label htmlFor="dosage-info" className="text-right pt-2">
+                              Dosage Instructions
+                            </Label>
+                            <Textarea id="dosage-info" placeholder="Detailed dosage instructions (e.g., 1 tablet twice daily after meals)" className="col-span-3" rows={3} />
+                          </div>
+                          <div className="grid grid-cols-4 items-start gap-4">
+                            <Label htmlFor="side-effects" className="text-right pt-2">
+                              Side Effects
+                            </Label>
+                            <Textarea id="side-effects" placeholder="Potential side effects" className="col-span-3" rows={2} />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="image" className="text-right">
+                              Image
+                            </Label>
+                            <div className="col-span-3 flex items-center gap-4">
+                              <Input id="image" type="file" className="flex-1" />
+                              <Button type="button" variant="outline" size="sm">
+                                <Upload className="h-4 w-4 mr-2" /> Upload
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                          </DialogClose>
+                          <Button className="bg-[#10847e] hover:bg-[#10847e]/90" onClick={() => {
+                            toast({
+                              title: "Medicine Added",
+                              description: "New medicine has been added to your inventory.",
+                            });
+                          }}>Add Medicine</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                   <CardDescription>
                     Manage your medicine inventory
@@ -382,9 +568,175 @@ const PharmacyDashboard = () => {
                           <TableCell><Badge>Pending</Badge></TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              <Button variant="ghost" size="sm">
-                                <FileText className="h-4 w-4 mr-2" /> View
-                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <FileText className="h-4 w-4 mr-2" /> View
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[700px]">
+                                  <DialogHeader>
+                                    <DialogTitle>Prescription #PRE001</DialogTitle>
+                                    <DialogDescription>
+                                      Prescription details and medication information
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="grid gap-4 py-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div className="space-y-2">
+                                        <h4 className="font-semibold">Patient Information</h4>
+                                        <div className="text-sm space-y-1">
+                                          <p><span className="font-medium">Name:</span> Rahul Sharma</p>
+                                          <p><span className="font-medium">Age:</span> 42 years</p>
+                                          <p><span className="font-medium">Gender:</span> Male</p>
+                                          <p><span className="font-medium">Contact:</span> +91 98765 43210</p>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <h4 className="font-semibold">Doctor Information</h4>
+                                        <div className="text-sm space-y-1">
+                                          <p><span className="font-medium">Name:</span> Dr. Amit Kumar</p>
+                                          <p><span className="font-medium">Specialization:</span> Cardiologist</p>
+                                          <p><span className="font-medium">Registration No:</span> MCI-12345</p>
+                                          <p><span className="font-medium">Date:</span> Apr 8, 2025</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <Separator />
+                                    
+                                    <div className="space-y-2">
+                                      <h4 className="font-semibold">Diagnosis</h4>
+                                      <p className="text-sm">Hypertension (Stage 1) with Hyperlipidemia</p>
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                      <h4 className="font-semibold">Prescribed Medications</h4>
+                                      
+                                      <div className="rounded-md border p-4 space-y-3">
+                                        <div className="flex justify-between items-start">
+                                          <div>
+                                            <h5 className="font-medium">1. Amlodipine 5mg</h5>
+                                            <div className="flex space-x-6 mt-1 text-sm">
+                                              <p className="text-muted-foreground">Tablet</p>
+                                              <p>Dosage: <span className="font-medium">1-0-0</span></p>
+                                            </div>
+                                            <p className="text-sm mt-2">Take one tablet daily in the morning after breakfast</p>
+                                            <p className="text-sm text-muted-foreground mt-1">Duration: 30 days</p>
+                                          </div>
+                                          <div className="flex space-x-2">
+                                            <Button variant="outline" size="sm" className="h-8">
+                                              <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                                            </Button>
+                                            <Button size="sm" className="h-8 bg-[#10847e] hover:bg-[#10847e]/90">
+                                              <CheckCircle className="h-3.5 w-3.5 mr-1" /> In Stock
+                                            </Button>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="flex flex-wrap gap-2 items-center">
+                                          <Label className="font-medium text-sm">Update Price:</Label>
+                                          <Input type="number" defaultValue="120" className="w-20 h-8" />
+                                          <Label className="text-sm">₹ per strip of 10 tablets</Label>
+                                          <Button variant="outline" size="sm" className="h-8 ml-auto">
+                                            Save Changes
+                                          </Button>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="rounded-md border p-4 space-y-3">
+                                        <div className="flex justify-between items-start">
+                                          <div>
+                                            <h5 className="font-medium">2. Atorvastatin 10mg</h5>
+                                            <div className="flex space-x-6 mt-1 text-sm">
+                                              <p className="text-muted-foreground">Tablet</p>
+                                              <p>Dosage: <span className="font-medium">0-0-1</span></p>
+                                            </div>
+                                            <p className="text-sm mt-2">Take one tablet at night after dinner</p>
+                                            <p className="text-sm text-muted-foreground mt-1">Duration: 30 days</p>
+                                          </div>
+                                          <div className="flex space-x-2">
+                                            <Button variant="outline" size="sm" className="h-8">
+                                              <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                                            </Button>
+                                            <Button size="sm" className="h-8 bg-[#10847e] hover:bg-[#10847e]/90">
+                                              <CheckCircle className="h-3.5 w-3.5 mr-1" /> In Stock
+                                            </Button>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="flex flex-wrap gap-2 items-center">
+                                          <Label className="font-medium text-sm">Update Price:</Label>
+                                          <Input type="number" defaultValue="120" className="w-20 h-8" />
+                                          <Label className="text-sm">₹ per strip of 10 tablets</Label>
+                                          <Button variant="outline" size="sm" className="h-8 ml-auto">
+                                            Save Changes
+                                          </Button>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="rounded-md border p-4 space-y-3">
+                                        <div className="flex justify-between items-start">
+                                          <div>
+                                            <h5 className="font-medium">3. Ecosprin 75mg</h5>
+                                            <div className="flex space-x-6 mt-1 text-sm">
+                                              <p className="text-muted-foreground">Tablet</p>
+                                              <p>Dosage: <span className="font-medium">0-1-0</span></p>
+                                            </div>
+                                            <p className="text-sm mt-2">Take one tablet after lunch</p>
+                                            <p className="text-sm text-muted-foreground mt-1">Duration: 30 days</p>
+                                          </div>
+                                          <div className="flex space-x-2">
+                                            <Button variant="outline" size="sm" className="h-8">
+                                              <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                                            </Button>
+                                            <Button size="sm" className="h-8 bg-yellow-500 hover:bg-yellow-600">
+                                              <AlertCircle className="h-3.5 w-3.5 mr-1" /> Low Stock
+                                            </Button>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="flex flex-wrap gap-2 items-center">
+                                          <Label className="font-medium text-sm">Update Price:</Label>
+                                          <Input type="number" defaultValue="85" className="w-20 h-8" />
+                                          <Label className="text-sm">₹ per strip of 15 tablets</Label>
+                                          <Button variant="outline" size="sm" className="h-8 ml-auto">
+                                            Save Changes
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                      <h4 className="font-semibold">Additional Instructions</h4>
+                                      <p className="text-sm">1. Monitor blood pressure daily and maintain a log</p>
+                                      <p className="text-sm">2. Follow low-salt, low-fat diet</p>
+                                      <p className="text-sm">3. Exercise regularly (30 minutes walking)</p>
+                                      <p className="text-sm">4. Follow-up after 30 days</p>
+                                    </div>
+                                  </div>
+                                  <DialogFooter className="flex justify-between">
+                                    <div className="flex space-x-2">
+                                      <Button variant="outline" size="sm">
+                                        <Stethoscope className="h-4 w-4 mr-2" /> Contact Doctor
+                                      </Button>
+                                      <Button variant="outline" size="sm">
+                                        <User className="h-4 w-4 mr-2" /> Contact Patient
+                                      </Button>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                      <Button size="sm" className="bg-[#10847e] hover:bg-[#10847e]/90" onClick={() => {
+                                        toast({
+                                          title: "Prescription Verified",
+                                          description: "Prescription has been verified and processed.",
+                                        });
+                                      }}>
+                                        <FileCheck className="h-4 w-4 mr-2" /> Verify & Process
+                                      </Button>
+                                    </div>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
                             </div>
                           </TableCell>
                         </TableRow>
