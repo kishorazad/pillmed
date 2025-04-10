@@ -70,10 +70,54 @@ const Header = () => {
           
           {/* Navigation */}
           <div className="flex items-center gap-6 text-sm mt-2 md:mt-0">
-            <Link href="/profile" className="flex flex-col items-center">
-              <i className="fas fa-user text-[#666666]"></i>
-              <span>{user ? user.name : 'Sign In'}</span>
-            </Link>
+            <div className="relative group">
+              <Link href="/profile" className="flex flex-col items-center">
+                <i className="fas fa-user text-[#666666]"></i>
+                <span>{user ? user.name.split(' ')[0] : 'Sign In'}</span>
+              </Link>
+              
+              {user && (
+                <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md hidden group-hover:block z-50">
+                  <div className="py-1">
+                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Profile</Link>
+                    <Link href="/profile#orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</Link>
+                    
+                    {user.role === 'admin' && (
+                      <Link href="/admin" className="block px-4 py-2 text-sm text-[#10847e] font-medium hover:bg-gray-100">
+                        Admin Dashboard
+                      </Link>
+                    )}
+                    
+                    {user.role === 'pharmacy' && (
+                      <Link href="/pharmacy" className="block px-4 py-2 text-sm text-[#10847e] font-medium hover:bg-gray-100">
+                        Pharmacy Dashboard
+                      </Link>
+                    )}
+                    
+                    {user.role === 'doctor' && (
+                      <Link href="/doctor" className="block px-4 py-2 text-sm text-[#10847e] font-medium hover:bg-gray-100">
+                        Doctor Dashboard
+                      </Link>
+                    )}
+                    
+                    {user.role === 'laboratory' && (
+                      <Link href="/laboratory" className="block px-4 py-2 text-sm text-[#10847e] font-medium hover:bg-gray-100">
+                        Laboratory Dashboard
+                      </Link>
+                    )}
+                    
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <button 
+                      onClick={() => useStore.getState().setUser(null)} 
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
             <button onClick={openCart} className="flex flex-col items-center relative">
               <i className="fas fa-shopping-cart text-[#666666]"></i>
               <span>Cart</span>
@@ -112,18 +156,45 @@ const Header = () => {
             <i className="fas fa-home text-[#ff6f61]"></i>
             <span>Home</span>
           </Link>
-          <Link href="/lab-tests" className="flex flex-col items-center text-xs">
-            <i className="fas fa-flask"></i>
-            <span>Lab Tests</span>
-          </Link>
+          
+          {/* Conditional Dashboard Link for Mobile */}
+          {user && user.role === 'admin' ? (
+            <Link href="/admin" className="flex flex-col items-center text-xs">
+              <i className="fas fa-tachometer-alt text-[#10847e]"></i>
+              <span>Admin</span>
+            </Link>
+          ) : user && user.role === 'pharmacy' ? (
+            <Link href="/pharmacy" className="flex flex-col items-center text-xs">
+              <i className="fas fa-pills text-[#10847e]"></i>
+              <span>Pharmacy</span>
+            </Link>
+          ) : user && user.role === 'doctor' ? (
+            <Link href="/doctor" className="flex flex-col items-center text-xs">
+              <i className="fas fa-user-md text-[#10847e]"></i>
+              <span>Doctor</span>
+            </Link>
+          ) : user && user.role === 'laboratory' ? (
+            <Link href="/laboratory" className="flex flex-col items-center text-xs">
+              <i className="fas fa-flask text-[#10847e]"></i>
+              <span>Lab</span>
+            </Link>
+          ) : (
+            <Link href="/lab-tests" className="flex flex-col items-center text-xs">
+              <i className="fas fa-flask"></i>
+              <span>Lab Tests</span>
+            </Link>
+          )}
+          
           <Link href="/products" className="flex flex-col items-center text-xs">
             <i className="fas fa-pills"></i>
             <span>Medicines</span>
           </Link>
+          
           <Link href="/consult" className="flex flex-col items-center text-xs">
             <i className="fas fa-user-md"></i>
             <span>Consult</span>
           </Link>
+          
           <Link href="/profile" className="flex flex-col items-center text-xs">
             <i className="fas fa-user"></i>
             <span>Profile</span>

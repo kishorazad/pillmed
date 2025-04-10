@@ -17,6 +17,8 @@ interface User {
   phone?: string;
   address?: string;
   pincode?: string;
+  role?: string;
+  profileImageUrl?: string;
 }
 
 interface AppState {

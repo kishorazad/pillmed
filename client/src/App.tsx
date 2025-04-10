@@ -19,6 +19,12 @@ import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
 import NotFound from "@/pages/not-found";
 
+// Admin and Professional Dashboards
+import AdminDashboard from "./pages/Admin/Dashboard";
+import PharmacyDashboard from "./pages/Pharmacy/Dashboard";
+import DoctorDashboard from "./pages/Doctor/Dashboard";
+import LaboratoryDashboard from "./pages/Laboratory/Dashboard";
+
 function Router() {
   return (
     <Switch>
@@ -29,6 +35,13 @@ function Router() {
       <Route path="/cart" component={Cart} />
       <Route path="/profile" component={Profile} />
       <Route path="/checkout" component={Checkout} />
+      
+      {/* Admin and Professional Dashboard Routes */}
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/pharmacy" component={PharmacyDashboard} />
+      <Route path="/doctor" component={DoctorDashboard} />
+      <Route path="/laboratory" component={LaboratoryDashboard} />
+      
       <Route component={NotFound} />
     </Switch>
   );
