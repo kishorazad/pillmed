@@ -529,10 +529,75 @@ const PharmacyDashboard = () => {
             <TabsContent value="prescriptions" className="mt-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Prescriptions</CardTitle>
-                  <CardDescription>
-                    Manage customer prescriptions
-                  </CardDescription>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Prescriptions</CardTitle>
+                      <CardDescription>
+                        Manage customer prescriptions
+                      </CardDescription>
+                    </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="bg-[#10847e] hover:bg-[#10847e]/90">
+                          <FilePlus className="mr-2 h-4 w-4" /> Upload Prescription
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                          <DialogTitle>Upload New Prescription</DialogTitle>
+                          <DialogDescription>
+                            Upload a prescription image or PDF and enter patient details
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="prescriptionFile">Prescription File</Label>
+                            <Input id="prescriptionFile" type="file" accept=".jpg,.jpeg,.png,.pdf" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="patientName">Patient Name</Label>
+                              <Input id="patientName" placeholder="Full name" />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="patientPhone">Patient Phone</Label>
+                              <Input id="patientPhone" placeholder="Contact number" />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="patientEmail">Patient Email</Label>
+                              <Input id="patientEmail" type="email" placeholder="Email address" />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="doctorName">Doctor Name</Label>
+                              <Input id="doctorName" placeholder="Doctor's name" />
+                            </div>
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="notes">Additional Notes</Label>
+                            <Textarea id="notes" placeholder="Any special instructions or notes" />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label className="text-sm text-muted-foreground">
+                              We'll notify the patient via SMS and email when the prescription is verified and ready
+                            </Label>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                          </DialogClose>
+                          <Button className="bg-[#10847e] hover:bg-[#10847e]/90" onClick={() => {
+                            toast({
+                              title: "Prescription Uploaded",
+                              description: "The prescription has been uploaded and is being processed.",
+                            });
+                          }}>Upload Prescription</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between mb-4">
