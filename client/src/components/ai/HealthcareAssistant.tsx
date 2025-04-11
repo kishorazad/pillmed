@@ -402,18 +402,28 @@ const HealthcareAssistant = () => {
               <CardDescription>Get medical information and health advice</CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-2 ml-auto sm:ml-0 mt-2 sm:mt-0">
+          <div className="flex items-center gap-3 ml-auto sm:ml-0 mt-2 sm:mt-0">
             {voiceSynthesisSupported && (
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-500">Voice:</span>
+              <div className="flex items-center gap-1 border rounded-full px-2 py-1">
+                <span className="text-xs text-gray-500">Voice Output:</span>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className={`p-1 h-auto ${isVoiceOutputEnabled ? 'text-green-600' : 'text-gray-400'}`}
+                  className={`p-1 h-auto ${isVoiceOutputEnabled ? 'text-green-600 font-medium' : 'text-gray-400'}`}
                   onClick={toggleVoiceOutput}
                 >
-                  {isVoiceOutputEnabled ? 'On' : 'Off'}
+                  {isVoiceOutputEnabled ? 'ON' : 'OFF'}
                 </Button>
+              </div>
+            )}
+            
+            {isVoiceInputActive && (
+              <div className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs animate-pulse">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+                <span>Listening...</span>
               </div>
             )}
           </div>
