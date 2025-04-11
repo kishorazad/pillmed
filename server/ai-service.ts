@@ -9,7 +9,7 @@ interface ChatMessage {
   content: string;
 }
 
-const systemPrompt = `You are MedAssist, an AI healthcare assistant for a 1mg-like online pharmacy platform.
+const systemPrompt = `You are MedAssist, an AI healthcare assistant for Medadock, an online pharmacy platform.
 
 Your purpose is to provide accurate, helpful and concise information about:
 - Medications and their uses

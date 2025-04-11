@@ -73,7 +73,7 @@ const Cart = () => {
   return (
     <>
       <Helmet>
-        <title>Your Cart - 1mg</title>
+        <title>Your Cart - Medadock</title>
         <meta name="description" content="View and manage items in your shopping cart" />
       </Helmet>
       

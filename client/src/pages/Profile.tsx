@@ -194,7 +194,7 @@ const Profile = () => {
   return (
     <>
       <Helmet>
-        <title>{user ? `${user.name}'s Profile` : 'Sign In'} - 1mg</title>
+        <title>{user ? `${user.name}'s Profile` : 'Sign In'} - Medadock</title>
         <meta name="description" content="Manage your profile, orders, and account information" />
       </Helmet>
       

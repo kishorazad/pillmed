@@ -90,7 +90,7 @@ const ProductDetail = () => {
   return (
     <>
       <Helmet>
-        <title>{product.name} - 1mg</title>
+        <title>{product.name} - Medadock</title>
         <meta name="description" content={product.description || `Buy ${product.name} online at the best price`} />
       </Helmet>
       
