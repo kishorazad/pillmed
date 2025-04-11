@@ -122,30 +122,103 @@ const HealthcareAssistant = () => {
       };
       
       recognitionRef.current.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
+        const results = Array.from(event.results);
+        
+        // Get transcript from all results
+        const transcript = results
           .map((result: any) => result[0].transcript)
           .join('');
         
+        // Calculate average confidence
+        let totalConfidence = 0;
+        let confidenceCount = 0;
+        
+        results.forEach((result: any) => {
+          if (result[0].confidence) {
+            totalConfidence += result[0].confidence;
+            confidenceCount++;
+          }
+        });
+        
+        const avgConfidence = confidenceCount > 0 ? totalConfidence / confidenceCount : 0;
+        
+        // Set message
         setVoiceTranscript(transcript);
         setInputMessage(transcript);
-        setListeningStatus('Heard: ' + transcript);
+        
+        // Provide feedback based on confidence level
+        let confidenceFeedback = '';
+        
+        if (avgConfidence < 0.5) {
+          confidenceFeedback = '⚠️ Low confidence. Please check before sending.';
+        } else if (avgConfidence < 0.8) {
+          confidenceFeedback = '✓ Recognized. Please verify.';
+        } else {
+          confidenceFeedback = '✅ Clearly recognized!';
+        }
+        
+        setListeningStatus(`${confidenceFeedback} "${transcript}"`);
       };
       
       recognitionRef.current.onend = () => {
         setIsVoiceInputActive(false);
-        setListeningStatus('');
+        
         if (voiceTranscript && voiceTranscript.trim().length > 0) {
+          // Keep the transcript visible until message is sent
           setTimeout(() => {
             handleSendMessage();
-          }, 500);
+            // Clear the status message after sending
+            setTimeout(() => {
+              setListeningStatus('');
+            }, 1500);
+          }, 1000);
+        } else {
+          // If nothing was heard
+          if (!listeningStatus.includes('Error')) {
+            setListeningStatus('No speech detected. Try again or type your question.');
+            setTimeout(() => setListeningStatus(''), 3000);
+          }
         }
       };
       
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         setIsVoiceInputActive(false);
-        setListeningStatus(`Error: ${event.error}`);
-        setTimeout(() => setListeningStatus(''), 3000);
+        
+        // Provide more user-friendly error messages
+        let errorMessage = 'An error occurred with speech recognition.';
+        
+        switch(event.error) {
+          case 'not-allowed':
+            errorMessage = 'Microphone access was denied. Please allow microphone access to use voice input.';
+            break;
+          case 'no-speech':
+            errorMessage = 'No speech detected. Please try speaking again.';
+            break;
+          case 'network':
+            errorMessage = 'Network error occurred. Please check your connection.';
+            break;
+          case 'aborted':
+            errorMessage = 'Speech recognition was aborted.';
+            break;
+          case 'audio-capture':
+            errorMessage = 'Could not capture audio. Please check your microphone.';
+            break;
+          case 'service-not-allowed':
+            errorMessage = 'Speech recognition service is not allowed.';
+            break;
+          case 'bad-grammar':
+            errorMessage = 'Speech grammar issue occurred.';
+            break;
+          case 'language-not-supported':
+            errorMessage = 'The selected language is not supported.';
+            break;
+          default:
+            errorMessage = `Error: ${event.error}`;
+        }
+        
+        setListeningStatus(errorMessage);
+        setTimeout(() => setListeningStatus(''), 4000);
       };
       
     } else {
@@ -504,34 +577,50 @@ const HealthcareAssistant = () => {
               )}
             </div>
             
-            <div className="mt-3 sm:mt-4 flex gap-1 sm:gap-2">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className={`p-2 h-9 w-9 sm:h-10 sm:w-10 ${isVoiceInputActive ? "text-red-500" : ""}`}
-                onClick={handleVoiceInput}
-              >
-                <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-              <Input
-                placeholder="Type health question..."
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={handleKeyPress}
-                disabled={chatMutation.isPending || isVoiceInputActive}
-                className="flex-grow text-sm h-9 sm:h-10"
-              />
-              <Button 
-                onClick={handleSendMessage}
-                className="h-9 w-9 sm:h-10 sm:w-10 p-0"
-                disabled={!inputMessage.trim() || chatMutation.isPending}
-              >
-                {chatMutation.isPending ? (
-                  <RefreshCcw className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4 sm:h-5 sm:w-5" />
-                )}
-              </Button>
+            <div className="mt-3 sm:mt-4 flex flex-col gap-2">
+              {listeningStatus && !isVoiceInputActive && (
+                <div className="text-xs text-gray-600 bg-gray-100 px-3 py-1.5 rounded-md">
+                  {listeningStatus}
+                </div>
+              )}
+              
+              <div className="flex gap-1 sm:gap-2 relative">
+                <Button 
+                  variant={isVoiceInputActive ? "default" : "outline"} 
+                  size="icon" 
+                  className={`p-2 h-9 w-9 sm:h-10 sm:w-10 relative ${
+                    isVoiceInputActive 
+                      ? "bg-red-500 hover:bg-red-600 text-white" 
+                      : "hover:bg-blue-50 hover:text-blue-600"
+                  }`}
+                  onClick={handleVoiceInput}
+                  title={isVoiceInputActive ? "Stop listening" : "Start voice input"}
+                >
+                  <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
+                  {isVoiceInputActive && (
+                    <span className="absolute inset-0 rounded-full animate-ping-slow opacity-75 bg-red-400"></span>
+                  )}
+                </Button>
+                <Input
+                  placeholder={voiceRecognitionSupported ? "Type or speak your health question..." : "Type your health question..."}
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  disabled={chatMutation.isPending || isVoiceInputActive}
+                  className="flex-grow text-sm h-9 sm:h-10"
+                />
+                <Button 
+                  onClick={handleSendMessage}
+                  className="h-9 w-9 sm:h-10 sm:w-10 p-0"
+                  disabled={!inputMessage.trim() || chatMutation.isPending}
+                >
+                  {chatMutation.isPending ? (
+                    <RefreshCcw className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
+                </Button>
+              </div>
             </div>
             
             <div className="mt-3 text-xs text-gray-500">

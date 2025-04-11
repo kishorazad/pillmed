@@ -87,10 +87,21 @@ export default {
             height: "0",
           },
         },
+        "ping-slow": {
+          "0%, 100%": {
+            transform: "scale(1)",
+            opacity: "0.75",
+          },
+          "50%": {
+            transform: "scale(1.1)",
+            opacity: "1",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "ping-slow": "ping-slow 1.5s ease-in-out infinite",
       },
     },
   },
