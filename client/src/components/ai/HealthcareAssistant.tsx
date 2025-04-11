@@ -56,6 +56,15 @@ interface InteractionsResult {
   interactions: Interaction[];
 }
 
+// API response types
+interface ChatResponse {
+  response: string;
+}
+
+interface InteractionsResponse {
+  interactions: Interaction[];
+}
+
 const HealthcareAssistant = () => {
   // State
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -72,8 +81,17 @@ const HealthcareAssistant = () => {
   const [medicationInput, setMedicationInput] = useState('');
   const [isVoiceInputActive, setIsVoiceInputActive] = useState(false);
   const [expandedInteraction, setExpandedInteraction] = useState<number | null>(null);
+  const [voiceRecognitionSupported, setVoiceRecognitionSupported] = useState(true);
+  const [voiceSynthesisSupported, setVoiceSynthesisSupported] = useState(true);
+  const [isVoiceOutputEnabled, setIsVoiceOutputEnabled] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [listeningStatus, setListeningStatus] = useState('');
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const synthesisRef = useRef<SpeechSynthesis | null>(null);
   
   // Scrolls to bottom of messages
   const scrollToBottom = () => {
@@ -84,21 +102,159 @@ const HealthcareAssistant = () => {
     scrollToBottom();
   }, [messages]);
   
+  // Initialize Web Speech API for recognition and synthesis
+  useEffect(() => {
+    // Initialize Speech Recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      
+      // Configure the recognition
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
+      
+      // Set up event handlers
+      recognitionRef.current.onstart = () => {
+        setIsVoiceInputActive(true);
+        setVoiceTranscript('');
+        setListeningStatus('Listening...');
+      };
+      
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        
+        setVoiceTranscript(transcript);
+        setInputMessage(transcript);
+        setListeningStatus('Heard: ' + transcript);
+      };
+      
+      recognitionRef.current.onend = () => {
+        setIsVoiceInputActive(false);
+        setListeningStatus('');
+        if (voiceTranscript && voiceTranscript.trim().length > 0) {
+          setTimeout(() => {
+            handleSendMessage();
+          }, 500);
+        }
+      };
+      
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsVoiceInputActive(false);
+        setListeningStatus(`Error: ${event.error}`);
+        setTimeout(() => setListeningStatus(''), 3000);
+      };
+      
+    } else {
+      setVoiceRecognitionSupported(false);
+      console.warn('Speech recognition not supported in this browser');
+    }
+    
+    // Initialize Speech Synthesis
+    if ('speechSynthesis' in window) {
+      synthesisRef.current = window.speechSynthesis;
+      
+      // Get available voices
+      const loadVoices = () => {
+        const voices = synthesisRef.current?.getVoices() || [];
+        setAvailableVoices(voices);
+        
+        // Try to select a female voice by default
+        const femaleVoice = voices.find(voice => 
+          voice.name.includes('female') || 
+          voice.name.includes('Samantha') || 
+          voice.name.includes('Google UK English Female')
+        );
+        
+        // Or any English voice
+        const englishVoice = voices.find(voice => 
+          voice.lang.includes('en-') || 
+          voice.lang.includes('en_')
+        );
+        
+        setSelectedVoice(femaleVoice || englishVoice || (voices.length > 0 ? voices[0] : null));
+      };
+      
+      // Voices might not be available immediately
+      if (synthesisRef.current.onvoiceschanged !== undefined) {
+        synthesisRef.current.onvoiceschanged = loadVoices;
+      }
+      
+      loadVoices();
+    } else {
+      setVoiceSynthesisSupported(false);
+      console.warn('Speech synthesis not supported in this browser');
+    }
+    
+    // Cleanup
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+      if (synthesisRef.current && synthesisRef.current.speaking) {
+        synthesisRef.current.cancel();
+      }
+    };
+  }, []);
+  
+  // Speak text using speech synthesis
+  const speakText = (text: string) => {
+    if (!voiceSynthesisSupported || !isVoiceOutputEnabled || !synthesisRef.current) {
+      return;
+    }
+    
+    // Cancel any ongoing speech
+    if (synthesisRef.current.speaking) {
+      synthesisRef.current.cancel();
+    }
+    
+    // Create speech utterance
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set selected voice if available
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+    
+    // Set properties
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    
+    // Speak
+    synthesisRef.current.speak(utterance);
+  };
+  
+  // Toggle voice output
+  const toggleVoiceOutput = () => {
+    if (synthesisRef.current?.speaking) {
+      synthesisRef.current.cancel();
+    }
+    setIsVoiceOutputEnabled(prev => !prev);
+  };
+  
   // Query mutations
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
       const messageHistory = messages.filter(m => m.role !== 'system');
-      return apiRequest('/api/ai/health-query', 'POST', { query: message, messageHistory });
+      return apiRequest<ChatResponse>('/api/ai/health-query', 'POST', { query: message, messageHistory });
     },
-    onSuccess: (data) => {
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: data.response,
-          timestamp: new Date()
-        }
-      ]);
+    onSuccess: (data: ChatResponse) => {
+      const assistantMessage = {
+        role: 'assistant' as const,
+        content: data.response,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
+      
+      // Speak the assistant's response if voice output is enabled
+      if (isVoiceOutputEnabled) {
+        speakText(data.response);
+      }
     }
   });
   
@@ -154,14 +310,19 @@ const HealthcareAssistant = () => {
   
   // Toggle voice input
   const handleVoiceInput = () => {
-    setIsVoiceInputActive(prev => !prev);
-    
-    // Simulated voice input - in a real app, would use Web Speech API
-    if (!isVoiceInputActive) {
-      setTimeout(() => {
-        setInputMessage(prev => prev + 'What are the side effects of paracetamol?');
-        setIsVoiceInputActive(false);
-      }, 1500);
+    if (isVoiceInputActive) {
+      // Stop listening
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    } else {
+      // Start listening
+      if (recognitionRef.current) {
+        recognitionRef.current.start();
+      } else if (!voiceRecognitionSupported) {
+        // Fallback for browsers that don't support speech recognition
+        alert("Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.");
+      }
     }
   };
   
@@ -240,6 +401,21 @@ const HealthcareAssistant = () => {
               <CardTitle className="text-xl">AI Health Assistant</CardTitle>
               <CardDescription>Get medical information and health advice</CardDescription>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {voiceSynthesisSupported && (
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-500">Voice:</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`p-1 h-auto ${isVoiceOutputEnabled ? 'text-green-600' : 'text-gray-400'}`}
+                  onClick={toggleVoiceOutput}
+                >
+                  {isVoiceOutputEnabled ? 'On' : 'Off'}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </CardHeader>
