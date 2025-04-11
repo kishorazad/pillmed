@@ -372,7 +372,7 @@ export class MemStorage implements IStorage {
     const testimonialsData: InsertTestimonial[] = [
       {
         name: 'Rajesh Singh',
-        content: 'I\'ve been using 1mg for ordering my monthly medicines for over a year now. The service is prompt, and the discounts help me save a lot on my recurring medical expenses.',
+        content: 'I\'ve been using Medadock for ordering my monthly medicines for over a year now. The service is prompt, and the discounts help me save a lot on my recurring medical expenses.',
         rating: 5,
         initials: 'RS'
       },
