@@ -126,12 +126,17 @@ export const useStore = create<AppState>((set, get) => ({
     // If a user just logged in, refresh their cart
     if (user) {
       try {
+        console.log("User logged in, fetching their cart items for user ID:", user.id);
         const response = await fetch(`/api/cart/${user.id}`);
         const cartItems = await response.json();
+        console.log("Cart items fetched after login:", cartItems);
         set({ cart: cartItems });
       } catch (error) {
         console.error('Failed to fetch cart items after login:', error);
       }
+    } else {
+      // User logged out, clear the cart
+      set({ cart: [] });
     }
   },
   

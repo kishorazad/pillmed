@@ -62,14 +62,20 @@ function Router() {
 }
 
 function App() {
-  const { setCart, tempUserId } = useStore();
+  const { setCart, tempUserId, user } = useStore();
   
-  // Fetch cart data on initial load
+  // Fetch cart data whenever user changes or on initial load
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const response = await fetch(`/api/cart/${tempUserId}`);
+        // Use the logged-in user's ID if available, otherwise fall back to tempUserId
+        const userId = user?.id || tempUserId;
+        console.log("App.tsx: Fetching cart for user ID:", userId);
+        
+        const response = await fetch(`/api/cart/${userId}`);
         const data = await response.json();
+        console.log("App.tsx: Cart data fetched:", data);
+        
         setCart(data);
       } catch (error) {
         console.error("Failed to fetch cart:", error);
@@ -77,7 +83,7 @@ function App() {
     };
     
     fetchCart();
-  }, [tempUserId, setCart]);
+  }, [user, tempUserId, setCart]);
   
   return (
     <QueryClientProvider client={queryClient}>
