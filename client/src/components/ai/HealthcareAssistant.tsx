@@ -440,31 +440,31 @@ const HealthcareAssistant = () => {
         
         <CardContent className="pt-2">
           <TabsContent value="chat" className="m-0">
-            <div className="h-[400px] overflow-y-auto border rounded-md p-4 bg-gray-50">
+            <div className="h-[350px] sm:h-[400px] overflow-y-auto border rounded-md p-2 sm:p-4 bg-gray-50">
               {messages.map((message, index) => (
                 <div 
                   key={index}
-                  className={`flex gap-3 mb-4 ${message.role === 'user' ? 'justify-end' : ''}`}
+                  className={`flex gap-2 sm:gap-3 mb-3 ${message.role === 'user' ? 'justify-end' : ''}`}
                 >
                   {message.role === 'assistant' && (
-                    <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
-                      <Bot className="h-5 w-5 text-blue-600" />
+                    <Avatar className="h-7 w-7 sm:h-8 sm:w-8 mt-1 flex-shrink-0 hidden xs:block">
+                      <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                       <AvatarFallback>AI</AvatarFallback>
                     </Avatar>
                   )}
                   
                   <div 
                     className={cn(
-                      "py-2 px-3 rounded-lg max-w-[80%]",
+                      "py-2 px-2 sm:px-3 rounded-lg",
                       message.role === 'user' 
-                        ? "bg-blue-500 text-white" 
-                        : "bg-white border shadow-sm"
+                        ? "bg-blue-500 text-white max-w-[85%] sm:max-w-[75%]" 
+                        : "bg-white border shadow-sm max-w-[85%] sm:max-w-[75%]"
                     )}
                   >
-                    <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+                    <div className="text-xs sm:text-sm whitespace-pre-wrap break-words">{message.content}</div>
                     {message.timestamp && (
                       <div className={cn(
-                        "text-xs mt-1 text-right",
+                        "text-[10px] sm:text-xs mt-1 text-right",
                         message.role === 'user' ? "text-blue-100" : "text-gray-400"
                       )}>
                         {formatTime(message.timestamp)}
@@ -473,8 +473,8 @@ const HealthcareAssistant = () => {
                   </div>
                   
                   {message.role === 'user' && (
-                    <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
-                      <User className="h-5 w-5" />
+                    <Avatar className="h-7 w-7 sm:h-8 sm:w-8 mt-1 flex-shrink-0 hidden xs:block">
+                      <User className="h-4 w-4 sm:h-5 sm:w-5" />
                       <AvatarFallback>ME</AvatarFallback>
                     </Avatar>
                   )}
@@ -489,36 +489,37 @@ const HealthcareAssistant = () => {
                     <div className="h-2 w-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                     <div className="h-2 w-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                   </div>
-                  <span>AI is thinking...</span>
+                  <span className="text-xs sm:text-sm">AI is thinking...</span>
                 </div>
               )}
             </div>
             
-            <div className="mt-4 flex gap-2">
+            <div className="mt-3 sm:mt-4 flex gap-1 sm:gap-2">
               <Button 
                 variant="outline" 
                 size="icon" 
-                className={isVoiceInputActive ? "text-red-500" : ""}
+                className={`p-2 h-9 w-9 sm:h-10 sm:w-10 ${isVoiceInputActive ? "text-red-500" : ""}`}
                 onClick={handleVoiceInput}
               >
-                <Mic className="h-5 w-5" />
+                <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
               <Input
-                placeholder="Type your health question here..."
+                placeholder="Type health question..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
                 disabled={chatMutation.isPending || isVoiceInputActive}
-                className="flex-grow"
+                className="flex-grow text-sm h-9 sm:h-10"
               />
               <Button 
-                onClick={handleSendMessage} 
+                onClick={handleSendMessage}
+                className="h-9 w-9 sm:h-10 sm:w-10 p-0"
                 disabled={!inputMessage.trim() || chatMutation.isPending}
               >
                 {chatMutation.isPending ? (
-                  <RefreshCcw className="h-5 w-5 animate-spin" />
+                  <RefreshCcw className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                 ) : (
-                  <Send className="h-5 w-5" />
+                  <Send className="h-4 w-4 sm:h-5 sm:w-5" />
                 )}
               </Button>
             </div>
@@ -550,21 +551,21 @@ const HealthcareAssistant = () => {
               </div>
             </div>
             
-            <div className="h-[370px] overflow-y-auto border rounded-md">
+            <div className="h-[320px] sm:h-[370px] overflow-y-auto border rounded-md">
               {medicationName && (
                 <>
                   {medicationQuery.isLoading && (
-                    <div className="p-8 text-center">
-                      <RefreshCcw className="h-8 w-8 animate-spin mx-auto mb-2 text-gray-400" />
-                      <p className="text-gray-500">Retrieving medication information...</p>
+                    <div className="p-4 sm:p-8 text-center">
+                      <RefreshCcw className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto mb-2 text-gray-400" />
+                      <p className="text-gray-500 text-sm">Retrieving medication information...</p>
                     </div>
                   )}
                   
                   {medicationQuery.isError && (
-                    <div className="p-8 text-center">
-                      <AlertCircle className="h-8 w-8 mx-auto mb-2 text-red-500" />
-                      <p className="font-medium text-red-600 mb-1">Error retrieving information</p>
-                      <p className="text-gray-500 text-sm">
+                    <div className="p-4 sm:p-8 text-center">
+                      <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-red-500" />
+                      <p className="font-medium text-red-600 mb-1 text-sm sm:text-base">Error retrieving information</p>
+                      <p className="text-gray-500 text-xs sm:text-sm">
                         Unable to find information for "{medicationName}". Please check the spelling or try a different medication.
                       </p>
                     </div>
@@ -656,33 +657,38 @@ const HealthcareAssistant = () => {
           </TabsContent>
           
           <TabsContent value="interactions" className="m-0">
-            <div className="mb-4">
-              <div className="flex gap-2">
+            <div className="mb-3 sm:mb-4">
+              <div className="flex gap-1 sm:gap-2">
                 <Input
                   placeholder="Add medication name..."
                   value={medicationInput}
                   onChange={(e) => setMedicationInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addMedicationToCheck()}
+                  className="text-xs sm:text-sm"
                 />
-                <Button onClick={addMedicationToCheck} disabled={!medicationInput.trim()}>
-                  <PlusCircle className="h-4 w-4 mr-1" />
+                <Button 
+                  onClick={addMedicationToCheck} 
+                  disabled={!medicationInput.trim()}
+                  className="whitespace-nowrap text-xs sm:text-sm"
+                >
+                  <PlusCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                   Add
                 </Button>
               </div>
             </div>
             
             {medicationsToCheck.length > 0 && (
-              <div className="mb-4 flex flex-wrap gap-2">
+              <div className="mb-3 sm:mb-4 flex flex-wrap gap-1 sm:gap-2">
                 {medicationsToCheck.map((med, index) => (
-                  <Badge key={index} variant="secondary" className="px-3 py-1.5">
+                  <Badge key={index} variant="secondary" className="px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm">
                     {med}
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-5 w-5 p-0 ml-1 hover:bg-transparent hover:text-red-500" 
+                      className="h-4 w-4 sm:h-5 sm:w-5 p-0 ml-1 hover:bg-transparent hover:text-red-500" 
                       onClick={() => removeMedicationFromCheck(index)}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     </Button>
                   </Badge>
                 ))}
@@ -690,86 +696,86 @@ const HealthcareAssistant = () => {
             )}
             
             <Button 
-              className="mb-4 w-full" 
+              className="mb-3 sm:mb-4 w-full text-xs sm:text-sm h-8 sm:h-10" 
               disabled={medicationsToCheck.length < 2 || interactionsMutation.isPending}
               onClick={checkInteractions}
             >
               {interactionsMutation.isPending ? (
                 <>
-                  <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
+                  <RefreshCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
                   Checking Interactions...
                 </>
               ) : (
                 <>
-                  <Search className="h-4 w-4 mr-2" />
+                  <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Check Interactions
                 </>
               )}
             </Button>
             
-            <div className="h-[330px] overflow-y-auto border rounded-md">
+            <div className="h-[320px] sm:h-[330px] overflow-y-auto border rounded-md">
               {!interactionsMutation.data && !interactionsMutation.isPending && (
-                <div className="p-8 text-center">
-                  <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                  <h3 className="text-lg font-medium text-gray-600 mb-1">Drug Interaction Checker</h3>
-                  <p className="text-gray-500 text-sm">
+                <div className="p-4 sm:p-8 text-center">
+                  <AlertCircle className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 text-gray-300" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-600 mb-1">Drug Interaction Checker</h3>
+                  <p className="text-xs sm:text-sm text-gray-500">
                     Add two or more medications to check for potential interactions between them.
                   </p>
                 </div>
               )}
               
               {interactionsMutation.data && (
-                <div className="p-4">
-                  <h3 className="text-lg font-medium mb-3">Interaction Results</h3>
+                <div className="p-3 sm:p-4">
+                  <h3 className="text-base sm:text-lg font-medium mb-2 sm:mb-3">Interaction Results</h3>
                   
                   {interactionsMutation.data.interactions.length === 0 ? (
-                    <div className="p-4 text-center bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-green-700 font-medium">No significant interactions found</p>
-                      <p className="text-sm text-gray-600 mt-1">
+                    <div className="p-3 sm:p-4 text-center bg-green-50 border border-green-200 rounded-md">
+                      <p className="text-green-700 font-medium text-sm sm:text-base">No significant interactions found</p>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
                         No known significant interactions were found between the medications you specified.
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       {interactionsMutation.data.interactions.map((interaction: Interaction, index: number) => (
                         <div 
                           key={index} 
                           className="border rounded-md overflow-hidden"
                         >
                           <div 
-                            className="flex justify-between items-center p-3 cursor-pointer bg-gray-50"
+                            className="flex justify-between items-center p-2 sm:p-3 cursor-pointer bg-gray-50"
                             onClick={() => toggleInteraction(index)}
                           >
-                            <div className="flex items-center gap-2">
-                              <Badge className={getSeverityColor(interaction.severity)}>
+                            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                              <Badge className={`text-xs ${getSeverityColor(interaction.severity)}`}>
                                 <span className="flex items-center gap-1">
                                   {getSeverityIcon(interaction.severity)}
                                   <span className="capitalize">{interaction.severity}</span>
                                 </span>
                               </Badge>
-                              <span className="font-medium">
+                              <span className="font-medium text-xs sm:text-sm">
                                 {interaction.medications.join(' + ')}
                               </span>
                             </div>
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <Button variant="ghost" size="icon" className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0">
                               {expandedInteraction === index ? (
-                                <ChevronUp className="h-4 w-4" />
+                                <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4" />
                               ) : (
-                                <ChevronDown className="h-4 w-4" />
+                                <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
                               )}
                             </Button>
                           </div>
                           
                           {expandedInteraction === index && (
-                            <div className="p-3 border-t">
+                            <div className="p-2 sm:p-3 border-t">
                               <div className="mb-2">
-                                <div className="text-sm font-medium mb-1">Description</div>
-                                <p className="text-sm text-gray-700">{interaction.description}</p>
+                                <div className="text-xs sm:text-sm font-medium mb-1">Description</div>
+                                <p className="text-xs sm:text-sm text-gray-700">{interaction.description}</p>
                               </div>
                               
                               <div>
-                                <div className="text-sm font-medium mb-1">Recommendation</div>
-                                <p className="text-sm text-gray-700">{interaction.recommendation}</p>
+                                <div className="text-xs sm:text-sm font-medium mb-1">Recommendation</div>
+                                <p className="text-xs sm:text-sm text-gray-700">{interaction.recommendation}</p>
                               </div>
                             </div>
                           )}
