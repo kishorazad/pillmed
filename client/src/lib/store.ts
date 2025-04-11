@@ -108,9 +108,11 @@ export const useStore = create<AppState>((set, get) => ({
   },
   
   clearCart: async () => {
-    const { tempUserId } = get();
+    const { tempUserId, user } = get();
+    const userId = user?.id || tempUserId;
+    
     try {
-      await apiRequest('DELETE', `/api/cart/user/${tempUserId}`);
+      await apiRequest('DELETE', `/api/cart/user/${userId}`);
       set({ cart: [] });
     } catch (error) {
       console.error('Failed to clear cart:', error);
@@ -118,7 +120,20 @@ export const useStore = create<AppState>((set, get) => ({
   },
   
   // User actions
-  setUser: (user) => set({ user }),
+  setUser: async (user) => {
+    set({ user });
+    
+    // If a user just logged in, refresh their cart
+    if (user) {
+      try {
+        const response = await fetch(`/api/cart/${user.id}`);
+        const cartItems = await response.json();
+        set({ cart: cartItems });
+      } catch (error) {
+        console.error('Failed to fetch cart items after login:', error);
+      }
+    }
+  },
   
   // Search actions
   setSearchQuery: (query) => set({ searchQuery: query }),
