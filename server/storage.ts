@@ -195,6 +195,50 @@ export class MemStorage implements IStorage {
   }
 
   private seedData() {
+    // Seed users
+    const usersData: InsertUser[] = [
+      {
+        username: 'user1',
+        email: 'user1@example.com',
+        password: 'password123',
+        fullName: 'Test User',
+        phone: '1234567890',
+        address: '123 Test Street, Test City',
+        role: 'customer'
+      },
+      {
+        username: 'admin',
+        email: 'admin@example.com',
+        password: 'admin123',
+        fullName: 'Admin User',
+        phone: '0987654321',
+        address: '456 Admin Street, Admin City',
+        role: 'admin'
+      },
+      {
+        username: 'doctor1',
+        email: 'doctor@example.com',
+        password: 'doctor123',
+        fullName: 'Dr. John Smith',
+        phone: '5554443333',
+        address: '789 Doctor Avenue, Medical City',
+        role: 'doctor'
+      },
+      {
+        username: 'pharmacy1',
+        email: 'pharmacy@example.com',
+        password: 'pharmacy123',
+        fullName: 'City Pharmacy',
+        phone: '1112223333',
+        address: '101 Health Street, Pharma City',
+        role: 'pharmacy'
+      }
+    ];
+    
+    usersData.forEach(user => {
+      this.createUser(user);
+    });
+    
     // Seed categories
     const categoriesData: InsertCategory[] = [
       { name: 'Diabetes Care', description: 'Products for managing diabetes', imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae' },

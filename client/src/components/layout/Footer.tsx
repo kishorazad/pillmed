@@ -24,7 +24,7 @@ const Footer = () => {
               <li><Link href="/about" className="hover:text-white">About Us</Link></li>
               <li><Link href="/careers" className="hover:text-white">Careers</Link></li>
               <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
-              <li><Link href="/partner" className="hover:text-white">Partner with 1mg</Link></li>
+              <li><Link href="/partner" className="hover:text-white">Partner with Medadock</Link></li>
               <li><Link href="/terms" className="hover:text-white">Terms & Conditions</Link></li>
               <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
             </ul>
@@ -47,7 +47,7 @@ const Footer = () => {
             <ul className="space-y-2 text-sm text-gray-400">
               <li className="flex items-start">
                 <i className="fas fa-envelope mt-1 mr-2"></i>
-                <span>support@1mg.com</span>
+                <span>support@medadock.com</span>
               </li>
               <li className="flex items-start">
                 <i className="fas fa-phone-alt mt-1 mr-2"></i>
@@ -62,7 +62,7 @@ const Footer = () => {
         </div>
         
         <div className="mt-10 pt-6 border-t border-gray-700 text-center text-gray-400 text-sm">
-          <p>© 2023 1mg. All Rights Reserved.</p>
+          <p>© 2023 Medadock. All Rights Reserved.</p>
           <p className="mt-2">The content is for informational purposes only and not intended to be a substitute for professional medical advice.</p>
         </div>
       </div>
