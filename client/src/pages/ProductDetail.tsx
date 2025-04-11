@@ -31,7 +31,14 @@ const ProductDetail = () => {
   const handleAddToCart = async () => {
     if (!product) return;
     
+    console.log("Adding to cart:", { 
+      productId: product.id, 
+      quantity, 
+      userId: "Using user ID from store" 
+    });
+    
     await addToCart(product.id, quantity);
+    
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart`,
