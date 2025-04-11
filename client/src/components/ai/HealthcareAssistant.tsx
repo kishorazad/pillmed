@@ -237,12 +237,12 @@ const HealthcareAssistant = () => {
   };
   
   // Query mutations
-  const chatMutation = useMutation({
+  const chatMutation = useMutation<ChatResponse, Error, string>({
     mutationFn: async (message: string) => {
       const messageHistory = messages.filter(m => m.role !== 'system');
       return apiRequest<ChatResponse>('/api/ai/health-query', 'POST', { query: message, messageHistory });
     },
-    onSuccess: (data: ChatResponse) => {
+    onSuccess: (data) => {
       const assistantMessage = {
         role: 'assistant' as const,
         content: data.response,
@@ -274,9 +274,9 @@ const HealthcareAssistant = () => {
   });
   
   // Mutation for medication interactions
-  const interactionsMutation = useMutation({
+  const interactionsMutation = useMutation<InteractionsResponse, Error, string[]>({
     mutationFn: async (medications: string[]) => {
-      return apiRequest('/api/ai/medications/interactions', 'POST', { medications });
+      return apiRequest<InteractionsResponse>('/api/ai/medications/interactions', 'POST', { medications });
     }
   });
   
@@ -389,9 +389,9 @@ const HealthcareAssistant = () => {
   };
   
   return (
-    <Card className="shadow-lg border-t-4 border-t-blue-500">
+    <Card className="shadow-lg border-t-4 border-t-blue-500 w-full max-w-full overflow-hidden">
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 bg-blue-100">
               <Bot className="h-6 w-6 text-blue-600" />
@@ -402,7 +402,7 @@ const HealthcareAssistant = () => {
               <CardDescription>Get medical information and health advice</CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto sm:ml-0 mt-2 sm:mt-0">
             {voiceSynthesisSupported && (
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-500">Voice:</span>
@@ -421,19 +421,19 @@ const HealthcareAssistant = () => {
       </CardHeader>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="px-6">
-          <TabsList className="w-full mb-2">
-            <TabsTrigger value="chat" className="flex-1">
-              <HelpCircle className="h-4 w-4 mr-2" />
-              <span>Chat</span>
+        <div className="px-4 sm:px-6">
+          <TabsList className="w-full mb-2 overflow-x-auto no-scrollbar">
+            <TabsTrigger value="chat" className="flex-1 min-w-20">
+              <HelpCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="whitespace-nowrap">Chat</span>
             </TabsTrigger>
-            <TabsTrigger value="medications" className="flex-1">
-              <Pill className="h-4 w-4 mr-2" />
-              <span>Medication Info</span>
+            <TabsTrigger value="medications" className="flex-1 min-w-20">
+              <Pill className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="whitespace-nowrap">Med Info</span>
             </TabsTrigger>
-            <TabsTrigger value="interactions" className="flex-1">
-              <AlertCircle className="h-4 w-4 mr-2" />
-              <span>Interactions</span>
+            <TabsTrigger value="interactions" className="flex-1 min-w-20">
+              <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="whitespace-nowrap">Interactions</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -731,7 +731,7 @@ const HealthcareAssistant = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {interactionsMutation.data.interactions.map((interaction, index) => (
+                      {interactionsMutation.data.interactions.map((interaction: Interaction, index: number) => (
                         <div 
                           key={index} 
                           className="border rounded-md overflow-hidden"
