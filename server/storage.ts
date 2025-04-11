@@ -195,49 +195,65 @@ export class MemStorage implements IStorage {
   }
 
   private seedData() {
-    // Seed users
-    const usersData: InsertUser[] = [
+    // Seed users with explicit IDs
+    const usersData = [
       {
+        id: 1,
         username: 'user1',
         email: 'user1@example.com',
         password: 'password123',
-        fullName: 'Test User',
+        name: 'Test User',
         phone: '1234567890',
         address: '123 Test Street, Test City',
-        role: 'customer'
+        role: 'customer',
+        pincode: '110001',
+        profileImageUrl: null
       },
       {
+        id: 2,
         username: 'admin',
         email: 'admin@example.com',
         password: 'admin123',
-        fullName: 'Admin User',
+        name: 'Admin User',
         phone: '0987654321',
         address: '456 Admin Street, Admin City',
-        role: 'admin'
+        role: 'admin',
+        pincode: '110002',
+        profileImageUrl: null
       },
       {
+        id: 3,
         username: 'doctor1',
         email: 'doctor@example.com',
         password: 'doctor123',
-        fullName: 'Dr. John Smith',
+        name: 'Dr. John Smith',
         phone: '5554443333',
         address: '789 Doctor Avenue, Medical City',
-        role: 'doctor'
+        role: 'doctor',
+        pincode: '110003',
+        profileImageUrl: null
       },
       {
+        id: 4,
         username: 'pharmacy1',
         email: 'pharmacy@example.com',
         password: 'pharmacy123',
-        fullName: 'City Pharmacy',
+        name: 'City Pharmacy',
         phone: '1112223333',
         address: '101 Health Street, Pharma City',
-        role: 'pharmacy'
+        role: 'pharmacy',
+        pincode: '110004',
+        profileImageUrl: null
       }
     ];
     
+    // Directly set the users with their explicit IDs
     usersData.forEach(user => {
-      this.createUser(user);
+      this.users.set(user.id, user as User);
     });
+    
+    // Update the current user ID counter
+    this.currentUserId = 5;
     
     // Seed categories
     const categoriesData: InsertCategory[] = [
