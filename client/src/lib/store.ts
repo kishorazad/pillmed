@@ -56,16 +56,18 @@ export const useStore = create<AppState>((set, get) => ({
   setCart: (cart) => set({ cart }),
   
   addToCart: async (productId, quantity) => {
-    const { tempUserId } = get();
+    const { tempUserId, user } = get();
+    const userId = user?.id || tempUserId;
+    
     try {
       await apiRequest('POST', '/api/cart', {
-        userId: tempUserId,
+        userId,
         productId,
         quantity
       });
       
       // Refetch the cart
-      const response = await fetch(`/api/cart/${tempUserId}`);
+      const response = await fetch(`/api/cart/${userId}`);
       const cartItems = await response.json();
       set({ cart: cartItems });
     } catch (error) {
@@ -74,12 +76,14 @@ export const useStore = create<AppState>((set, get) => ({
   },
   
   updateCartItem: async (id, quantity) => {
-    const { tempUserId } = get();
+    const { tempUserId, user } = get();
+    const userId = user?.id || tempUserId;
+    
     try {
       await apiRequest('PUT', `/api/cart/${id}`, { quantity });
       
       // Refetch the cart
-      const response = await fetch(`/api/cart/${tempUserId}`);
+      const response = await fetch(`/api/cart/${userId}`);
       const cartItems = await response.json();
       set({ cart: cartItems });
     } catch (error) {
@@ -88,12 +92,14 @@ export const useStore = create<AppState>((set, get) => ({
   },
   
   removeFromCart: async (id) => {
-    const { tempUserId } = get();
+    const { tempUserId, user } = get();
+    const userId = user?.id || tempUserId;
+    
     try {
       await apiRequest('DELETE', `/api/cart/${id}`);
       
       // Refetch the cart
-      const response = await fetch(`/api/cart/${tempUserId}`);
+      const response = await fetch(`/api/cart/${userId}`);
       const cartItems = await response.json();
       set({ cart: cartItems });
     } catch (error) {
