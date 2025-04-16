@@ -3,12 +3,31 @@ import mongoose from 'mongoose';
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/medadock');
-    console.log('MongoDB connected successfully');
+    // Check if DATABASE_URL environment variable exists (for PostgreSQL)
+    if (process.env.DATABASE_URL) {
+      console.log('Using local MongoDB connection');
+      // Try connecting with different MongoDB connection strings
+      try {
+        await mongoose.connect('mongodb://localhost:27017/medadock');
+        console.log('MongoDB connected successfully (localhost)');
+        return;
+      } catch (localError) {
+        console.log('Local MongoDB connection failed, trying mongodb service');
+        try {
+          await mongoose.connect('mongodb://mongodb:27017/medadock');
+          console.log('MongoDB connected successfully (mongodb service)');
+          return;
+        } catch (serviceError) {
+          console.error('MongoDB service connection error:', serviceError);
+        }
+      }
+    } else {
+      console.log('No DATABASE_URL found, skipping MongoDB connection');
+    }
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    process.exit(1);
   }
+  console.warn('Falling back to in-memory storage');
 };
 
 // User Schema

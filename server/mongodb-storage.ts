@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { IStorage } from './storage';
+import { IStorage, memStorage } from './storage';
 import { 
   User, 
   Category, 

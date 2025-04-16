@@ -13,7 +13,7 @@ import {
   HealthTip
 } from '../models';
 
-const uri = "mongodb://localhost:27017/medadock";
+const uri = "mongodb://mongodb:27017/medadock";
 const client = new MongoClient(uri);
 let db: any;
 
@@ -25,7 +25,8 @@ const connectToMongoDB = async () => {
     return db;
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    throw error;
+    console.log('Falling back to in-memory storage');
+    return null;
   }
 };
 

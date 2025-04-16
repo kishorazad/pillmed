@@ -1,6 +1,15 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import mongoose from 'mongoose';
+import { initializeDatabase } from './services/mongodb-service';
+
+// Connect to MongoDB and initialize data
+initializeDatabase().then(() => {
+  console.log('Connected to MongoDB and initialized data');
+}).catch(err => {
+  console.error('Failed to initialize MongoDB database', err);
+});
 
 const app = express();
 app.use(express.json());
