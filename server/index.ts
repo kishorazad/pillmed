@@ -1,14 +1,13 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import mongoose from 'mongoose';
-import { initializeDatabase } from './services/mongodb-service';
+import { importMedicinesFromCSV } from "./csv-import";
 
-// Connect to MongoDB and initialize data
-initializeDatabase().then(() => {
-  console.log('Connected to MongoDB and initialized data');
+// Import medicine data from CSV directly to in-memory storage
+importMedicinesFromCSV().then(() => {
+  console.log('Imported medicine data successfully');
 }).catch(err => {
-  console.error('Failed to initialize MongoDB database', err);
+  console.error('Failed to import medicine data:', err);
 });
 
 const app = express();

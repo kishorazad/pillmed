@@ -1,12 +1,12 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { mongoDBStorage as storage } from "./mongodb-storage"; // Use the MongoDB storage implementation
+import { storage } from "./storage"; // Use the in-memory storage implementation
 import { insertCartItemSchema, insertUserSchema } from "@shared/schema";
 import { processHealthQuery, getMedicationInfo, analyzeMedicationInteractions } from "./ai-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // MongoDB database will be initialized in index.ts
+  // Data will be imported from CSV in index.ts
   // Get all categories
   app.get("/api/categories", async (_req: Request, res: Response) => {
     const categories = await storage.getCategories();
