@@ -123,6 +123,7 @@ const Header = () => {
             <li><Link href="/products/category/4" className="hover:text-[#10847e]">COVID-19</Link></li>
             <li><Link href="/products/category/5" className="hover:text-[#10847e]">Ayurveda</Link></li>
             <li><Link href="/products/category/6" className="hover:text-[#10847e]">Healthcare Devices</Link></li>
+            <li><Link href="/products/category/7" className="text-orange-500 font-semibold">Saffron</Link></li>
             <li><Link href="/health-blog" className="hover:text-[#10847e]">Health Blog</Link></li>
             <li><Link href="/plus" className="hover:text-[#10847e]">PLUS</Link></li>
             <li><Link href="/offers" className="hover:text-[#10847e]">Offers</Link></li>

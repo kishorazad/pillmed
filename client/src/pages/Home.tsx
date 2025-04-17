@@ -118,7 +118,7 @@ const Home = () => {
                 categories={categories.map((cat: Category) => ({
                   id: cat.id,
                   name: cat.name,
-                  imageUrl: cat.imageUrl,
+                  imageUrl: cat.imageUrl || null,
                   link: `/products/category/${cat.id}`
                 }))}
               />
