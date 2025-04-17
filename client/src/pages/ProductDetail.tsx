@@ -144,16 +144,12 @@ const ProductDetail = () => {
       <Helmet>
         <title>{generateSEOTitle()}</title>
         <meta name="description" content={generateSEODescription()} />
-      </Helmet>
-      <Helmet>
-        <title>{product.name} - Medadock</title>
-        <meta name="description" content={product.description || `Buy ${product.name} online at the best price`} />
         <meta name="keywords" content={`${product.name}, ${product.brand || 'medicine'}, online pharmacy, healthcare, medicine, ${product.name.toLowerCase()}`} />
-        <meta property="og:title" content={`${product.name} - Medadock`} />
+        <meta property="og:title" content={`${product.name} - PillNow`} />
         <meta property="og:description" content={product.description || `Buy ${product.name} online at the best price`} />
-        <meta property="og:image" content={product.imageUrl} />
+        {product.imageUrl && <meta property="og:image" content={product.imageUrl} />}
         <meta property="og:type" content="product" />
-        <link rel="canonical" href={`https://medadock.com/products/${params.id}`} />
+        <link rel="canonical" href={`https://pillnow.com/products/${params.id}`} />
       </Helmet>
       
       <div className="container mx-auto px-4 py-4">
