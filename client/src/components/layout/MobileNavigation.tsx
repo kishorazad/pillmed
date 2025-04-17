@@ -42,7 +42,7 @@ const MobileNavigation: React.FC = () => {
       <div className="flex justify-between items-center">
         {navItems.map((item) => (
           <Link key={item.label} href={item.path}>
-            <a className={`flex flex-col items-center py-2 px-4 flex-1 ${
+            <div className={`flex flex-col items-center py-2 px-4 flex-1 ${
               location === item.path ? 'text-[#10847e]' : 'text-gray-500'
             }`}>
               <div className="relative">
@@ -54,7 +54,7 @@ const MobileNavigation: React.FC = () => {
                 )}
               </div>
               <span className="text-xs mt-1">{item.label}</span>
-            </a>
+            </div>
           </Link>
         ))}
       </div>

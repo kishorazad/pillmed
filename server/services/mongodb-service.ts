@@ -17,7 +17,8 @@ export const connectToDatabase = async () => {
     console.log('Connected to MongoDB');
     return true;
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    // Just log the message, not the full error object to avoid verbose logs
+    console.error('MongoDB connection error: Cannot connect to MongoDB - using in-memory storage');
     return false;
   }
 };
@@ -341,6 +342,8 @@ export const initializeDatabase = async () => {
     // Connect to MongoDB
     const connected = await connectToDatabase();
     if (!connected) {
+      // Simple error message with no details to avoid cluttering logs
+      console.log('Using in-memory storage instead of MongoDB');
       throw new Error('Failed to connect to MongoDB');
     }
     
@@ -358,7 +361,8 @@ export const initializeDatabase = async () => {
     
     return true;
   } catch (error) {
-    console.error('Error initializing database:', error);
+    // Simplified error message
+    console.error('Error initializing database, using in-memory storage');
     throw error;
   }
 };

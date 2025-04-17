@@ -28,8 +28,7 @@ mongoose.connect(MONGODB_URI)
     // After MongoDB connection is established, import medicines
     return importMedicinesFromExcel();
   })
-  .catch(err => {
-    console.error('❌ MongoDB connection error, falling back to in-memory storage:', err.message);
+  .catch(() => {
     console.log('Using in-memory storage');
     
     global.useMongoStorage = false;

@@ -62,7 +62,7 @@ export class MongoDBStorage implements IStorage {
     try {
       await initializeDatabase();
     } catch (error) {
-      console.error('Failed to initialize MongoDB database:', error);
+      console.log('Failed to initialize MongoDB database, using in-memory storage');
     }
   }
 
