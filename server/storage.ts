@@ -13,7 +13,8 @@ import {
   labBookings, type LabBooking, type InsertLabBooking,
   orders, type Order, type InsertOrder,
   orderItems, type OrderItem, type InsertOrderItem,
-  healthTips, type HealthTip, type InsertHealthTip
+  healthTips, type HealthTip, type InsertHealthTip,
+  notificationTokens, type NotificationToken, type InsertNotificationToken
 } from "@shared/schema";
 
 export interface IStorage {
@@ -23,6 +24,11 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getUsers(): Promise<User[]>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
+  
+  // Notification related methods
+  saveNotificationToken(token: InsertNotificationToken): Promise<NotificationToken>;
+  getNotificationTokensByUserId(userId: number): Promise<NotificationToken[]>;
+  deleteNotificationToken(token: string): Promise<boolean>;
   
   // Product related methods
   getProducts(): Promise<Product[]>;
@@ -141,6 +147,7 @@ export class MemStorage implements IStorage {
   private orders: Map<number, Order>;
   private orderItems: Map<number, OrderItem>;
   private healthTips: Map<number, HealthTip>;
+  private notificationTokens: Map<number, NotificationToken>;
   
   currentUserId: number;
   currentProductId: number;
@@ -157,6 +164,7 @@ export class MemStorage implements IStorage {
   currentOrderId: number;
   currentOrderItemId: number;
   currentHealthTipId: number;
+  currentNotificationTokenId: number;
 
   constructor() {
     this.users = new Map();
@@ -174,6 +182,7 @@ export class MemStorage implements IStorage {
     this.orders = new Map();
     this.orderItems = new Map();
     this.healthTips = new Map();
+    this.notificationTokens = new Map();
     
     this.currentUserId = 1;
     this.currentProductId = 1;
@@ -190,6 +199,7 @@ export class MemStorage implements IStorage {
     this.currentOrderId = 1;
     this.currentOrderItemId = 1;
     this.currentHealthTipId = 1;
+    this.currentNotificationTokenId = 1;
     
     // Initialize with seed data
     this.seedData();
@@ -907,6 +917,49 @@ export class MemStorage implements IStorage {
 
   async deleteHealthTip(id: number): Promise<boolean> {
     return this.healthTips.delete(id);
+  }
+
+  // Notification token methods
+  async saveNotificationToken(insertToken: InsertNotificationToken): Promise<NotificationToken> {
+    // Check if token already exists
+    for (const [id, token] of this.notificationTokens.entries()) {
+      if (token.token === insertToken.token) {
+        // Update existing token
+        const updatedToken = { ...token, ...insertToken };
+        this.notificationTokens.set(id, updatedToken);
+        return updatedToken;
+      }
+    }
+    
+    // Create new token
+    const id = this.currentNotificationTokenId++;
+    const now = new Date();
+    const notificationToken: NotificationToken = { 
+      ...insertToken, 
+      id, 
+      createdAt: now 
+    };
+    this.notificationTokens.set(id, notificationToken);
+    return notificationToken;
+  }
+
+  async getNotificationTokensByUserId(userId: number): Promise<NotificationToken[]> {
+    const tokens: NotificationToken[] = [];
+    for (const token of this.notificationTokens.values()) {
+      if (token.userId === userId) {
+        tokens.push(token);
+      }
+    }
+    return tokens;
+  }
+
+  async deleteNotificationToken(tokenValue: string): Promise<boolean> {
+    for (const [id, token] of this.notificationTokens.entries()) {
+      if (token.token === tokenValue) {
+        return this.notificationTokens.delete(id);
+      }
+    }
+    return false;
   }
 }
 

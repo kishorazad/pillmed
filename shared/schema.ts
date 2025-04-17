@@ -30,6 +30,24 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Table for notification tokens (FCM)
+export const notificationTokens = pgTable("notification_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  deviceInfo: text("device_info"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const insertNotificationTokenSchema = createInsertSchema(notificationTokens).pick({
+  userId: true,
+  token: true,
+  deviceInfo: true
+});
+
+export type InsertNotificationToken = z.infer<typeof insertNotificationTokenSchema>;
+export type NotificationToken = typeof notificationTokens.$inferSelect;
+
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
