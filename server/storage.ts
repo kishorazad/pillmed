@@ -47,6 +47,7 @@ export interface IStorage {
   updateCartItem(id: number, quantity: number): Promise<CartItem | undefined>;
   removeFromCart(id: number): Promise<boolean>;
   clearCart(userId: number): Promise<boolean>;
+  transferCartItems(fromUserId: number, toUserId: number): Promise<boolean>;
   
   // Article related methods
   getArticles(): Promise<Article[]>;
@@ -741,6 +742,31 @@ export class MemStorage implements IStorage {
     userCartItems.forEach(item => {
       this.cartItems.delete(item.id);
     });
+    
+    return true;
+  }
+  
+  async transferCartItems(fromUserId: number, toUserId: number): Promise<boolean> {
+    const fromUserCartItems = Array.from(this.cartItems.values()).filter(
+      (item) => item.userId === fromUserId
+    );
+    
+    if (fromUserCartItems.length === 0) {
+      // No items to transfer
+      return false;
+    }
+    
+    // Copy items from source user to destination user
+    for (const item of fromUserCartItems) {
+      await this.addToCart({
+        userId: toUserId,
+        productId: item.productId,
+        quantity: item.quantity
+      });
+    }
+    
+    // Clear the source user's cart
+    await this.clearCart(fromUserId);
     
     return true;
   }
