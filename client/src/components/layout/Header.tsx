@@ -1,59 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useStore } from '@/lib/store';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import Logo from './Logo';
+import MedicineSearch from '@/components/search/MedicineSearch';
 
 const Header = () => {
   const [location, navigate] = useLocation();
-  const { cart, openCart, user, searchQuery, setSearchQuery } = useStore();
+  const { cart, openCart, user } = useStore();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [showSearchResults, setShowSearchResults] = useState(false);
-  const [searchInputFocused, setSearchInputFocused] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate(`/products?search=${searchQuery}`);
-    setShowSearchResults(false);
-  };
-  
-  // Real-time search functionality
-  useEffect(() => {
-    if (searchQuery.length >= 2) {
-      setIsSearching(true);
-      const timer = setTimeout(() => {
-        // Get realtime search results from API
-        fetch(`/api/products/search?query=${searchQuery}`)
-          .then(res => res.json())
-          .then(data => {
-            setSearchResults(data.slice(0, 5)); // Limit to 5 results
-            setShowSearchResults(searchInputFocused && data.length > 0);
-            setIsSearching(false);
-          })
-          .catch(err => {
-            console.error('Error fetching search results:', err);
-            setIsSearching(false);
-          });
-      }, 300);
-      
-      return () => {
-        clearTimeout(timer);
-      };
-    } else {
-      setSearchResults([]);
-      setShowSearchResults(false);
-      setIsSearching(false);
-    }
-  }, [searchQuery, searchInputFocused]);
-  
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-  };
   
   return (
     <header className="shadow-sm sticky top-0 z-50 bg-white">
@@ -79,9 +33,7 @@ const Header = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo & Location */}
           <div className="flex items-center gap-6 w-full md:w-auto justify-between">
-            <Link href="/" className="text-2xl font-bold">
-              <span className="text-[#10847e]">PillNow</span>
-            </Link>
+            <Logo size="medium" className="text-orange-500" />
             <div className="flex items-center text-sm text-[#666666] md:ml-4">
               <i className="fas fa-map-marker-alt mr-1 text-[#10847e]"></i>
               <span>Deliver to</span>
@@ -91,98 +43,9 @@ const Header = () => {
           </div>
           
           {/* Search */}
-          <form onSubmit={handleSearch} className="relative w-full md:max-w-xl">
-            <div className="relative">
-              <Input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search for Medicines and Health Products"
-                value={searchQuery}
-                onChange={handleSearchInputChange}
-                onFocus={() => {
-                  setSearchInputFocused(true);
-                  if (searchResults.length > 0) setShowSearchResults(true);
-                }}
-                onBlur={() => {
-                  setSearchInputFocused(false);
-                  setTimeout(() => setShowSearchResults(false), 200);
-                }}
-                className="w-full py-2 px-4 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#10847e]"
-              />
-              <Button 
-                type="submit"
-                variant="ghost" 
-                size="icon"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#10847e]"
-              >
-                <i className="fas fa-search"></i>
-              </Button>
-            </div>
-            
-            {/* Search Results Dropdown */}
-            {showSearchResults && (
-              <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-auto">
-                {isSearching ? (
-                  <div className="p-4 text-center text-gray-500">
-                    <i className="fas fa-spinner fa-spin mr-2"></i>
-                    Searching...
-                  </div>
-                ) : (
-                  <>
-                    <div className="p-2 border-b border-gray-200 bg-gray-50">
-                      <p className="text-sm text-gray-600">Showing results for "{searchQuery}"</p>
-                    </div>
-                    {searchResults.length > 0 ? (
-                      <>
-                        <ul>
-                          {searchResults.map((product) => (
-                            <li key={product.id} className="border-b border-gray-100 last:border-none">
-                              <Link 
-                                href={`/products/${product.id}`}
-                                className="flex items-center px-4 py-3 hover:bg-gray-50"
-                              >
-                                <div className="flex-shrink-0 w-10 h-10 mr-3">
-                                  {product.imageUrl ? (
-                                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
-                                  ) : (
-                                    <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded">
-                                      <i className="fas fa-pills text-gray-400"></i>
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-800">{product.name}</p>
-                                  {product.brand && (
-                                    <p className="text-xs text-gray-500">By {product.brand}</p>
-                                  )}
-                                </div>
-                                <div className="ml-2 text-sm font-medium text-[#10847e]">
-                                  ₹{product.discountedPrice || product.price}
-                                  <i className="fas fa-chevron-right ml-1 text-xs"></i>
-                                </div>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="p-3 border-t border-gray-200 bg-gray-50">
-                          <Link
-                            href={`/products?search=${searchQuery}`}
-                            className="block w-full py-2 text-center text-sm font-medium text-[#10847e] hover:bg-gray-100 rounded"
-                          >
-                            View All Results <i className="fas fa-arrow-right ml-1"></i>
-                          </Link>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="p-4 text-center text-gray-500">
-                        No results found for "{searchQuery}"
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </form>
+          <div className="relative w-full md:max-w-xl">
+            <MedicineSearch />
+          </div>
           
           {/* Navigation */}
           <div className="flex items-center gap-5 text-sm mt-2 md:mt-0">

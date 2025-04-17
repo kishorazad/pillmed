@@ -12,13 +12,33 @@ interface SearchResult {
   manufacturer?: string | null;
 }
 
+// Placeholder search suggestions that rotate like PharmEasy
+const searchSuggestions = [
+  "Search for medicines", 
+  "Search for Cardiology", 
+  "Search for Orthopedic", 
+  "Search for Gynecology",
+  "Search for Diabetes",
+  "Search for Vitamins"
+];
+
 const MedicineSearch: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  // Rotate placeholder text
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prevIndex) => (prevIndex + 1) % searchSuggestions.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Close the search results when clicking outside
   useEffect(() => {
@@ -74,6 +94,18 @@ const MedicineSearch: React.FC = () => {
     setSearchTerm('');
     setResults([]);
     setShowResults(false);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const handleSearchButtonClick = () => {
+    if (searchTerm.trim().length > 0) {
+      // Trigger search
+      setShowResults(true);
+    } else if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   const calculateDiscount = (price: number, discountedPrice?: number | null) => {
@@ -82,51 +114,65 @@ const MedicineSearch: React.FC = () => {
   };
 
   return (
-    <div className="relative" ref={searchRef}>
-      <div className="flex items-center bg-gray-100 rounded-full p-2">
-        <Search className="h-4 w-4 text-gray-400 mx-2" />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={handleInputChange}
-          placeholder="Search medicines/healthcare products"
-          className="bg-transparent border-none outline-none flex-grow text-sm placeholder-gray-400"
-          onFocus={() => setShowResults(true)}
-        />
-        {searchTerm && (
-          <button 
-            onClick={clearSearch}
-            className="flex items-center justify-center h-5 w-5 bg-gray-300 rounded-full mr-1"
-          >
-            <X className="h-3 w-3 text-gray-600" />
-          </button>
-        )}
+    <div className="relative w-full" ref={searchRef}>
+      <div className="flex w-full items-center">
+        <div className="flex flex-grow items-center bg-white rounded-l-full border p-2 pl-4">
+          <Search className="h-5 w-5 text-gray-400 mr-2" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchTerm}
+            onChange={handleInputChange}
+            placeholder={searchSuggestions[placeholderIndex]}
+            className="bg-transparent border-none outline-none flex-grow text-base placeholder-gray-500 w-full"
+            onFocus={() => setShowResults(true)}
+          />
+          {searchTerm && (
+            <button 
+              onClick={clearSearch}
+              className="flex items-center justify-center h-6 w-6 bg-gray-200 rounded-full mr-1"
+            >
+              <X className="h-4 w-4 text-gray-600" />
+            </button>
+          )}
+        </div>
+        <button 
+          onClick={handleSearchButtonClick}
+          className="bg-teal-600 text-white py-2 px-6 rounded-r-full font-medium hover:bg-teal-700 transition-colors"
+        >
+          Search
+        </button>
       </div>
 
       {/* Search Results Dropdown */}
       {showResults && (searchTerm.length >= 2 || results.length > 0) && (
         <div className="absolute top-full left-0 right-0 bg-white rounded-lg shadow-lg mt-1 z-50 max-h-[400px] overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center">
-              <div className="animate-pulse flex space-x-4">
-                <div className="flex-1 space-y-3 py-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded w-5/6 mx-auto"></div>
-                </div>
+            <div className="p-4">
+              <div className="animate-pulse space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center">
+                    <div className="w-12 h-12 bg-gray-200 rounded-md"></div>
+                    <div className="ml-3 flex-1">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : results.length > 0 ? (
-            <div>
+            <div className="divide-y">
               {results.map((result) => (
                 <Link key={result.id} href={`/products/${result.id}`}>
-                  <a className="block p-3 hover:bg-gray-50 border-b last:border-b-0">
+                  <a className="block p-3 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                         <img 
-                          src={result.imageUrl || 'https://via.placeholder.com/40'} 
+                          src={result.imageUrl || 'https://via.placeholder.com/48'} 
                           alt={result.name} 
                           className="w-full h-full object-contain"
+                          loading="lazy"
                         />
                       </div>
                       <div className="ml-3 flex-grow">
