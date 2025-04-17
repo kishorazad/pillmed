@@ -21,7 +21,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'medium' }) => {
 
   return (
     <Link href="/">
-      <a className={`flex items-center ${className}`}>
+      <div className={`flex items-center ${className} cursor-pointer`}>
         <svg
           className={`${getSizeClass()} w-auto text-orange-500`}
           viewBox="0 0 250 100" 
@@ -35,7 +35,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'medium' }) => {
           <path d="M235.714,57.142 L221.428,57.142 L221.428,42.857 L235.714,42.857 L235.714,42.857 L235.714,28.571 L250,28.571 L250,71.428 L235.714,71.428 L235.714,57.142 Z" />
         </svg>
         <span className="ml-2 font-bold text-xl tracking-tight text-gray-900">PillNow</span>
-      </a>
+      </div>
     </Link>
   );
 };

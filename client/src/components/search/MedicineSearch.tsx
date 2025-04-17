@@ -165,7 +165,7 @@ const MedicineSearch: React.FC = () => {
             <div className="divide-y">
               {results.map((result) => (
                 <Link key={result.id} href={`/products/${result.id}`}>
-                  <a className="block p-3 hover:bg-gray-50 transition-colors">
+                  <div className="block p-3 hover:bg-gray-50 transition-colors cursor-pointer">
                     <div className="flex items-center">
                       <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                         <img 
@@ -197,7 +197,7 @@ const MedicineSearch: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  </a>
+                  </div>
                 </Link>
               ))}
             </div>

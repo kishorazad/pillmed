@@ -1,16 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { ArrowRight, Pill, Loader2 } from 'lucide-react';
-
-interface Medicine {
-  id: number;
-  name: string;
-  price: number;
-  discountedPrice?: number | null;
-  imageUrl?: string | null;
-  manufacturer?: string | null;
-  composition?: string | null;
-}
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface SubstituteMedicinesProps {
   medicineId: number;
@@ -18,110 +10,88 @@ interface SubstituteMedicinesProps {
   composition?: string | null;
 }
 
+interface SubstituteMedicine {
+  id: number;
+  name: string;
+  imageUrl?: string | null;
+  price: number;
+  discountedPrice?: number | null;
+  manufacturer?: string | null;
+  brand?: string | null;
+}
+
 const SubstituteMedicines: React.FC<SubstituteMedicinesProps> = ({ 
   medicineId, 
-  medicineName, 
+  medicineName,
   composition 
 }) => {
-  const [substitutes, setSubstitutes] = useState<Medicine[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
+  const { data: substitutes = [], isLoading, error } = useQuery<SubstituteMedicine[]>({
+    queryKey: [`/api/medicine/substitutes?${composition ? `composition=${encodeURIComponent(composition || '')}` : `name=${encodeURIComponent(medicineName)}`}&excludeId=${medicineId}`],
+    staleTime: 60 * 60 * 1000, // Cache for 1 hour
+  });
 
-  useEffect(() => {
-    const fetchSubstitutes = async () => {
-      try {
-        // First check if we have the composition, as it's the most reliable way to find substitutes
-        let endpoint = composition 
-          ? `/api/medicine/substitutes?composition=${encodeURIComponent(composition)}&excludeId=${medicineId}`
-          : `/api/medicine/substitutes?name=${encodeURIComponent(medicineName)}&excludeId=${medicineId}`;
-        
-        const response = await fetch(endpoint);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch substitute medicines');
-        }
-        
-        const data = await response.json();
-        setSubstitutes(data);
-      } catch (err) {
-        console.error('Error fetching substitutes:', err);
-        setError('Could not load substitute medicines at this time.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const calculateDiscount = (price: number, discountedPrice?: number | null) => {
+    if (!discountedPrice || discountedPrice >= price) return null;
+    return Math.round(((price - discountedPrice) / price) * 100);
+  };
 
-    if (medicineId && (medicineName || composition)) {
-      fetchSubstitutes();
-    }
-  }, [medicineId, medicineName, composition]);
-
-  // If we have at least 1 substitute, show the component
-  if (!loading && substitutes.length === 0) {
+  // If no substitutes found or error, don't render anything
+  if (substitutes.length === 0 || error) {
     return null;
   }
 
-  // Default to showing only 3 items unless "showAll" is true
-  const displayedSubstitutes = showAll ? substitutes : substitutes.slice(0, 3);
-
   return (
-    <div className="mt-8 border rounded-lg p-4">
-      <div className="flex items-center mb-4">
-        <Pill className="h-5 w-5 text-teal-600 mr-2" />
-        <h2 className="text-lg font-semibold">Similar Alternatives</h2>
-      </div>
+    <div className="my-8">
+      <h2 className="text-xl font-bold mb-4">Similar Medicines</h2>
       
-      {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-8 w-8 text-teal-600 animate-spin" />
+      {isLoading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-4">
+                <div className="w-full h-28 bg-gray-200 rounded-md mb-3"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      ) : error ? (
-        <div className="text-center py-4 text-red-500">{error}</div>
       ) : (
-        <>
-          <div className="text-sm text-gray-500 mb-4">
-            Medicines with similar composition to {medicineName}
-          </div>
-          
-          <div className="space-y-3">
-            {displayedSubstitutes.map((substitute) => (
-              <Link key={substitute.id} href={`/products/${substitute.id}`}>
-                <a className="flex items-center p-3 border rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
-                    <img 
-                      src={substitute.imageUrl || 'https://via.placeholder.com/48'} 
-                      alt={substitute.name} 
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div className="ml-3 flex-grow">
-                    <h3 className="text-sm font-medium">{substitute.name}</h3>
-                    {substitute.manufacturer && (
-                      <p className="text-xs text-gray-500">{substitute.manufacturer}</p>
-                    )}
-                    <div className="flex items-center mt-1">
-                      <span className="text-sm font-bold">₹{substitute.discountedPrice || substitute.price}</span>
-                      {substitute.discountedPrice && (
-                        <span className="text-xs text-gray-500 line-through ml-1">₹{substitute.price}</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {substitutes?.map((medicine: SubstituteMedicine) => (
+            <Link key={medicine.id} href={`/products/${medicine.id}`}>
+              <div className="block cursor-pointer">
+                <Card className="h-full transition-transform hover:scale-105 hover:shadow-md">
+                  <CardContent className="p-3">
+                    <div className="w-full h-28 flex items-center justify-center mb-2 bg-gray-50 rounded overflow-hidden">
+                      <img 
+                        src={medicine.imageUrl || 'https://via.placeholder.com/100'} 
+                        alt={medicine.name} 
+                        className="h-full max-w-full object-contain"
+                        loading="lazy"
+                      />
+                    </div>
+                    <h3 className="text-sm font-medium line-clamp-2 h-10">{medicine.name}</h3>
+                    <p className="text-xs text-gray-500 mb-1 line-clamp-1">
+                      {medicine.manufacturer || medicine.brand || ''}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm">
+                        ₹{medicine.discountedPrice || medicine.price}
+                      </span>
+                      {medicine.discountedPrice && medicine.price && (
+                        <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
+                          {calculateDiscount(medicine.price, medicine.discountedPrice)}% off
+                        </Badge>
                       )}
                     </div>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                </a>
-              </Link>
-            ))}
-          </div>
-          
-          {substitutes.length > 3 && (
-            <button 
-              onClick={() => setShowAll(!showAll)}
-              className="mt-4 text-sm text-teal-600 font-medium hover:underline"
-            >
-              {showAll ? 'Show Less' : `View All Alternatives (${substitutes.length})`}
-            </button>
-          )}
-        </>
+                  </CardContent>
+                </Card>
+              </div>
+            </Link>
+          ))}
+        </div>
       )}
     </div>
   );

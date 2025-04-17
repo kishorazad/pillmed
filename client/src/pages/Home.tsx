@@ -97,8 +97,8 @@ const Home = () => {
       <div className="container mx-auto px-4 pt-2 pb-16">
         {isMobile ? (
           <>
-            {/* Search bar for mobile */}
-            <div className="mb-4">
+            {/* Search bar for mobile with animated placeholders */}
+            <div className="mb-4 px-2">
               <MedicineSearch />
             </div>
             

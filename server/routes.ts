@@ -679,11 +679,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fallback to in-memory search
       const allProducts = await dbStorage.getProducts();
       
-      const filteredProducts = allProducts.filter(product => 
-        product.name.toLowerCase().includes(query) ||
-        (product.composition && product.composition.toLowerCase().includes(query)) ||
-        (product.manufacturer && product.manufacturer.toLowerCase().includes(query))
-      );
+      const filteredProducts = allProducts.filter(product => {
+        // Always check basic fields that are guaranteed to exist
+        const nameMatch = product.name.toLowerCase().includes(query);
+        const brandMatch = product.brand ? product.brand.toLowerCase().includes(query) : false;
+        const descriptionMatch = product.description ? product.description.toLowerCase().includes(query) : false;
+        
+        // Handle additional properties safely using type assertion
+        const productWithExtras = product as any;
+        const compositionMatch = productWithExtras.composition ? 
+          productWithExtras.composition.toLowerCase().includes(query) : false;
+        const manufacturerMatch = productWithExtras.manufacturer ? 
+          productWithExtras.manufacturer.toLowerCase().includes(query) : false;
+          
+        return nameMatch || brandMatch || descriptionMatch || compositionMatch || manufacturerMatch;
+      });
       
       return res.json(filteredProducts.slice(0, Number(limit)));
     } catch (error) {
@@ -708,11 +718,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (composition) {
         // If we have composition, use that for a more accurate match
         const compositionLower = composition.toLowerCase();
-        substitutes = allProducts.filter(product => 
-          product.id !== excludedId && 
-          product.composition && 
-          product.composition.toLowerCase().includes(compositionLower)
-        );
+        substitutes = allProducts.filter(product => {
+          // First check if product matches the excluded ID
+          if (product.id === excludedId) return false;
+          
+          // Use type assertion to safely access composition
+          const productExt = product as any;
+          return productExt.composition && 
+                 productExt.composition.toLowerCase().includes(compositionLower);
+        });
       } else if (name) {
         // Otherwise try to match by name, extracting the likely generic name
         // Heuristic: Try to get the first word which might be the generic name
