@@ -656,6 +656,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch users" });
     }
   });
+  
+  // ===== Order Management Routes =====
+  
+  // Get all orders
+  app.get("/api/orders", async (_req: Request, res: Response) => {
+    try {
+      const orders = await dbStorage.getOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      res.status(500).json({ message: "Failed to fetch orders" });
+    }
+  });
+  
+  // Get order by ID
+  app.get("/api/orders/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const order = await dbStorage.getOrderById(id);
+      
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      res.json(order);
+    } catch (error) {
+      console.error('Error fetching order:', error);
+      res.status(500).json({ message: "Failed to fetch order" });
+    }
+  });
+  
+  // Get orders by user ID
+  app.get("/api/orders/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      let orders = await dbStorage.getOrdersByUser(userId);
+      
+      // Enhance orders with items
+      for (let order of orders) {
+        const orderItems = await dbStorage.getOrderItems(order.id);
+        
+        // For each order item, get product details
+        const enhancedItems = [];
+        for (const item of orderItems) {
+          const product = await dbStorage.getProductById(item.productId);
+          enhancedItems.push({
+            ...item,
+            product
+          });
+        }
+        
+        // Add items to order
+        order.items = enhancedItems;
+      }
+      
+      res.json(orders);
+    } catch (error) {
+      console.error('Error fetching user orders:', error);
+      res.status(500).json({ message: "Failed to fetch user orders" });
+    }
+  });
+  
+  // Get order items for a specific order
+  app.get("/api/orders/:id/items", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const orderItems = await dbStorage.getOrderItems(id);
+      
+      // If we want to include product details with each order item
+      const enhancedItems = [];
+      for (const item of orderItems) {
+        const product = await dbStorage.getProductById(item.productId);
+        enhancedItems.push({
+          ...item,
+          product
+        });
+      }
+      
+      res.json(enhancedItems);
+    } catch (error) {
+      console.error('Error fetching order items:', error);
+      res.status(500).json({ message: "Failed to fetch order items" });
+    }
+  });
+  
+  // Create a new order
+  app.post("/api/orders", async (req: Request, res: Response) => {
+    try {
+      const { userId, address, total, items } = req.body;
+      
+      // Create the order
+      const order = await dbStorage.createOrder({
+        userId,
+        address,
+        total,
+        status: 'processing',
+        createdAt: new Date()
+      });
+      
+      // Create order items
+      for (const item of items) {
+        await dbStorage.createOrderItem({
+          orderId: order.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price
+        });
+      }
+      
+      // Clear the user's cart after successful order
+      await dbStorage.clearCart(userId);
+      
+      res.status(201).json(order);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      res.status(500).json({ message: "Failed to create order" });
+    }
+  });
+  
+  // Update order status
+  app.patch("/api/orders/:id/status", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      const validStatuses = ['processing', 'shipped', 'delivered', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      const updatedOrder = await dbStorage.updateOrderStatus(id, status);
+      
+      if (!updatedOrder) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      res.json(updatedOrder);
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      res.status(500).json({ message: "Failed to update order status" });
+    }
+  });
 
   const httpServer = createServer(app);
 

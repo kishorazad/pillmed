@@ -84,11 +84,11 @@ const OrderHistory = ({ userId }: { userId?: number }) => {
               <h3 className="font-medium">₹{order.total.toFixed(2)}</h3>
             </div>
             <div className="flex items-center space-x-3 mt-2 sm:mt-0">
-              <Badge variant={
-                order.status === 'delivered' ? 'success' : 
-                order.status === 'shipped' ? 'default' : 
-                order.status === 'processing' ? 'secondary' : 
-                'outline'
+              <Badge className={
+                order.status === 'delivered' ? 'bg-green-500 hover:bg-green-600 text-white' : 
+                order.status === 'shipped' ? 'bg-blue-500 hover:bg-blue-600 text-white' : 
+                order.status === 'processing' ? 'bg-amber-500 hover:bg-amber-600 text-white' : 
+                'bg-gray-500 hover:bg-gray-600 text-white'
               }>
                 {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
               </Badge>
