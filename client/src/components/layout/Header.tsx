@@ -80,8 +80,8 @@ const Header = () => {
           {/* Logo & Location */}
           <div className="flex items-center gap-6 w-full md:w-auto justify-between">
             <Link href="/" className="text-2xl font-bold">
-              <span className="text-[#ff6f61]">1</span>
-              <span className="text-[#10847e]">mg</span>
+              <span className="text-[#10847e]">Pharm</span>
+              <span className="text-[#10847e]">Easy</span>
             </Link>
             <div className="flex items-center text-sm text-[#666666] md:ml-4">
               <i className="fas fa-map-marker-alt mr-1 text-[#10847e]"></i>

@@ -77,12 +77,12 @@ const ProductManagement: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   // Fetch products
-  const { data: products, isLoading: productsLoading } = useQuery({
+  const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['/api/products'],
   });
 
   // Fetch categories for dropdown
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['/api/categories'],
   });
 
@@ -496,7 +496,7 @@ const ProductManagement: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {products?.length > 0 ? (
+          {Array.isArray(products) && products.length > 0 ? (
             <div className="relative overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -512,7 +512,9 @@ const ProductManagement: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {products.map((product: any) => {
-                    const category = categories?.find((c: any) => c.id === product.categoryId);
+                    const category = Array.isArray(categories) 
+                      ? categories.find((c: any) => c.id === product.categoryId)
+                      : undefined;
                     return (
                       <TableRow key={product.id}>
                         <TableCell>
