@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { OrderItem, Product } from '@shared/schema';
 import { formatCurrency } from '@/lib/utils';
-import { Package, Truck, ArrowDown } from 'lucide-react';
+import { Package, Truck, ArrowDown, Repeat } from 'lucide-react';
 
 interface OrderHistoryProps {
   userId: number;
