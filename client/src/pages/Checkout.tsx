@@ -160,7 +160,7 @@ const Checkout = () => {
   return (
     <>
       <Helmet>
-        <title>Checkout - Medadock</title>
+        <title>Checkout - PillNow</title>
         <meta name="description" content="Complete your purchase securely" />
       </Helmet>
       
