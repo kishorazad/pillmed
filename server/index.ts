@@ -3,32 +3,60 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { importMedicinesFromCSV } from "./csv-import";
 import { importMedicinesFromExcel } from "./excel-import";
+import { mongoDBStorage } from './mongodb-storage';
 import session from 'express-session';
+import mongoose from 'mongoose';
 
 // Session configuration
 const sessionSecret = process.env.SESSION_SECRET || 'medadock-secret-key';
 
-// Use in-memory storage for this project since we don't have MongoDB
-console.log('Using in-memory storage');
+// Add TypeScript definitions to global
+declare global {
+  var useMongoStorage: boolean;
+}
 
-// Try to import medicine data from Excel first, and then from CSV as backup
-importMedicinesFromExcel().then((success) => {
-  if (success) {
-    console.log('Imported medicine data from Excel successfully');
-  } else {
-    // Fall back to CSV
+// Connect to MongoDB or fallback to in-memory storage
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://user1:password123@cluster0.mongodb.net/medadockdb';
+
+// Try connecting to MongoDB
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('✅ Connected to MongoDB successfully');
+    
+    global.useMongoStorage = true;
+    
+    // After MongoDB connection is established, import medicines
+    return importMedicinesFromExcel();
+  })
+  .catch(err => {
+    console.error('❌ MongoDB connection error, falling back to in-memory storage:', err.message);
+    console.log('Using in-memory storage');
+    
+    global.useMongoStorage = false;
+    
+    // Use Excel import for in-memory storage too
+    return importMedicinesFromExcel();
+  })
+  .then((success) => {
+    if (success) {
+      console.log('Imported medicine data from Excel successfully');
+    } else {
+      // Fall back to CSV
+      return importMedicinesFromCSV();
+    }
+  })
+  .catch(err => {
+    console.error('Failed to import medicine data from Excel, trying CSV:', err);
     return importMedicinesFromCSV();
-  }
-}).catch(err => {
-  console.error('Failed to import medicine data from Excel, trying CSV:', err);
-  return importMedicinesFromCSV();
-}).then((success) => {
-  if (success) {
-    console.log('Imported medicine data from CSV successfully');
-  }
-}).catch(err => {
-  console.error('Failed to import medicine data from both Excel and CSV:', err);
-});
+  })
+  .then((success) => {
+    if (success) {
+      console.log('Imported medicine data from CSV successfully');
+    }
+  })
+  .catch(err => {
+    console.error('Failed to import medicine data from both Excel and CSV:', err);
+  });
 
 const app = express();
 app.use(express.json());

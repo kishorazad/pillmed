@@ -1,6 +1,7 @@
 import express, { type Express, type Request, type Response } from "express";
 import { createServer, type Server } from "http";
-import { storage as dbStorage } from "./storage"; // Use the in-memory storage implementation
+import { storage as memStorage } from "./storage"; // In-memory storage
+import { mongoDBStorage } from "./mongodb-storage"; // MongoDB storage
 import { insertCartItemSchema, insertUserSchema } from "@shared/schema";
 import { processHealthQuery, getMedicationInfo, analyzeMedicationInteractions } from "./ai-service";
 import { z } from "zod";
@@ -8,6 +9,15 @@ import multer from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+
+// Choose the appropriate storage implementation
+declare global {
+  var useMongoStorage: boolean;
+}
+
+// Default to in-memory storage if not set
+const dbStorage = global.useMongoStorage ? mongoDBStorage : memStorage;
+console.log(`Using ${global.useMongoStorage ? 'MongoDB' : 'in-memory'} storage for database operations`);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup uploads directory
@@ -154,8 +164,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const beforeFromCart = await dbStorage.getCartItems(fromUserId);
       const beforeToCart = await dbStorage.getCartItems(toUserId);
       
-      // Perform the transfer
-      const success = await dbStorage.transferCartItems(fromUserId, toUserId);
+      // Perform the transfer - this function needs to be implemented in both storage types
+      // For now just copy from one user to another
+      let success = false;
+      
+      if (beforeFromCart.length > 0) {
+        // Copy all items from fromUser to toUser
+        for (const item of beforeFromCart) {
+          await dbStorage.addToCart({
+            userId: toUserId,
+            productId: item.productId,
+            quantity: item.quantity
+          });
+        }
+        
+        // Clear the fromUser's cart
+        await dbStorage.clearCart(fromUserId);
+        success = true;
+      }
       
       // Get cart after transfer
       const afterFromCart = await dbStorage.getCartItems(fromUserId);
@@ -175,6 +201,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Cart transfer error:", error);
       res.status(500).json({ error: "Failed to transfer cart items" });
+    }
+  });
+  
+  // Create an order from cart items
+  app.post("/api/cart-to-order", async (req: Request, res: Response) => {
+    const { userId, shippingAddress, paymentMethod } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+    
+    try {
+      // Get the cart items with product details
+      const cartItems = await dbStorage.getCartItemWithProductDetails(userId);
+      
+      if (!cartItems || cartItems.length === 0) {
+        return res.status(400).json({ error: "Cart is empty" });
+      }
+      
+      // Calculate total amount
+      const totalAmount = cartItems.reduce((total, item) => {
+        const itemPrice = item.product.discountedPrice || item.product.price;
+        return total + (itemPrice * item.quantity);
+      }, 0);
+      
+      // Create a new order
+      const newOrder = await dbStorage.createOrder({
+        userId: userId,
+        orderDate: new Date(),
+        status: "pending",
+        totalAmount: totalAmount,
+        shippingAddress: shippingAddress || "Default Shipping Address",
+        paymentMethod: paymentMethod || "credit_card",
+        trackingNumber: `TRK${Math.floor(Math.random() * 1000000)}`
+      });
+      
+      // Add the order items
+      for (const item of cartItems) {
+        await dbStorage.createOrderItem({
+          orderId: newOrder.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.product.discountedPrice || item.product.price
+        });
+      }
+      
+      // Clear the cart after creating the order
+      await dbStorage.clearCart(userId);
+      
+      res.status(201).json({ 
+        message: "Order created successfully",
+        order: newOrder
+      });
+    } catch (error) {
+      console.error("Failed to create order from cart:", error);
+      res.status(500).json({ error: "Failed to create order from cart" });
     }
   });
   

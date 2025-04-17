@@ -397,35 +397,24 @@ const Profile = () => {
         
         if (updatedCart.length > 0) {
           try {
-            // Process the cart items to create an order automatically
-            const cartTotal = updatedCart.reduce((total, item) => {
-              const itemPrice = item.product.discountedPrice || item.product.price;
-              return total + (itemPrice * item.quantity);
-            }, 0);
-            
             // Get shipping address from user profile or use a default
             const shippingAddress = userData.address || 'Default Shipping Address';
             
-            // Create an order with cart items
-            const orderResponse = await fetch('/api/orders', {
+            // Use our new endpoint to convert cart to order
+            const orderResponse = await fetch('/api/cart-to-order', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 userId: userData.id,
-                totalAmount: cartTotal,
                 shippingAddress,
-                paymentMethod: 'credit_card',
-                items: updatedCart.map(item => ({
-                  productId: item.productId,
-                  quantity: item.quantity,
-                  price: item.product.discountedPrice || item.product.price
-                }))
+                paymentMethod: 'credit_card'
               })
             });
             
             if (orderResponse.ok) {
               console.log('Order created automatically after registration');
-              // The cart should be cleared automatically by the API
+              // Fetch updated cart (should be empty now)
+              await useStore.getState().fetchCart(userData.id);
             }
           } catch (orderError) {
             console.error('Failed to create automatic order:', orderError);
