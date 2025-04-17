@@ -6,6 +6,7 @@ import { importMedicinesFromExcel } from "./excel-import";
 import { mongoDBStorage } from './mongodb-storage';
 import session from 'express-session';
 import mongoose from 'mongoose';
+import { optimizeDatabaseForLargeDatasets } from './index-optimizer';
 
 // Session configuration
 const sessionSecret = process.env.SESSION_SECRET || 'medadock-secret-key';
@@ -20,10 +21,18 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://user1:password123@
 
 // Try connecting to MongoDB
 mongoose.connect(MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log('✅ Connected to MongoDB successfully');
     
     global.useMongoStorage = true;
+    
+    // Optimize database for large datasets (up to 700,000 products)
+    try {
+      await optimizeDatabaseForLargeDatasets();
+      console.log('Database optimized for large datasets (up to 700,000 products)');
+    } catch (optimizationError) {
+      console.warn('Database optimization skipped:', optimizationError instanceof Error ? optimizationError.message : 'Unknown error');
+    }
     
     // After MongoDB connection is established, import medicines
     return importMedicinesFromExcel();

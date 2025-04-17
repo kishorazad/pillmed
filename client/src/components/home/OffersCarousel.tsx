@@ -69,13 +69,13 @@ const OffersCarousel: React.FC<OffersCarouselProps> = ({ offers }) => {
       >
         {offers.map((offer) => (
           <Link key={offer.id} href={offer.link}>
-            <a className="flex-shrink-0 w-[85%] rounded-lg overflow-hidden shadow-sm">
+            <div className="flex-shrink-0 w-[85%] rounded-lg overflow-hidden shadow-sm cursor-pointer">
               <img 
                 src={offer.imageUrl}
                 alt={offer.alt}
                 className="w-full h-auto object-cover"
               />
-            </a>
+            </div>
           </Link>
         ))}
       </div>
