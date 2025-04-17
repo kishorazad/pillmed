@@ -67,10 +67,13 @@ const MedicineSearch: React.FC = () => {
         const response = await fetch(`/api/medicine/search?q=${encodeURIComponent(debouncedSearchTerm)}`);
         if (response.ok) {
           const data = await response.json();
-          setResults(data);
+          // The API returns an object with a results array, not an array directly
+          setResults(data.results || []);
           setShowResults(true);
+          console.log('Search results:', data.results);
         } else {
           setResults([]);
+          console.error('Search API returned error status:', response.status);
         }
       } catch (error) {
         console.error('Error searching medicines:', error);
@@ -99,10 +102,27 @@ const MedicineSearch: React.FC = () => {
     }
   };
 
-  const handleSearchButtonClick = () => {
+  const handleSearchButtonClick = async () => {
     if (searchTerm.trim().length > 0) {
-      // Trigger search
-      setShowResults(true);
+      // Explicitly trigger search when clicking the button
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/medicine/search?q=${encodeURIComponent(searchTerm)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setResults(data.results || []);
+          setShowResults(true);
+          console.log('Button search results:', data.results);
+        } else {
+          setResults([]);
+          console.error('Button search API returned error status:', response.status);
+        }
+      } catch (error) {
+        console.error('Error with button search:', error);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
     } else if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -126,6 +146,12 @@ const MedicineSearch: React.FC = () => {
             placeholder={searchSuggestions[placeholderIndex]}
             className="bg-transparent border-none outline-none flex-grow text-base placeholder-gray-500 w-full"
             onFocus={() => setShowResults(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchTerm.trim().length > 0) {
+                e.preventDefault();
+                handleSearchButtonClick();
+              }
+            }}
           />
           {searchTerm && (
             <button 
