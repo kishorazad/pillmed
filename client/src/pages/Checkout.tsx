@@ -93,7 +93,7 @@ const Checkout = () => {
         const shippingAddress = `${data.address}, ${data.city}, ${data.state} - ${data.pincode}`;
         
         // Prepare order items
-        const items = cartItems.map(item => ({
+        const items = cart.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
           price: item.product.discountedPrice || item.product.price
@@ -106,9 +106,9 @@ const Checkout = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            userId,
+            userId: user?.id,
             shippingAddress,
-            totalAmount: totalCartPrice,
+            totalAmount: cartTotal,
             paymentMethod: data.paymentMethod,
             items
           })

@@ -23,6 +23,22 @@ const OrderHistory = ({ userId }: { userId?: number }) => {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['/api/orders/user', userId],
     enabled: !!userId,
+    queryFn: async ({ queryKey }) => {
+      try {
+        const response = await fetch(`/api/orders/user/${userId}`);
+        if (!response.ok) {
+          if (response.status === 404) {
+            // If no orders, return empty array
+            return [];
+          }
+          throw new Error(`Error fetching orders: ${response.statusText}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        return [];
+      }
+    }
   });
   
   const reorderItems = async (orderId: number) => {
