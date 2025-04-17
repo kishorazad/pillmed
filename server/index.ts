@@ -5,8 +5,8 @@ import { importMedicinesFromCSV } from "./csv-import";
 import { importMedicinesFromExcel } from "./excel-import";
 import { mongoDBStorage } from './mongodb-storage';
 import session from 'express-session';
-import mongoose from 'mongoose';
 import { optimizeDatabaseForLargeDatasets } from './index-optimizer';
+import { connectToDatabase } from './services/mongodb-service';
 
 // Session configuration
 const sessionSecret = process.env.SESSION_SECRET || 'medadock-secret-key';
@@ -16,33 +16,23 @@ declare global {
   var useMongoStorage: boolean;
 }
 
-// Connect to MongoDB or fallback to in-memory storage
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/medadockdb';
-
-// Try connecting to MongoDB with improved connection handling
 // Use IIFE to immediately execute async code
 (async () => {
-  let isMongoConnected = false;
-  
   try {
-    // Use connection options for better reliability
-    await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-      family: 4  // Force IPv4
-    });
+    // Use the MongoDB connection from mongodb-service.ts
+    const isMongoConnected = await connectToDatabase();
+    global.useMongoStorage = isMongoConnected;
     
-    console.log('✅ Connected to MongoDB successfully');
-    global.useMongoStorage = true;
-    isMongoConnected = true;
-    
-    // Optimize database for large datasets (up to 700,000 products)
-    try {
-      await optimizeDatabaseForLargeDatasets();
-      console.log('Database optimized for large datasets (up to 700,000 products)');
-    } catch (optimizationError) {
-      console.warn('MongoDB not connected, skipping optimization');
+    if (isMongoConnected) {
+      // Optimize database for large datasets (up to 700,000 products)
+      try {
+        await optimizeDatabaseForLargeDatasets();
+        console.log('Database optimized for large datasets (up to 700,000 products)');
+      } catch (optimizationError) {
+        console.warn('MongoDB not connected, skipping optimization');
+      }
+    } else {
+      console.log('Using in-memory storage for database operations');
     }
   } catch (error) {
     console.log('Using in-memory storage for database operations');
