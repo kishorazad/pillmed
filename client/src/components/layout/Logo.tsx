@@ -7,16 +7,9 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ className = '', size = 'medium' }) => {
+  // Fixed logo size now as per requirement (120*30)
   const getSizeClass = () => {
-    switch (size) {
-      case 'small':
-        return 'h-10'; // Increased from h-7
-      case 'large':
-        return 'h-20'; // Increased from h-14
-      case 'medium':
-      default:
-        return 'h-14'; // Increased from h-10
-    }
+    return 'h-[30px] w-[120px]';
   };
 
   return (
@@ -25,7 +18,10 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'medium' }) => {
         <img 
           src="/pillnow.png" 
           alt="PillNow Logo" 
-          className={`${getSizeClass()} w-auto`} 
+          className={`${getSizeClass()}`}
+          width="500"
+          height="89"
+          style={{ objectFit: 'contain' }}
         />
       </div>
     </Link>
