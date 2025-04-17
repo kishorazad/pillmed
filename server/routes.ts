@@ -490,10 +490,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Continue to in-memory fallback
       }
       
-      // Fallback to in-memory
-      const users = await storage.getUsersByRole("admin");
+      // Fallback to in-memory - get all users
+      const allUsers = await storage.getUsers();
+      // Filter to admin users only
+      const users = allUsers.filter(user => user.role === 'admin');
       // Remove passwords before sending
-      const safeUsers = users.map(({ password, ...user }) => user);
+      const safeUsers = users.map(user => {
+        const { password, ...rest } = user;
+        return rest;
+      });
       res.json(safeUsers);
     } catch (error) {
       console.error("Admin users fetch error:", error);
