@@ -39,6 +39,7 @@ interface AppState {
   clearCart: () => Promise<void>;
   setUser: (user: User | null) => void;
   setSearchQuery: (query: string) => void;
+  fetchCart: (userId?: number) => Promise<void>;
 }
 
 // Create a store with Zustand
@@ -54,6 +55,22 @@ export const useStore = create<AppState>((set, get) => ({
   openCart: () => set({ cartOpen: true }),
   closeCart: () => set({ cartOpen: false }),
   setCart: (cart) => set({ cart }),
+  
+  // Fetch cart items for current user
+  fetchCart: async (userId?: number) => {
+    const state = get();
+    const currentUserId = userId || state.user?.id || state.tempUserId;
+    
+    try {
+      console.log('Fetching cart for user ID:', currentUserId);
+      const response = await fetch(`/api/cart/${currentUserId}`);
+      const cartItems = await response.json();
+      console.log('Cart data fetched:', cartItems);
+      set({ cart: cartItems });
+    } catch (error) {
+      console.error('Failed to fetch cart:', error);
+    }
+  },
   
   addToCart: async (productId, quantity) => {
     const { tempUserId, user } = get();

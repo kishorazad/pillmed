@@ -286,7 +286,14 @@ const Profile = () => {
       }
       
       const userData = await response.json();
-      setUser(userData);
+      
+      // Important: Use the store's setUser function directly to handle cart transfer
+      useStore.getState().setUser(userData);
+      
+      // Explicitly fetch cart after login to ensure it's up to date
+      setTimeout(() => {
+        useStore.getState().fetchCart(userData.id);
+      }, 500);
       
       // Show appropriate toast message depending on if cart had items
       if (cartCount > 0) {
@@ -337,7 +344,14 @@ const Profile = () => {
       }
       
       const userData = await response.json();
-      setUser(userData);
+      
+      // Important: Use the store's setUser function directly to handle cart transfer
+      useStore.getState().setUser(userData);
+      
+      // Explicitly fetch cart after registration to ensure it's up to date
+      setTimeout(() => {
+        useStore.getState().fetchCart(userData.id);
+      }, 500);
       
       // Show appropriate toast message depending on if cart had items
       if (cartCount > 0) {
@@ -364,7 +378,14 @@ const Profile = () => {
   
   // Handle logout
   const handleLogout = () => {
-    setUser(null);
+    // Use the store's setUser function directly
+    useStore.getState().setUser(null);
+    
+    // Explicitly fetch cart for guest user after logout
+    setTimeout(() => {
+      useStore.getState().fetchCart();
+    }, 500);
+    
     toast({
       title: "Logged out",
       description: "You have been successfully logged out",
