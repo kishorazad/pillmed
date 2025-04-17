@@ -126,8 +126,25 @@ const ProductDetail = () => {
     ? relatedProducts.filter((p: any) => p.id !== product.id).slice(0, 4)
     : [];
   
+  // Generate SEO metadata for the product
+  const generateSEOTitle = () => {
+    return `${product.name} - Buy Online at PillNow`;
+  };
+
+  const generateSEODescription = () => {
+    let desc = `Buy ${product.name}`;
+    if (product.brand) desc += ` by ${product.brand}`;
+    desc += ` online at PillNow. Get information about uses, composition, dosage, side effects and more. Order now for home delivery.`;
+    return desc;
+  };
+
   return (
     <>
+      {/* Dynamic SEO metadata for each product */}
+      <Helmet>
+        <title>{generateSEOTitle()}</title>
+        <meta name="description" content={generateSEODescription()} />
+      </Helmet>
       <Helmet>
         <title>{product.name} - Medadock</title>
         <meta name="description" content={product.description || `Buy ${product.name} online at the best price`} />
