@@ -366,6 +366,20 @@ const Profile = () => {
                     <CardTitle>Sign In</CardTitle>
                   </CardHeader>
                   <CardContent>
+                    {/* Cart preservation message */}
+                    {useStore.getState().cart.length > 0 && (
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md text-sm">
+                        <div className="flex items-center text-blue-700 mb-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                          </svg>
+                          <span className="font-medium">Your shopping cart has {useStore.getState().cart.length} items</span>
+                        </div>
+                        <p className="text-gray-600 pl-6">Your cart items will be preserved when you sign in.</p>
+                      </div>
+                    )}
                     <Form {...loginForm}>
                       <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                         <FormField
@@ -410,6 +424,20 @@ const Profile = () => {
                     <CardTitle>Register</CardTitle>
                   </CardHeader>
                   <CardContent>
+                    {/* Cart preservation message */}
+                    {useStore.getState().cart.length > 0 && (
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md text-sm">
+                        <div className="flex items-center text-blue-700 mb-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                          </svg>
+                          <span className="font-medium">Your shopping cart has {useStore.getState().cart.length} items</span>
+                        </div>
+                        <p className="text-gray-600 pl-6">Your cart items will be preserved when you register.</p>
+                      </div>
+                    )}
                     <Form {...registerForm}>
                       <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                         <FormField

@@ -226,15 +226,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User registration
   app.post("/api/register", async (req: Request, res: Response) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+      const { tempUserId, ...userData } = req.body;
+      const validUserData = insertUserSchema.parse(userData);
       
       // Check if user with the username already exists
-      const existingUser = await storage.getUserByUsername(userData.username);
+      const existingUser = await storage.getUserByUsername(validUserData.username);
       if (existingUser) {
         return res.status(409).json({ message: "Username already exists" });
       }
       
-      const newUser = await storage.createUser(userData);
+      const newUser = await storage.createUser(validUserData);
+      
+      // Set user in session
+      (req.session as any).user = newUser;
+      
+      // Transfer cart items from temp user to the newly registered user
+      if (tempUserId && tempUserId !== newUser.id) {
+        console.log(`Transferring cart items from temp user ${tempUserId} to new user ${newUser.id}`);
+        try {
+          await storage.transferCartItems(tempUserId, newUser.id);
+        } catch (err) {
+          console.error("Error transferring cart items during registration:", err);
+        }
+      }
       
       // Don't return the password
       const { password, ...userWithoutPassword } = newUser;

@@ -661,23 +661,42 @@ export class MemStorage implements IStorage {
     );
   }
   
-  // New method to transfer cart items from one user to another (guest to authenticated)
+  // Method to transfer cart items from one user to another (guest to authenticated)
   async transferCartItems(fromUserId: number, toUserId: number): Promise<boolean> {
+    console.log(`Starting cart transfer from user ${fromUserId} to user ${toUserId}`);
+    
     // Get all cart items from the source user
     const sourceCartItems = await this.getCartItems(fromUserId);
+    console.log(`Found ${sourceCartItems.length} items in cart for source user ${fromUserId}`);
+    
+    if (sourceCartItems.length === 0) {
+      console.log('No items to transfer, cart transfer complete');
+      return true;
+    }
     
     // For each item, add it to the target user's cart and remove from source
     for (const item of sourceCartItems) {
-      // Add to target user's cart
-      await this.addToCart({
-        userId: toUserId,
-        productId: item.productId,
-        quantity: item.quantity
-      });
+      console.log(`Transferring item ${item.id} (product: ${item.productId}, quantity: ${item.quantity})`);
       
-      // Remove from source user's cart
-      await this.removeFromCart(item.id);
+      try {
+        // Add to target user's cart
+        const newItem = await this.addToCart({
+          userId: toUserId,
+          productId: item.productId,
+          quantity: item.quantity
+        });
+        console.log(`Added to target user's cart as item ${newItem.id}`);
+        
+        // Remove from source user's cart
+        await this.removeFromCart(item.id);
+        console.log(`Removed item ${item.id} from source user's cart`);
+      } catch (error) {
+        console.error(`Error transferring cart item ${item.id}:`, error);
+      }
     }
+    
+    const finalCartItems = await this.getCartItems(toUserId);
+    console.log(`Cart transfer complete. Target user ${toUserId} now has ${finalCartItems.length} items`);
     
     return true;
   }
