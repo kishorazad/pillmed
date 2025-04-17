@@ -138,7 +138,7 @@ const MedicineSearch: React.FC = () => {
         </div>
         <button 
           onClick={handleSearchButtonClick}
-          className="bg-teal-600 text-white py-2 px-6 rounded-r-full font-medium hover:bg-teal-700 transition-colors"
+          className="bg-orange-500 text-white py-2 px-6 rounded-r-full font-medium hover:bg-orange-600 transition-colors"
         >
           Search
         </button>
@@ -189,7 +189,7 @@ const MedicineSearch: React.FC = () => {
                               <span className="text-xs text-gray-500 line-through ml-1">
                                 ₹{result.price}
                               </span>
-                              <span className="text-xs text-green-600 ml-1">
+                              <span className="text-xs text-orange-600 ml-1">
                                 {calculateDiscount(result.price, result.discountedPrice)}% off
                               </span>
                             </>
