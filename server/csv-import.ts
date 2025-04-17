@@ -61,8 +61,8 @@ export async function importMedicinesFromCSV() {
           console.log(`CSV parsing complete. Found ${results.length} medicines.`);
           
           try {
-            // First 50 products only to avoid overwhelming the system
-            const medicineData = results.slice(0, 50).map(item => {
+            // First 20 products only for faster loading
+            const medicineData = results.slice(0, 20).map(item => {
               // Determine category based on primary use or medicine type
               let categoryId;
               const primaryUse = item.primary_use || '';
