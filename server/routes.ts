@@ -60,7 +60,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/cart/:userId", async (req: Request, res: Response) => {
     const userId = parseInt(req.params.userId);
     const cartItems = await storage.getCartItemWithProductDetails(userId);
+    
+    // Add debug information
+    console.log(`Fetching cart for userId: ${userId}, found ${cartItems.length} items`);
+    
     res.json(cartItems);
+  });
+  
+  // Test cart transfer endpoint - for debugging only
+  app.post("/api/cart/transfer", async (req: Request, res: Response) => {
+    const { fromUserId, toUserId } = req.body;
+    
+    if (!fromUserId || !toUserId) {
+      return res.status(400).json({ error: "Both fromUserId and toUserId are required" });
+    }
+    
+    try {
+      // Get cart before transfer
+      const beforeFromCart = await storage.getCartItems(fromUserId);
+      const beforeToCart = await storage.getCartItems(toUserId);
+      
+      // Perform the transfer
+      const success = await storage.transferCartItems(fromUserId, toUserId);
+      
+      // Get cart after transfer
+      const afterFromCart = await storage.getCartItems(fromUserId);
+      const afterToCart = await storage.getCartItems(toUserId);
+      
+      res.json({
+        success,
+        before: {
+          fromCart: beforeFromCart,
+          toCart: beforeToCart
+        },
+        after: {
+          fromCart: afterFromCart,
+          toCart: afterToCart
+        }
+      });
+    } catch (error) {
+      console.error("Cart transfer error:", error);
+      res.status(500).json({ error: "Failed to transfer cart items" });
+    }
   });
   
   // Add item to cart
@@ -514,9 +555,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fallback to in-memory - get all users
       const allUsers = await storage.getUsers();
       // Filter to admin users only
-      const users = allUsers.filter((user: User) => user.role === 'admin');
+      const users = allUsers.filter((user) => user.role === 'admin');
       // Remove passwords before sending
-      const safeUsers = users.map((user: User) => {
+      const safeUsers = users.map((user) => {
+        // @ts-ignore - We know password exists but we're removing it
         const { password, ...rest } = user;
         return rest;
       });

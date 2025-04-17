@@ -31,10 +31,15 @@ const ProductDetail = () => {
   const handleAddToCart = async () => {
     if (!product) return;
     
+    // Get the current userId from store state for logging purposes
+    const { user, tempUserId } = useStore.getState();
+    const currentUserId = user?.id || tempUserId;
+    
     console.log("Adding to cart:", { 
       productId: product.id, 
       quantity, 
-      userId: "Using user ID from store" 
+      userId: currentUserId,
+      userLoggedIn: !!user
     });
     
     await addToCart(product.id, quantity);

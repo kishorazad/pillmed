@@ -135,8 +135,18 @@ export const useStore = create<AppState>((set, get) => ({
         console.error('Failed to fetch cart items after login:', error);
       }
     } else {
-      // User logged out, clear the cart
-      set({ cart: [] });
+      // User logged out, go back to using tempUserId for cart operations
+      const { tempUserId } = get();
+      try {
+        console.log("User logged out, fetching temp cart items for ID:", tempUserId);
+        const response = await fetch(`/api/cart/${tempUserId}`);
+        const cartItems = await response.json();
+        set({ cart: cartItems });
+      } catch (error) {
+        console.error('Failed to fetch temp cart items after logout:', error);
+        // Clear the cart as fallback
+        set({ cart: [] });
+      }
     }
   },
   
