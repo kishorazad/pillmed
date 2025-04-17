@@ -1,6 +1,7 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'wouter';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronUp, ChevronDown, PhoneCall, MessagesSquare } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Product {
   id: number;
@@ -24,37 +25,8 @@ const ProductSlider: React.FC<ProductSliderProps> = ({
   viewMoreLink = '/products',
   products 
 }) => {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [showLeftScroll, setShowLeftScroll] = useState(false);
-  const [showRightScroll, setShowRightScroll] = useState(true);
-
-  useEffect(() => {
-    // Check if we need to show the right scroll button on initial render
-    if (scrollContainerRef.current) {
-      const { scrollWidth, clientWidth } = scrollContainerRef.current;
-      setShowRightScroll(scrollWidth > clientWidth);
-    }
-  }, [products]);
-
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -280, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 280, behavior: 'smooth' });
-    }
-  };
-
-  const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setShowLeftScroll(scrollLeft > 0);
-      setShowRightScroll(scrollLeft + clientWidth < scrollWidth - 10);
-    }
-  };
+  // Only show the first 5 products
+  const displayProducts = products.slice(0, 5);
 
   const renderDiscountPercentage = (price: number, discountedPrice: number) => {
     if (!discountedPrice || discountedPrice >= price) return null;
@@ -68,48 +40,22 @@ const ProductSlider: React.FC<ProductSliderProps> = ({
         <h2 className="text-lg font-bold">{title}</h2>
         {viewMoreLink && (
           <Link href={viewMoreLink}>
-            <a className="text-sm font-medium text-[#10847e]">View All</a>
+            <span className="text-sm font-medium text-[#10847e]">View All</span>
           </Link>
         )}
       </div>
       
       <div className="relative">
-        {/* Scroll buttons */}
-        {showLeftScroll && (
-          <button 
-            onClick={scrollLeft}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-1 shadow-md text-gray-600"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-        )}
-        
-        {showRightScroll && (
-          <button 
-            onClick={scrollRight}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-1 shadow-md text-gray-600"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        )}
-        
-        {/* Products row */}
-        <div 
-          ref={scrollContainerRef}
-          className="flex overflow-x-auto hide-scrollbar gap-3 py-2 pb-4"
-          onScroll={handleScroll}
-        >
-          {products.map((product) => (
-            <Link key={product.id} href={`/products/${product.id}`}>
-              <a className="flex-shrink-0 w-36 rounded-lg p-2 border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                {/* Product image */}
-                <div className="h-24 mb-2 relative flex items-center justify-center">
+        {/* Products list - vertical layout */}
+        <div className="flex flex-col space-y-3">
+          {displayProducts.map((product) => (
+            <div key={product.id} className="flex items-start p-2 border border-gray-100 rounded-lg hover:shadow-md">
+              <Link href={`/products/${product.id}`}>
+                <div className="w-20 h-20 relative flex-shrink-0">
                   <img 
                     src={product.imageUrl || 'https://via.placeholder.com/120'}
                     alt={product.name}
-                    className="h-full object-contain mx-auto"
+                    className="h-full w-full object-contain"
                   />
                   
                   {/* Discount tag */}
@@ -119,40 +65,63 @@ const ProductSlider: React.FC<ProductSliderProps> = ({
                     </div>
                   )}
                 </div>
+              </Link>
+              
+              <div className="flex-1 pl-3">
+                <Link href={`/products/${product.id}`}>
+                  <h3 className="text-sm font-medium line-clamp-2">{product.name}</h3>
+                </Link>
                 
-                {/* Product details */}
-                <div>
-                  <h3 className="text-xs font-medium mb-1 line-clamp-2 h-8">{product.name}</h3>
+                {/* Price */}
+                <div className="flex items-center mt-1">
+                  <span className="font-bold text-sm">
+                    ₹{product.discountedPrice || product.price}
+                  </span>
                   
-                  {/* Rating */}
-                  {product.rating && (
-                    <div className="flex items-center mb-1">
-                      <div className="bg-green-700 text-white text-xs px-1 rounded flex items-center">
-                        <span>{product.rating}</span>
-                        <span className="text-xs">★</span>
-                      </div>
-                      {product.ratingCount && (
-                        <span className="text-gray-500 text-xs ml-1">({product.ratingCount})</span>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Price */}
-                  <div className="flex items-center">
-                    <span className="font-bold text-sm">
-                      ₹{product.discountedPrice || product.price}
+                  {product.discountedPrice && (
+                    <span className="text-gray-500 text-xs line-through ml-1">
+                      ₹{product.price}
                     </span>
-                    
-                    {product.discountedPrice && (
-                      <span className="text-gray-500 text-xs line-through ml-1">
-                        ₹{product.price}
-                      </span>
-                    )}
-                  </div>
+                  )}
+
+                  {/* Deal tag for special items */}
+                  {product.discountedPrice && product.price && 
+                   renderDiscountPercentage(product.price, product.discountedPrice) && 
+                   parseInt(renderDiscountPercentage(product.price, product.discountedPrice) || '0') > 20 && (
+                    <span className="ml-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-sm">
+                      Deal of the Week
+                    </span>
+                  )}
                 </div>
-              </a>
-            </Link>
+                
+                {/* Add to cart button */}
+                <div className="mt-2 flex justify-between items-center">
+                  <Button 
+                    className="bg-[#10847e] hover:bg-[#0d6e69] text-white text-xs py-1 h-8 px-2 rounded-md"
+                  >
+                    ADD TO CART
+                  </Button>
+                </div>
+              </div>
+            </div>
           ))}
+        </div>
+      </div>
+
+      {/* Contact options */}
+      <div className="mt-5 flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+        <div className="flex items-center text-sm">
+          <span className="font-medium">Need help with medicines?</span>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="flex gap-1 text-xs items-center text-green-700 border-green-700">
+            <PhoneCall size={16} />
+            <span>Call 8770762307</span>
+          </Button>
+          <Button size="sm" variant="outline" className="flex gap-1 text-xs items-center text-green-700 border-green-700">
+            <MessagesSquare size={16} />
+            <span>WhatsApp</span>
+          </Button>
         </div>
       </div>
     </div>

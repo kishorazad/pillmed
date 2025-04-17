@@ -41,6 +41,7 @@ import OffersCarousel from '@/components/home/OffersCarousel';
 import QuickLinks from '@/components/home/QuickLinks';
 import ProductSlider from '@/components/products/ProductSlider';
 import MedicineSearch from '@/components/search/MedicineSearch';
+import MedicineCategorySlider from '@/components/home/MedicineCategorySlider';
 
 // Categories
 import { useQuery } from '@tanstack/react-query';
@@ -114,13 +115,13 @@ const Home = () => {
               <OffersCarousel offers={offerSlides} />
             </div>
             
-            {/* Categories Grid for Mobile */}
+            {/* Categories slider for Mobile */}
             {!categoriesLoading && categories?.length > 0 && (
-              <CategoryGrid 
+              <MedicineCategorySlider 
                 categories={categories.map((cat: Category) => ({
                   id: cat.id,
                   name: cat.name,
-                  imageUrl: cat.imageUrl || 'https://via.placeholder.com/80',
+                  imageUrl: cat.imageUrl,
                   link: `/products/category/${cat.id}`
                 }))}
               />
