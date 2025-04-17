@@ -9,6 +9,7 @@ import { useStore } from "./lib/store";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import CartSidebar from "./components/cart/CartSidebar";
+import MobileNavigation from "./components/layout/MobileNavigation";
 
 // Pages
 import Home from "./pages/Home";
@@ -72,13 +73,14 @@ function App() {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen pb-16 md:pb-0">
         <Header />
         <main className="flex-grow">
           <Router />
         </main>
         <Footer />
         <CartSidebar />
+        <MobileNavigation />
       </div>
       <Toaster />
     </QueryClientProvider>

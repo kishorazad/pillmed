@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useMediaQuery } from '../hooks/use-media-query';
 
 // Components
 import HeroSection from '@/components/home/HeroSection';

@@ -13,26 +13,38 @@ interface CategoryGridProps {
 }
 
 const CategoryGrid: React.FC<CategoryGridProps> = ({ categories }) => {
+  // Take only first 6 categories for mobile display
+  const displayCategories = categories.slice(0, 6);
+  
   return (
     <div className="my-6">
-      <h2 className="text-xl font-bold mb-4">Shop by Category</h2>
-      
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-        {categories.map((category) => (
+      <h2 className="text-lg font-bold mb-3">Shop By Category</h2>
+      <div className="grid grid-cols-3 gap-3">
+        {displayCategories.map((category) => (
           <Link key={category.id} href={category.link}>
-            <a className="flex flex-col items-center text-center group">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#f8f8f8] flex items-center justify-center p-3 mb-2 transition-all group-hover:shadow-md">
+            <a className="flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full bg-gray-100 p-1 mb-2 flex items-center justify-center">
                 <img 
                   src={category.imageUrl} 
-                  alt={category.name} 
-                  className="w-full h-full object-contain"
+                  alt={category.name}
+                  className="w-12 h-12 object-contain"
                 />
               </div>
-              <span className="text-xs sm:text-sm font-medium line-clamp-2">{category.name}</span>
+              <span className="text-xs text-center leading-tight">{category.name}</span>
             </a>
           </Link>
         ))}
       </div>
+      
+      {categories.length > 6 && (
+        <div className="text-center mt-3">
+          <Link href="/products">
+            <a className="text-sm font-medium text-[#10847e]">
+              View All Categories
+            </a>
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

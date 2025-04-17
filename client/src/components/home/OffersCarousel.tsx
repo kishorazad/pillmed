@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef, useState } from 'react';
+import { Link } from 'wouter';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface OfferSlide {
+interface Offer {
   id: number;
   imageUrl: string;
   alt: string;
@@ -9,156 +10,75 @@ interface OfferSlide {
 }
 
 interface OffersCarouselProps {
-  offers: OfferSlide[];
-  autoPlay?: boolean;
-  interval?: number;
+  offers: Offer[];
 }
 
-const OffersCarousel: React.FC<OffersCarouselProps> = ({ 
-  offers, 
-  autoPlay = true, 
-  interval = 5000 
-}) => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+const OffersCarousel: React.FC<OffersCarouselProps> = ({ offers }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(true);
 
-  // Start autoplay timer
-  useEffect(() => {
-    if (autoPlay) {
-      startTimer();
-    }
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [autoPlay, currentSlide, offers.length]);
-
-  const startTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    
-    timerRef.current = setInterval(() => {
-      setCurrentSlide((prev) => (prev === offers.length - 1 ? 0 : prev + 1));
-    }, interval);
-  };
-
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index);
-    if (autoPlay) {
-      startTimer();
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
     }
   };
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev === offers.length - 1 ? 0 : prev + 1));
-    if (autoPlay) {
-      startTimer();
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
     }
   };
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev === 0 ? offers.length - 1 : prev - 1));
-    if (autoPlay) {
-      startTimer();
-    }
-  };
-
-  // Touch handlers for swipe
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      nextSlide();
-    }
-    if (isRightSwipe) {
-      prevSlide();
-    }
-
-    // Reset touch positions
-    setTouchStart(null);
-    setTouchEnd(null);
-    
-    if (autoPlay) {
-      startTimer();
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowLeftScroll(scrollLeft > 0);
+      setShowRightScroll(scrollLeft + clientWidth < scrollWidth - 10);
     }
   };
 
   return (
-    <div className="relative rounded-lg overflow-hidden mb-6">
-      <div 
-        className="relative"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div 
-          className="flex transition-transform duration-500 ease-out"
-          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+    <div className="relative">
+      {/* Scroll buttons */}
+      {showLeftScroll && (
+        <button 
+          onClick={scrollLeft}
+          className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-1 shadow-md text-gray-600"
+          aria-label="Scroll left"
         >
-          {offers.map((offer) => (
-            <div 
-              key={offer.id} 
-              className="w-full flex-shrink-0"
-            >
-              <a href={offer.link} className="block">
-                <img
-                  src={offer.imageUrl}
-                  alt={offer.alt}
-                  className="w-full h-auto rounded-lg"
-                />
-              </a>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Navigation Dots */}
-      <div className="absolute bottom-3 left-0 right-0 flex justify-center space-x-2">
-        {offers.map((_, index) => (
-          <button
-            key={index}
-            className={`h-2 rounded-full transition-all ${
-              index === currentSlide ? 'w-6 bg-white' : 'w-2 bg-white/60'
-            }`}
-            onClick={() => goToSlide(index)}
-            aria-label={`Go to slide ${index + 1}`}
-          />
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+      )}
+      
+      {showRightScroll && (
+        <button 
+          onClick={scrollRight}
+          className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-1 shadow-md text-gray-600"
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      )}
+      
+      {/* Carousel content */}
+      <div 
+        ref={scrollContainerRef}
+        className="flex overflow-x-auto hide-scrollbar gap-4 py-2 px-1"
+        onScroll={handleScroll}
+      >
+        {offers.map((offer) => (
+          <Link key={offer.id} href={offer.link}>
+            <a className="flex-shrink-0 w-[85%] rounded-lg overflow-hidden shadow-sm">
+              <img 
+                src={offer.imageUrl}
+                alt={offer.alt}
+                className="w-full h-auto object-cover"
+              />
+            </a>
+          </Link>
         ))}
       </div>
-
-      {/* Navigation Buttons (only on larger screens) */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 rounded-full w-8 h-8 flex items-center justify-center shadow-md hidden md:flex"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 rounded-full w-8 h-8 flex items-center justify-center shadow-md hidden md:flex"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="h-5 w-5" />
-      </button>
     </div>
   );
 };

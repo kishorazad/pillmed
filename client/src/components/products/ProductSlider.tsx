@@ -1,127 +1,157 @@
-import React, { useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'wouter';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Product {
   id: number;
   name: string;
-  imageUrl: string;
+  description?: string;
   price: number;
-  discountedPrice?: number;
-  rating?: number;
-  ratingCount?: number;
+  discountedPrice?: number | null;
+  imageUrl?: string | null;
+  rating?: number | null;
+  ratingCount?: number | null;
 }
 
 interface ProductSliderProps {
   title: string;
-  viewMoreLink: string;
+  viewMoreLink?: string;
   products: Product[];
-  showDiscount?: boolean;
 }
 
 const ProductSlider: React.FC<ProductSliderProps> = ({ 
   title, 
-  viewMoreLink, 
-  products,
-  showDiscount = true 
+  viewMoreLink = '/products',
+  products 
 }) => {
-  const sliderRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(true);
+
+  useEffect(() => {
+    // Check if we need to show the right scroll button on initial render
+    if (scrollContainerRef.current) {
+      const { scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowRightScroll(scrollWidth > clientWidth);
+    }
+  }, [products]);
 
   const scrollLeft = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -280, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 280, behavior: 'smooth' });
     }
   };
 
-  // Calculate discount percentage
-  const getDiscountPercentage = (price: number, discountedPrice?: number) => {
-    if (!discountedPrice) return 0;
-    return Math.round(((price - discountedPrice) / price) * 100);
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowLeftScroll(scrollLeft > 0);
+      setShowRightScroll(scrollLeft + clientWidth < scrollWidth - 10);
+    }
+  };
+
+  const renderDiscountPercentage = (price: number, discountedPrice: number) => {
+    if (!discountedPrice || discountedPrice >= price) return null;
+    const discount = Math.round(((price - discountedPrice) / price) * 100);
+    return discount > 0 ? `${discount}%` : null;
   };
 
   return (
-    <div className="my-6 relative">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">{title}</h2>
-        <Link href={viewMoreLink}>
-          <a className="text-sm text-[#10847e] font-medium hover:underline">View All</a>
-        </Link>
+    <div className="my-6">
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-bold">{title}</h2>
+        {viewMoreLink && (
+          <Link href={viewMoreLink}>
+            <a className="text-sm font-medium text-[#10847e]">View All</a>
+          </Link>
+        )}
       </div>
       
-      <div className="relative group">
-        {/* Navigation Buttons (Desktop) */}
-        <button 
-          onClick={scrollLeft}
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1/2 bg-white rounded-full p-2 shadow-md z-10 hidden md:block opacity-0 group-hover:opacity-100 transition-opacity"
-          aria-label="Scroll left"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
+      <div className="relative">
+        {/* Scroll buttons */}
+        {showLeftScroll && (
+          <button 
+            onClick={scrollLeft}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-1 shadow-md text-gray-600"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
         
-        <button 
-          onClick={scrollRight}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 bg-white rounded-full p-2 shadow-md z-10 hidden md:block opacity-0 group-hover:opacity-100 transition-opacity"
-          aria-label="Scroll right"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-
-        {/* Product Slider */}
+        {showRightScroll && (
+          <button 
+            onClick={scrollRight}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-1 shadow-md text-gray-600"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
+        
+        {/* Products row */}
         <div 
-          ref={sliderRef}
-          className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto hide-scrollbar gap-3 py-2 pb-4"
+          onScroll={handleScroll}
         >
           {products.map((product) => (
-            <div 
-              key={product.id} 
-              className="flex-shrink-0 w-[160px] sm:w-[200px] bg-white rounded-lg shadow-sm border overflow-hidden"
-            >
-              <Link href={`/products/${product.id}`}>
-                <a className="block">
-                  <div className="relative h-32 sm:h-40 bg-gray-100">
-                    <img 
-                      src={product.imageUrl} 
-                      alt={product.name} 
-                      className="w-full h-full object-contain p-2"
-                    />
-                    {product.discountedPrice && showDiscount && (
-                      <div className="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-                        {getDiscountPercentage(product.price, product.discountedPrice)}% OFF
+            <Link key={product.id} href={`/products/${product.id}`}>
+              <a className="flex-shrink-0 w-36 rounded-lg p-2 border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                {/* Product image */}
+                <div className="h-24 mb-2 relative flex items-center justify-center">
+                  <img 
+                    src={product.imageUrl || 'https://via.placeholder.com/120'}
+                    alt={product.name}
+                    className="h-full object-contain mx-auto"
+                  />
+                  
+                  {/* Discount tag */}
+                  {product.discountedPrice && product.price && (
+                    <div className="absolute top-0 left-0 bg-green-500 text-white text-xs font-bold py-1 px-1.5 rounded">
+                      {renderDiscountPercentage(product.price, product.discountedPrice) || 'SALE'}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Product details */}
+                <div>
+                  <h3 className="text-xs font-medium mb-1 line-clamp-2 h-8">{product.name}</h3>
+                  
+                  {/* Rating */}
+                  {product.rating && (
+                    <div className="flex items-center mb-1">
+                      <div className="bg-green-700 text-white text-xs px-1 rounded flex items-center">
+                        <span>{product.rating}</span>
+                        <span className="text-xs">★</span>
                       </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-medium text-sm line-clamp-2 h-10 mb-1">{product.name}</h3>
-                    
-                    {product.rating !== undefined && (
-                      <div className="flex items-center mb-1">
-                        <div className="bg-green-500 text-white text-xs px-1 rounded flex items-center">
-                          {product.rating}★
-                        </div>
-                        {product.ratingCount !== undefined && (
-                          <span className="text-xs text-gray-500 ml-1">({product.ratingCount})</span>
-                        )}
-                      </div>
-                    )}
-                    
-                    <div className="flex items-baseline">
-                      <span className="font-bold text-sm">₹{product.discountedPrice || product.price}</span>
-                      {product.discountedPrice && (
-                        <span className="text-xs text-gray-500 line-through ml-1">₹{product.price}</span>
+                      {product.ratingCount && (
+                        <span className="text-gray-500 text-xs ml-1">({product.ratingCount})</span>
                       )}
                     </div>
+                  )}
+                  
+                  {/* Price */}
+                  <div className="flex items-center">
+                    <span className="font-bold text-sm">
+                      ₹{product.discountedPrice || product.price}
+                    </span>
+                    
+                    {product.discountedPrice && (
+                      <span className="text-gray-500 text-xs line-through ml-1">
+                        ₹{product.price}
+                      </span>
+                    )}
                   </div>
-                </a>
-              </Link>
-            </div>
+                </div>
+              </a>
+            </Link>
           ))}
         </div>
       </div>
