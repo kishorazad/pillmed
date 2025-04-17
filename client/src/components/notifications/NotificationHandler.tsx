@@ -1,119 +1,71 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { requestNotificationPermission, onMessageListener } from '@/lib/firebase';
-import { Bell, BellOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { useStore } from '@/lib/store';
+import { apiRequest } from '@/lib/queryClient';
 
 /**
- * Component that handles notification permissions and displays FCM messages
+ * NotificationHandler component manages Firebase Cloud Messaging (FCM) integration
+ * It handles permission requests, token registration, and displaying notifications
  */
-const NotificationHandler: React.FC = () => {
-  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
+export function NotificationHandler() {
   const { toast } = useToast();
+  const { user } = useStore();
+  const [, setNotificationToken] = useState<string | null>(null);
 
-  // Check notification permission status on component mount
+  // Request permission and register token when user logs in
   useEffect(() => {
-    const checkPermission = async () => {
-      if (typeof Notification !== 'undefined') {
-        const permission = Notification.permission;
-        setNotificationsEnabled(permission === 'granted');
+    // Only proceed if we have a logged in user
+    if (!user) return;
+
+    const registerNotificationToken = async () => {
+      try {
+        // Request permission and get FCM token
+        const token = await requestNotificationPermission();
+        
+        if (!token) return;
+        
+        setNotificationToken(token);
+        
+        // Register token with our backend
+        await apiRequest('POST', '/api/notification-tokens', {
+          token,
+          userId: user.id,
+          deviceInfo: navigator.userAgent
+        });
+        
+        console.log('Notification token registered successfully');
+      } catch (error) {
+        console.error('Error registering notification token:', error);
       }
     };
 
-    checkPermission();
-  }, []);
+    registerNotificationToken();
+  }, [user]);
 
-  // Set up message listener for foreground notifications
+  // Set up listener for foreground messages
   useEffect(() => {
-    if (!notificationsEnabled) return;
-
     const unsubscribe = onMessageListener((payload) => {
+      // Display notification as toast
       const { notification } = payload;
       
       if (notification) {
         toast({
-          title: notification.title || 'New Notification',
+          title: notification.title || 'New notification',
           description: notification.body || '',
           duration: 5000,
         });
       }
     });
 
-    return () => unsubscribe();
-  }, [notificationsEnabled, toast]);
+    // Clean up listener on unmount
+    return () => {
+      unsubscribe();
+    };
+  }, [toast]);
 
-  // Handle requesting permission
-  const handleEnableNotifications = async () => {
-    const token = await requestNotificationPermission();
-    
-    if (token) {
-      setNotificationsEnabled(true);
-      
-      // Show success toast
-      toast({
-        title: 'Notifications Enabled',
-        description: 'You will now receive notifications for order updates and medication reminders.',
-        duration: 3000,
-      });
-      
-      // Here you would typically save this token to your user's profile on the server
-      try {
-        // This is a placeholder for sending the token to your server
-        // await fetch('/api/user/notifications/token', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ token }),
-        // });
-      } catch (error) {
-        console.error('Error saving notification token:', error);
-      }
-    } else {
-      toast({
-        title: 'Notification Permission Denied',
-        description: 'Please enable notifications in your browser settings to receive updates.',
-        variant: 'destructive',
-        duration: 5000,
-      });
-    }
-  };
-
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleEnableNotifications}
-            disabled={notificationsEnabled}
-            className="relative"
-            aria-label={notificationsEnabled ? 'Notifications enabled' : 'Enable notifications'}
-          >
-            {notificationsEnabled ? (
-              <Bell className="h-5 w-5" />
-            ) : (
-              <BellOff className="h-5 w-5" />
-            )}
-            
-            {notificationsEnabled && (
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-green-500" />
-            )}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          {notificationsEnabled 
-            ? 'Notifications are enabled' 
-            : 'Enable notifications for order updates and medication reminders'}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-};
+  // This component doesn't render anything visible
+  return null;
+}
 
 export default NotificationHandler;

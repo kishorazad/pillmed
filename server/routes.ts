@@ -973,6 +973,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API routes for notification tokens
+  // Register a new notification token
+  app.post("/api/notification-tokens", async (req: Request, res: Response) => {
+    try {
+      const { token, userId, deviceInfo } = req.body;
+      
+      if (!token || !userId) {
+        return res.status(400).json({ message: "Token and userId are required" });
+      }
+      
+      const notificationToken = await dbStorage.saveNotificationToken({
+        token,
+        userId,
+        deviceInfo: deviceInfo || null,
+        createdAt: new Date()
+      });
+      
+      res.status(201).json(notificationToken);
+    } catch (error) {
+      console.error('Error saving notification token:', error);
+      res.status(500).json({ message: "Failed to save notification token" });
+    }
+  });
+  
+  // Get notification tokens for a user
+  app.get("/api/notification-tokens/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      const tokens = await dbStorage.getNotificationTokensByUserId(userId);
+      
+      res.json(tokens);
+    } catch (error) {
+      console.error('Error fetching notification tokens:', error);
+      res.status(500).json({ message: "Failed to fetch notification tokens" });
+    }
+  });
+  
+  // Delete a notification token
+  app.delete("/api/notification-tokens/:token", async (req: Request, res: Response) => {
+    try {
+      const token = req.params.token;
+      
+      const result = await dbStorage.deleteNotificationToken(token);
+      
+      if (!result) {
+        return res.status(404).json({ message: "Token not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting notification token:', error);
+      res.status(500).json({ message: "Failed to delete notification token" });
+    }
+  });
+
   // Setup SEO routes for sitemap.xml and robots.txt
   setupSeoRoutes(app);
   
