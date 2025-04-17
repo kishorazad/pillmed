@@ -164,9 +164,9 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
                       e.stopPropagation(); // Prevent accordion from toggling
                       reorderItems(order.id);
                     }}
-                    className="mt-2"
+                    className="mt-2 border-[#10847e] text-[#10847e] hover:bg-[#10847e]/10 hover:text-[#10847e] hover:border-[#10847e]"
                   >
-                    Reorder
+                    <Repeat className="w-4 h-4 mr-1" /> Reorder
                   </Button>
                 </div>
               </div>

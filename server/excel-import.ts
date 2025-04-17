@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import { read, utils } from 'xlsx';
 import path from 'path';
 import fs from 'fs';
 import { storage } from './storage';
@@ -47,12 +47,32 @@ export async function importMedicinesFromExcel(): Promise<boolean> {
     }
     
     // Read the Excel file
-    const workbook = XLSX.readFile(xlsxFilePath);
-    const sheetName = workbook.SheetNames[0];  // Get the first sheet
-    const worksheet = workbook.Sheets[sheetName];
+    const workbook = read(xlsxFilePath, { type: 'file' });
     
-    // Convert to JSON
-    const results = XLSX.utils.sheet_to_json(worksheet);
+    // Loop through all sheets to find one with data
+    let results: any[] = [];
+    let worksheetFound = false;
+    
+    console.log(`Excel file has ${workbook.SheetNames.length} sheets: ${workbook.SheetNames.join(', ')}`);
+    
+    for (const sheetName of workbook.SheetNames) {
+      const worksheet = workbook.Sheets[sheetName];
+      const sheetData = utils.sheet_to_json(worksheet);
+      
+      console.log(`Sheet ${sheetName} has ${sheetData.length} rows`);
+      
+      if (sheetData.length > 0) {
+        results = sheetData;
+        worksheetFound = true;
+        console.log(`Using data from sheet: ${sheetName}`);
+        break;
+      }
+    }
+    
+    if (!worksheetFound) {
+      console.error('No sheet with data found in the Excel file');
+      return false;
+    }
     
     console.log(`Excel parsing complete. Found ${results.length} medicines.`);
     
@@ -66,11 +86,28 @@ export async function importMedicinesFromExcel(): Promise<boolean> {
     
     // Process up to 200 medicines
     const medicineData: MedicineData[] = (results as any[]).slice(0, 200).map((item: any) => {
-      // Map Excel fields to our schema
+      // Debugging - log the keys of the first item to understand structure
+      if (results.indexOf(item) === 0) {
+        console.log('First item keys:', Object.keys(item));
+        console.log('First item sample values:', JSON.stringify(item).substring(0, 500) + '...');
+      }
+      
+      // Map Excel fields to our schema - handle various field naming conventions
       // Determine category based on primary use or medicine type
       let categoryId: number;
-      const primaryUse = item.primary_use || item.PRIMARY_USE || '';
-      const composition = item.composition || item.COMPOSITION || item.salt_composition || '';
+      
+      // Extract potential fields with various casing
+      const fieldKeys = Object.keys(item);
+      const getPossibleValue = (possibleNames: string[]): string => {
+        for (const name of possibleNames) {
+          const matchingKey = fieldKeys.find(k => k.toLowerCase() === name.toLowerCase());
+          if (matchingKey && item[matchingKey]) return item[matchingKey].toString();
+        }
+        return '';
+      };
+      
+      const primaryUse = getPossibleValue(['primary_use', 'PRIMARY_USE', 'primaryUse', 'uses', 'USES']);
+      const composition = getPossibleValue(['composition', 'COMPOSITION', 'salt_composition', 'SALT_COMPOSITION']);
       
       // Default category mapping logic (adjust field names as needed based on actual Excel structure)
       if (primaryUse.toString().toLowerCase().includes('pregnancy')) {
