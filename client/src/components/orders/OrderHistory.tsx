@@ -36,11 +36,27 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
       case 'shipped':
         return 'secondary' as const;
       case 'processing':
-        return 'secondary' as const;
+        return 'outline' as const;
       case 'cancelled':
         return 'destructive' as const;
       default:
         return 'outline' as const;
+    }
+  };
+  
+  // Get custom class for badge based on status
+  const getStatusBadgeClass = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'delivered':
+        return 'bg-[#10847e]/10 text-[#10847e] hover:bg-[#10847e]/10 border-[#10847e]/20';
+      case 'shipped':
+        return 'bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200';
+      case 'processing':
+        return 'bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200';
+      case 'cancelled':
+        return 'bg-red-50 text-red-700 hover:bg-red-50 border-red-200';
+      default:
+        return 'bg-gray-50 text-gray-700 hover:bg-gray-50 border-gray-200';
     }
   };
   
@@ -129,7 +145,10 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
                     Placed on {formatDate(order.orderDate)}
                   </p>
                   <div className="mt-2 flex items-center">
-                    <Badge variant={getStatusBadgeVariant(order.status)} className="flex items-center">
+                    <Badge 
+                      variant={getStatusBadgeVariant(order.status)} 
+                      className={`flex items-center ${getStatusBadgeClass(order.status)}`}
+                    >
                       {getStatusIcon(order.status)} {order.status}
                     </Badge>
                   </div>

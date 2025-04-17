@@ -31,7 +31,7 @@ export async function importMedicinesFromExcel(): Promise<boolean> {
     
     // Check how many products we already have
     const existingProducts = await storage.getProducts();
-    if (existingProducts.length > 10) {
+    if (existingProducts.length > 100) {
       console.log(`Already have ${existingProducts.length} products in memory storage. Skipping import.`);
       return true;
     }
@@ -64,8 +64,8 @@ export async function importMedicinesFromExcel(): Promise<boolean> {
       categoryMap.set(cat.name, cat.id);
     });
     
-    // Process only up to 50 medicines
-    const medicineData: MedicineData[] = (results as any[]).slice(0, 50).map((item: any) => {
+    // Process up to 200 medicines
+    const medicineData: MedicineData[] = (results as any[]).slice(0, 200).map((item: any) => {
       // Map Excel fields to our schema
       // Determine category based on primary use or medicine type
       let categoryId: number;
