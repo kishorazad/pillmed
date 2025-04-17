@@ -10,6 +10,7 @@ import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import CartSidebar from "./components/cart/CartSidebar";
 import MobileNavigation from "./components/layout/MobileNavigation";
+import FloatingContactButtons from "./components/contact/FloatingContactButtons";
 
 // Pages
 import Home from "./pages/Home";
