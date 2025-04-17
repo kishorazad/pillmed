@@ -113,10 +113,16 @@ const Profile = () => {
   // Handle login
   const onLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
     try {
+      // Get the temporary user ID to transfer the cart
+      const { tempUserId } = useStore.getState();
+      
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          tempUserId
+        }),
       });
       
       if (!response.ok) {

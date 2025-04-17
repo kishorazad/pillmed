@@ -208,7 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // User login (simple implementation without actual authentication)
   app.post("/api/login", async (req: Request, res: Response) => {
-    const { username, password } = req.body;
+    const { username, password, tempUserId } = req.body;
     
     if (!username || !password) {
       return res.status(400).json({ message: "Username and password are required" });
@@ -218,6 +218,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     if (!user || user.password !== password) {
       return res.status(401).json({ message: "Invalid username or password" });
+    }
+    
+    // Set user in session
+    (req.session as any).user = user;
+    
+    // Transfer cart items from temp user to authenticated user
+    if (tempUserId && tempUserId !== user.id) {
+      console.log(`Transferring cart items from temp user ${tempUserId} to user ${user.id}`);
+      try {
+        await storage.transferCartItems(tempUserId, user.id);
+      } catch (err) {
+        console.error("Error transferring cart items:", err);
+      }
     }
     
     // Don't return the password
@@ -501,9 +514,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fallback to in-memory - get all users
       const allUsers = await storage.getUsers();
       // Filter to admin users only
-      const users = allUsers.filter(user => user.role === 'admin');
+      const users = allUsers.filter((user: User) => user.role === 'admin');
       // Remove passwords before sending
-      const safeUsers = users.map(user => {
+      const safeUsers = users.map((user: User) => {
         const { password, ...rest } = user;
         return rest;
       });
