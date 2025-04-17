@@ -593,18 +593,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Product search endpoint
+  // Product search endpoint - Ultra-optimized for 700,000+ products
   app.get("/api/products/search", async (req: Request, res: Response) => {
     try {
-      const { query, limit = 10, page = 1, categoryId } = req.query;
+      const { 
+        query, 
+        limit = 10, 
+        page = 1, 
+        categoryId,
+        minPrice,
+        maxPrice,
+        sortBy = 'relevance',
+        brand,
+        inStock
+      } = req.query;
       
       if (!query || typeof query !== 'string') {
         return res.status(400).json({ error: "Search query is required" });
       }
       
-      const limitNum = Number(limit);
+      const limitNum = Math.min(Number(limit), 50); // Cap at 50 for performance
       const pageNum = Number(page);
       const skip = (pageNum - 1) * limitNum;
+      
+      console.time('product-search-time');
       
       // Try to search in MongoDB first - optimized for large datasets (up to 700,000 products)
       try {
@@ -612,9 +624,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { Product } = await import('./models');
         
         if (mongoose.connection.readyState === 1) {  // Connected
-          console.log('Using MongoDB for product search with indexes');
+          console.log('Using MongoDB for optimized product search');
           
-          // Create indexes if they don't exist yet (run once)
+          // Create weighted text index if not exists
           try {
             await Product.collection.createIndex({ 
               name: "text", 
@@ -622,84 +634,254 @@ export async function registerRoutes(app: Express): Promise<Server> {
               brand: "text",
               composition: "text",
               manufacturer: "text" 
+            }, {
+              weights: {
+                name: 10,         // Prioritize name matches
+                brand: 5,         // Brand is second
+                composition: 5,   // Composition is tied for second
+                manufacturer: 3,  // Manufacturer is third
+                description: 1    // Description least important
+              },
+              default_language: "english",
+              background: true    // Non-blocking
             });
             
-            // Create regular indexes for better performance with range queries and sorting
-            await Product.collection.createIndex({ price: 1 });
-            await Product.collection.createIndex({ categoryId: 1 });
-            await Product.collection.createIndex({ isFeatured: 1 });
-            await Product.collection.createIndex({ name: 1 });
+            // Create indexes for filters and sorting with background option for better performance
+            await Promise.allSettled([
+              Product.collection.createIndex({ price: 1 }, { background: true }),
+              Product.collection.createIndex({ categoryId: 1 }, { background: true }),
+              Product.collection.createIndex({ isFeatured: 1 }, { background: true }),
+              Product.collection.createIndex({ name: 1 }, { background: true }),
+              Product.collection.createIndex({ brand: 1 }, { background: true }),
+              Product.collection.createIndex({ inStock: 1 }, { background: true })
+            ]);
           } catch (indexError) {
-            // If index already exists or other error, log but continue
+            // If indexes already exist, this is fine
             console.log('Index operation completed or already exists');
           }
           
-          // Build query object
-          const searchQuery: any = {};
+          // Build query with advanced options
+          let mongoQuery: any = {};
           
-          // Add text search
-          searchQuery.$or = [
-            { name: { $regex: query, $options: 'i' } },  // Case-insensitive partial name match
-            { $text: { $search: query } }                // Full text search for other fields
-          ];
+          // Text search strategy based on query length
+          if (query.length > 3) {
+            // For longer queries, use both text search and regex for better results
+            mongoQuery.$or = [
+              { name: { $regex: query, $options: 'i' } }, // Case-insensitive regex for name (most important)
+              { $text: { $search: query } }              // Text search for other fields
+            ];
+          } else {
+            // For short queries (3 chars or less), use prefix matching which is faster
+            mongoQuery.name = { $regex: `^${query}`, $options: 'i' };
+          }
           
           // Add category filter if provided
           if (categoryId && !isNaN(Number(categoryId))) {
-            searchQuery.categoryId = Number(categoryId);
+            mongoQuery.categoryId = Number(categoryId);
           }
           
-          // Execute the optimized query
-          const products = await Product.find(searchQuery)
-            .select('id name price discountedPrice imageUrl brand quantity categoryId') // Only select needed fields
+          // Add price range filters if provided
+          if ((minPrice && !isNaN(parseFloat(minPrice as string))) || 
+              (maxPrice && !isNaN(parseFloat(maxPrice as string)))) {
+            mongoQuery.price = {};
+            
+            if (minPrice && !isNaN(parseFloat(minPrice as string))) {
+              mongoQuery.price.$gte = parseFloat(minPrice as string);
+            }
+            
+            if (maxPrice && !isNaN(parseFloat(maxPrice as string))) {
+              mongoQuery.price.$lte = parseFloat(maxPrice as string);
+            }
+          }
+          
+          // Add brand filter if provided
+          if (brand && typeof brand === 'string') {
+            mongoQuery.brand = { $regex: brand, $options: 'i' };
+          }
+          
+          // Add in-stock filter if provided
+          if (inStock !== undefined) {
+            mongoQuery.inStock = inStock === 'true';
+          }
+          
+          // Prepare sort options
+          let sortOptions: any = {};
+          switch (sortBy) {
+            case 'price_asc':
+              sortOptions = { price: 1 };
+              break;
+            case 'price_desc':
+              sortOptions = { price: -1 };
+              break;
+            case 'name_asc':
+              sortOptions = { name: 1 };
+              break;
+            case 'name_desc':
+              sortOptions = { name: -1 };
+              break;
+            case 'relevance':
+            default:
+              // For text search, use text score if available
+              if (mongoQuery.$text) {
+                sortOptions = { score: { $meta: "textScore" } };
+              } else {
+                // Default sort by name
+                sortOptions = { name: 1 };
+              }
+              break;
+          }
+          
+          // Advanced projection for better network performance
+          const projection: any = {
+            _id: 0, // Exclude MongoDB _id field
+            id: 1,
+            name: 1,
+            price: 1,
+            discountedPrice: 1,
+            imageUrl: 1,
+            brand: 1,
+            quantity: 1,
+            categoryId: 1,
+            inStock: 1
+          };
+          
+          // Add text score to projection for relevance sorting
+          if (mongoQuery.$text) {
+            projection.score = { $meta: "textScore" };
+          }
+          
+          // Use Promise.all for parallel execution (both count and products)
+          // Also use timeouts to ensure we don't wait too long for counts
+          const countPromise = Promise.race([
+            Product.countDocuments(mongoQuery).exec(),
+            new Promise(resolve => setTimeout(() => resolve(1000), 1000)) // 1 second timeout
+          ]);
+          
+          const productsPromise = Product.find(mongoQuery, projection)
+            .sort(sortOptions)
             .skip(skip)
             .limit(limitNum)
-            .lean(); // Use lean for better performance
+            .lean()
+            .exec();
           
-          // Get total count for pagination
-          const total = await Product.countDocuments(searchQuery);
+          const [totalCount, products] = await Promise.all([
+            countPromise,
+            productsPromise
+          ]);
+          
+          console.timeEnd('product-search-time');
           
           return res.json({
             products,
             pagination: {
-              total,
+              total: typeof totalCount === 'number' ? totalCount : 1000,
               page: pageNum,
               limit: limitNum,
-              pages: Math.ceil(total / limitNum)
-            }
+              pages: Math.ceil((typeof totalCount === 'number' ? totalCount : 1000) / limitNum)
+            },
+            engine: 'mongodb',
+            searchTime: true
           });
         }
       } catch (error) {
         console.log('MongoDB search fallback to in-memory:', error instanceof Error ? error.message : 'unknown error');
       }
       
-      // Fallback to in-memory search with optimizations for large datasets
-      console.log('Using in-memory product search');
+      // Fallback to in-memory search with advanced optimizations for large datasets
+      console.log('Using optimized in-memory product search');
       const searchQuery = query.toLowerCase();
       const allProducts = await dbStorage.getProducts();
       
-      // Apply category filter first if provided (reduces dataset size early)
-      let filteredByCategoryProducts = allProducts;
+      // Apply filters in order of most restrictive first
+      let filteredProducts = allProducts;
+      
+      // 1. Apply category filter first (typically most restrictive)
       if (categoryId && !isNaN(Number(categoryId))) {
-        filteredByCategoryProducts = allProducts.filter(p => p.categoryId === Number(categoryId));
+        filteredProducts = filteredProducts.filter(p => p.categoryId === Number(categoryId));
       }
       
-      // Use early return pattern for better performance with large arrays
-      const filteredProducts = filteredByCategoryProducts.filter(product => {
-        // Check name first as most likely match (faster short-circuit)
+      // 2. Apply price filters next
+      if (minPrice && !isNaN(parseFloat(minPrice as string))) {
+        const min = parseFloat(minPrice as string);
+        filteredProducts = filteredProducts.filter(p => p.price >= min);
+      }
+      
+      if (maxPrice && !isNaN(parseFloat(maxPrice as string))) {
+        const max = parseFloat(maxPrice as string);
+        filteredProducts = filteredProducts.filter(p => p.price <= max);
+      }
+      
+      // 3. Apply brand filter
+      if (brand && typeof brand === 'string') {
+        const brandLower = brand.toLowerCase();
+        filteredProducts = filteredProducts.filter(p => 
+          p.brand && p.brand.toLowerCase().includes(brandLower)
+        );
+      }
+      
+      // 4. Apply in-stock filter
+      if (inStock !== undefined) {
+        const inStockBool = inStock === 'true';
+        filteredProducts = filteredProducts.filter(p => p.inStock === inStockBool);
+      }
+      
+      // 5. Finally apply search query filter (usually least restrictive but most CPU-intensive)
+      // Use fast short-circuit evaluation (return true as soon as match found)
+      filteredProducts = filteredProducts.filter(product => {
+        // Check name first (most common match)
         if (product.name.toLowerCase().includes(searchQuery)) return true;
         
-        // Only check description and brand if name doesn't match
-        if (product.description && product.description.toLowerCase().includes(searchQuery)) return true;
+        // Only check other fields if name doesn't match
         if (product.brand && product.brand.toLowerCase().includes(searchQuery)) return true;
+        
+        // Check description last as it's the largest text field
+        if (product.description && product.description.toLowerCase().includes(searchQuery)) return true;
         
         return false;
       });
       
-      // Calculate pagination
-      const startIndex = skip;
-      const endIndex = startIndex + limitNum;
+      // Apply sorting based on selected option
+      switch (sortBy) {
+        case 'price_asc':
+          filteredProducts.sort((a, b) => a.price - b.price);
+          break;
+        case 'price_desc':
+          filteredProducts.sort((a, b) => b.price - a.price);
+          break;
+        case 'name_asc':
+          filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'name_desc':
+          filteredProducts.sort((a, b) => b.name.localeCompare(a.name));
+          break;
+        case 'relevance':
+        default:
+          // Sort by relevance (name match type priority)
+          filteredProducts.sort((a, b) => {
+            // Give priority to exact matches
+            const aExactMatch = a.name.toLowerCase() === searchQuery;
+            const bExactMatch = b.name.toLowerCase() === searchQuery;
+            
+            if (aExactMatch && !bExactMatch) return -1;
+            if (!aExactMatch && bExactMatch) return 1;
+            
+            // Then to prefix/starts with matches
+            const aStartsMatch = a.name.toLowerCase().startsWith(searchQuery);
+            const bStartsMatch = b.name.toLowerCase().startsWith(searchQuery);
+            
+            if (aStartsMatch && !bStartsMatch) return -1;
+            if (!aStartsMatch && bStartsMatch) return 1;
+            
+            // Fall back to alphabetical
+            return a.name.localeCompare(b.name);
+          });
+      }
       
-      // Create a simplified version of the products array for better performance
+      // Apply pagination
+      const startIndex = skip;
+      const endIndex = Math.min(startIndex + limitNum, filteredProducts.length);
+      
+      // Project only needed fields for smaller payload
       const paginatedProducts = filteredProducts
         .slice(startIndex, endIndex)
         .map(p => ({
@@ -710,8 +892,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           imageUrl: p.imageUrl,
           brand: p.brand,
           quantity: p.quantity,
-          categoryId: p.categoryId
+          categoryId: p.categoryId,
+          inStock: p.inStock
         }));
+      
+      console.timeEnd('product-search-time');
       
       return res.json({
         products: paginatedProducts,
@@ -720,7 +905,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           page: pageNum,
           limit: limitNum,
           pages: Math.ceil(filteredProducts.length / limitNum)
-        }
+        },
+        engine: 'memory'
       });
     } catch (error) {
       console.error("Search error:", error);
@@ -728,17 +914,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Real-time medicine search endpoint - Optimized for large datasets
+  // Real-time medicine search endpoint - Ultra-optimized for 700,000+ products
   app.get("/api/medicine/search", async (req: Request, res: Response) => {
     try {
-      const { q, limit = 10 } = req.query;
+      const { 
+        q, 
+        limit = 10,
+        page = 1,
+        categoryId,
+        minPrice,
+        maxPrice,
+        sortBy = 'relevance',
+        brand,
+        inStock
+      } = req.query;
       
       if (!q || typeof q !== 'string') {
         return res.status(400).json({ error: "Search query is required" });
       }
       
       const query = q.toLowerCase();
-      const limitNum = Number(limit);
+      const limitNum = Math.min(parseInt(limit as string) || 10, 50); // Cap at 50 for performance
+      const pageNum = parseInt(page as string) || 1;
+      const skip = (pageNum - 1) * limitNum;
+      
+      console.time('search-time');
       
       // Try to search in MongoDB first for better performance with large datasets
       try {
@@ -746,9 +946,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { Product } = await import('./models');
         
         if (mongoose.connection.readyState === 1) {  // Connected to MongoDB
-          console.log('Using MongoDB for medicine search');
+          console.log('Using MongoDB for optimized medicine search');
           
-          // Create an index if not exists for performance
+          // Create weighted text index if not exists (better than standard)
           try {
             await Product.collection.createIndex({ 
               name: "text", 
@@ -756,45 +956,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
               brand: "text",
               composition: "text",
               manufacturer: "text" 
+            }, {
+              weights: {
+                name: 10,         // Prioritize name matches
+                brand: 5,          // Brand is second
+                composition: 5,    // Composition is tied for second
+                manufacturer: 3,   // Manufacturer is third
+                description: 1     // Description least important
+              },
+              default_language: "english",
+              background: true,   // Non-blocking indexing
+              name: "product_search_index"
             });
+            
+            // Also create regular indexes for other filters
+            await Promise.allSettled([
+              Product.collection.createIndex({ categoryId: 1 }),
+              Product.collection.createIndex({ price: 1 }),
+              Product.collection.createIndex({ brand: 1 }),
+              Product.collection.createIndex({ inStock: 1 })
+            ]);
           } catch (indexError) {
-            // If index already exists, this is fine
-            console.log('Index operation:', indexError instanceof Error ? indexError.message : 'completed');
+            // If indexes already exist, this is fine
+            console.log('Index operation completed or already exists');
           }
           
-          // For partial matching, use regex with index-utilizing prefixes
-          const products = await Product.find({
-            $or: [
-              { name: { $regex: query, $options: 'i' } },
-              { brand: { $regex: query, $options: 'i' } },
-              { composition: { $regex: query, $options: 'i' } },
-              // Use text search for description as it can be longer
-              { $text: { $search: query } }
-            ]
-          })
-          .select('id name price discountedPrice imageUrl brand quantity') // Only select needed fields
-          .limit(limitNum);
+          // Build query with advanced options
+          let mongoQuery: any = {};
           
-          return res.json(products);
+          // Text search strategy based on query length
+          if (query.length > 3) {
+            // For longer queries, use both text search and regex for better results
+            mongoQuery.$or = [
+              { name: { $regex: query, $options: 'i' } }, // Case-insensitive regex for name (most important)
+              { $text: { $search: query } }              // Text search for other fields
+            ];
+          } else {
+            // For short queries (3 chars or less), use prefix matching which is faster
+            mongoQuery.name = { $regex: `^${query}`, $options: 'i' };
+          }
+          
+          // Add filters if provided
+          if (categoryId && !isNaN(parseInt(categoryId as string))) {
+            mongoQuery.categoryId = parseInt(categoryId as string);
+          }
+          
+          // Price filtering
+          if ((minPrice && !isNaN(parseFloat(minPrice as string))) || 
+              (maxPrice && !isNaN(parseFloat(maxPrice as string)))) {
+            mongoQuery.price = {};
+            
+            if (minPrice && !isNaN(parseFloat(minPrice as string))) {
+              mongoQuery.price.$gte = parseFloat(minPrice as string);
+            }
+            
+            if (maxPrice && !isNaN(parseFloat(maxPrice as string))) {
+              mongoQuery.price.$lte = parseFloat(maxPrice as string);
+            }
+          }
+          
+          // Brand filtering
+          if (brand && typeof brand === 'string') {
+            mongoQuery.brand = { $regex: brand, $options: 'i' };
+          }
+          
+          // In-stock filtering
+          if (inStock !== undefined) {
+            mongoQuery.inStock = inStock === 'true';
+          }
+          
+          // Prepare sort options
+          let sortOptions: any = {};
+          switch (sortBy) {
+            case 'price_asc':
+              sortOptions = { price: 1 };
+              break;
+            case 'price_desc':
+              sortOptions = { price: -1 };
+              break;
+            case 'name_asc':
+              sortOptions = { name: 1 };
+              break;
+            case 'name_desc':
+              sortOptions = { name: -1 };
+              break;
+            case 'relevance':
+            default:
+              // For text search, use text score if available
+              if (mongoQuery.$text) {
+                sortOptions = { score: { $meta: "textScore" } };
+              } else {
+                // Default sort by name
+                sortOptions = { name: 1 };
+              }
+              break;
+          }
+          
+          // Build projection - only select fields we need
+          const projection: any = {
+            _id: 0, // Exclude MongoDB _id field
+            id: 1,
+            name: 1,
+            price: 1,
+            discountedPrice: 1,
+            imageUrl: 1,
+            brand: 1,
+            quantity: 1,
+            categoryId: 1,
+            inStock: 1
+          };
+          
+          // Add text score to projection for relevance sorting
+          if (mongoQuery.$text) {
+            projection.score = { $meta: "textScore" };
+          }
+          
+          // Execute query with pagination and projection
+          const countPromise = Product.countDocuments(mongoQuery).exec();
+          
+          const productsPromise = Product.find(mongoQuery, projection)
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(limitNum)
+            .lean()
+            .exec();
+          
+          // Use Promise.allSettled to handle potential timeout on count
+          const [countResult, productsResult] = await Promise.allSettled([
+            Promise.race([
+              countPromise,
+              new Promise(resolve => setTimeout(() => resolve(1000), 1000)) // 1 second timeout
+            ]),
+            productsPromise
+          ]);
+          
+          const totalCount = countResult.status === 'fulfilled' ? countResult.value as number : 1000;
+          
+          if (productsResult.status === 'fulfilled') {
+            const products = productsResult.value;
+            
+            console.timeEnd('search-time');
+            
+            return res.json({
+              results: products,
+              pagination: {
+                page: pageNum,
+                limit: limitNum,
+                totalCount,
+                totalPages: Math.ceil(totalCount / limitNum)
+              },
+              searchTime: true
+            });
+          }
         }
       } catch (error) {
-        console.log('MongoDB search fallback to in-memory');
+        console.log('MongoDB search fallback to in-memory:', error instanceof Error ? error.message : 'Unknown error');
         // Continue to in-memory fallback
       }
       
-      // Fallback to in-memory search with optimization
+      // Fallback to in-memory search with advanced optimization for large datasets
       const allProducts = await dbStorage.getProducts();
       
-      // Use an early-return filter pattern for better performance with large arrays
-      const filteredProducts = allProducts.filter(product => {
-        // Check name first as the most likely match (faster short-circuit)
-        if (product.name.toLowerCase().includes(query)) return true;
+      // Apply filters in order of most restrictive first for better performance
+      let filteredProducts = allProducts;
+      
+      // First apply category filter if available (typically most restrictive)
+      if (categoryId && !isNaN(parseInt(categoryId as string))) {
+        const catId = parseInt(categoryId as string);
+        filteredProducts = filteredProducts.filter(p => p.categoryId === catId);
+      }
+      
+      // Then apply price filters
+      if (minPrice && !isNaN(parseFloat(minPrice as string))) {
+        const min = parseFloat(minPrice as string);
+        filteredProducts = filteredProducts.filter(p => p.price >= min);
+      }
+      
+      if (maxPrice && !isNaN(parseFloat(maxPrice as string))) {
+        const max = parseFloat(maxPrice as string);
+        filteredProducts = filteredProducts.filter(p => p.price <= max);
+      }
+      
+      // Apply brand filter if available
+      if (brand && typeof brand === 'string') {
+        const brandLower = brand.toLowerCase();
+        filteredProducts = filteredProducts.filter(p => 
+          p.brand && p.brand.toLowerCase().includes(brandLower)
+        );
+      }
+      
+      // Apply in-stock filter if available
+      if (inStock !== undefined) {
+        const inStockBool = inStock === 'true';
+        filteredProducts = filteredProducts.filter(p => p.inStock === inStockBool);
+      }
+      
+      // Finally apply search query filter (usually least restrictive but most CPU-intensive)
+      filteredProducts = filteredProducts.filter(product => {
+        // For large datasets, use early returns for performance
         
-        // Check other fields only if name doesn't match
+        // Check name first (most common match)
+        const nameMatch = product.name.toLowerCase().includes(query);
+        if (nameMatch) return true;
+        
+        // Only check other fields if name doesn't match
         if (product.brand && product.brand.toLowerCase().includes(query)) return true;
+        
+        // Check description last as it's the largest text field
         if (product.description && product.description.toLowerCase().includes(query)) return true;
         
-        // Only check extended properties as a last resort
+        // Only check extended properties if basic properties don't match
         const productWithExtras = product as any;
         if (productWithExtras.composition && productWithExtras.composition.toLowerCase().includes(query)) return true;
         if (productWithExtras.manufacturer && productWithExtras.manufacturer.toLowerCase().includes(query)) return true;
@@ -802,18 +1173,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return false;
       });
       
-      // Return only a limited subset with minimal fields
-      const simplifiedProducts = filteredProducts.slice(0, limitNum).map(p => ({
+      // Sort based on selected option
+      switch (sortBy) {
+        case 'price_asc':
+          filteredProducts.sort((a, b) => a.price - b.price);
+          break;
+        case 'price_desc':
+          filteredProducts.sort((a, b) => b.price - a.price);
+          break;
+        case 'name_asc':
+          filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'name_desc':
+          filteredProducts.sort((a, b) => b.name.localeCompare(a.name));
+          break;
+        case 'relevance':
+        default:
+          // Sort by relevance (name match type priority)
+          filteredProducts.sort((a, b) => {
+            // Give priority to exact matches
+            const aExactMatch = a.name.toLowerCase() === query;
+            const bExactMatch = b.name.toLowerCase() === query;
+            
+            if (aExactMatch && !bExactMatch) return -1;
+            if (!aExactMatch && bExactMatch) return 1;
+            
+            // Then to prefix/starts with matches
+            const aStartsMatch = a.name.toLowerCase().startsWith(query);
+            const bStartsMatch = b.name.toLowerCase().startsWith(query);
+            
+            if (aStartsMatch && !bStartsMatch) return -1;
+            if (!aStartsMatch && bStartsMatch) return 1;
+            
+            // Then to contains matches (which all results do at this point)
+            // Fall back to alphabetical
+            return a.name.localeCompare(b.name);
+          });
+      }
+      
+      // Apply pagination
+      const total = filteredProducts.length;
+      const paginatedProducts = filteredProducts.slice(skip, skip + limitNum);
+      
+      // Project only needed fields for smaller response
+      const projectedProducts = paginatedProducts.map(p => ({
         id: p.id,
         name: p.name,
         price: p.price,
         discountedPrice: p.discountedPrice,
         imageUrl: p.imageUrl,
         brand: p.brand,
-        quantity: p.quantity
+        quantity: p.quantity,
+        categoryId: p.categoryId,
+        inStock: p.inStock
       }));
       
-      return res.json(simplifiedProducts);
+      console.timeEnd('search-time');
+      
+      return res.json({
+        results: projectedProducts,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          totalCount: total,
+          totalPages: Math.ceil(total / limitNum)
+        }
+      });
     } catch (error) {
       console.error("Medicine search error:", error);
       res.status(500).json({ error: "Error searching medicines" });
