@@ -40,6 +40,7 @@ import CategoryGrid from '@/components/home/CategoryGrid';
 import OffersCarousel from '@/components/home/OffersCarousel';
 import QuickLinks from '@/components/home/QuickLinks';
 import ProductSlider from '@/components/products/ProductSlider';
+import MedicineSearch from '@/components/search/MedicineSearch';
 
 // Categories
 import { useQuery } from '@tanstack/react-query';
@@ -96,10 +97,9 @@ const Home = () => {
       <div className="container mx-auto px-4 pt-2 pb-16">
         {isMobile ? (
           <>
-            {/* Search bar for mobile (just visual, not functional in this demo) */}
-            <div className="flex items-center bg-gray-100 rounded-full p-2 mb-4">
-              <i className="fas fa-search text-gray-400 mx-2"></i>
-              <span className="text-gray-400 text-sm">Search medicines/healthcare products</span>
+            {/* Search bar for mobile */}
+            <div className="mb-4">
+              <MedicineSearch />
             </div>
             
             {/* Mobile Quick Links */}

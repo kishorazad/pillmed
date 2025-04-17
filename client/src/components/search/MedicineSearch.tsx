@@ -44,7 +44,7 @@ const MedicineSearch: React.FC = () => {
 
       setLoading(true);
       try {
-        const response = await fetch(`/api/products/search?q=${encodeURIComponent(debouncedSearchTerm)}`);
+        const response = await fetch(`/api/medicine/search?q=${encodeURIComponent(debouncedSearchTerm)}`);
         if (response.ok) {
           const data = await response.json();
           setResults(data);

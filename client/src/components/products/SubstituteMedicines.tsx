@@ -33,8 +33,8 @@ const SubstituteMedicines: React.FC<SubstituteMedicinesProps> = ({
       try {
         // First check if we have the composition, as it's the most reliable way to find substitutes
         let endpoint = composition 
-          ? `/api/products/substitutes?composition=${encodeURIComponent(composition)}&excludeId=${medicineId}`
-          : `/api/products/substitutes?name=${encodeURIComponent(medicineName)}&excludeId=${medicineId}`;
+          ? `/api/medicine/substitutes?composition=${encodeURIComponent(composition)}&excludeId=${medicineId}`
+          : `/api/medicine/substitutes?name=${encodeURIComponent(medicineName)}&excludeId=${medicineId}`;
         
         const response = await fetch(endpoint);
         

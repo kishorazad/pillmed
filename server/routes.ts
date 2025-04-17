@@ -665,6 +665,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Real-time medicine search endpoint
+  app.get("/api/medicine/search", async (req: Request, res: Response) => {
+    try {
+      const { q, limit = 10 } = req.query;
+      
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ error: "Search query is required" });
+      }
+      
+      const query = q.toLowerCase();
+      
+      // Fallback to in-memory search
+      const allProducts = await dbStorage.getProducts();
+      
+      const filteredProducts = allProducts.filter(product => 
+        product.name.toLowerCase().includes(query) ||
+        (product.composition && product.composition.toLowerCase().includes(query)) ||
+        (product.manufacturer && product.manufacturer.toLowerCase().includes(query))
+      );
+      
+      return res.json(filteredProducts.slice(0, Number(limit)));
+    } catch (error) {
+      console.error("Medicine search error:", error);
+      res.status(500).json({ error: "Error searching medicines" });
+    }
+  });
+  
+  // Medicine substitutes endpoint
+  app.get("/api/medicine/substitutes", async (req: Request, res: Response) => {
+    try {
+      const { name, composition, excludeId } = req.query;
+      
+      if ((!name && !composition) || (name && typeof name !== 'string') || (composition && typeof composition !== 'string')) {
+        return res.status(400).json({ error: "Either name or composition is required" });
+      }
+      
+      const excludedId = excludeId ? parseInt(excludeId as string) : undefined;
+      const allProducts = await dbStorage.getProducts();
+      let substitutes = [];
+      
+      if (composition) {
+        // If we have composition, use that for a more accurate match
+        const compositionLower = composition.toLowerCase();
+        substitutes = allProducts.filter(product => 
+          product.id !== excludedId && 
+          product.composition && 
+          product.composition.toLowerCase().includes(compositionLower)
+        );
+      } else if (name) {
+        // Otherwise try to match by name, extracting the likely generic name
+        // Heuristic: Try to get the first word which might be the generic name
+        const nameParts = name.split(' ');
+        const likelyGenericName = nameParts[0].toLowerCase();
+        
+        substitutes = allProducts.filter(product => 
+          product.id !== excludedId && 
+          product.name.toLowerCase().includes(likelyGenericName)
+        );
+      }
+      
+      // Sort substitutes by price (lowest first)
+      substitutes.sort((a, b) => {
+        const priceA = a.discountedPrice || a.price;
+        const priceB = b.discountedPrice || b.price;
+        return priceA - priceB;
+      });
+      
+      res.json(substitutes.slice(0, 10));
+    } catch (error) {
+      console.error("Substitutes search error:", error);
+      res.status(500).json({ error: "Error finding substitute medicines" });
+    }
+  });
+  
   // Admin dashboard endpoints
   app.post("/api/admin/products", async (req: Request, res: Response) => {
     try {
