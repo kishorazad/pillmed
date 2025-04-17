@@ -275,6 +275,232 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Pincode lookup endpoint
+  app.get("/api/pincode/:pincode", async (req: Request, res: Response) => {
+    try {
+      const pincode = req.params.pincode;
+      
+      if (!pincode || pincode.length !== 6 || !/^\d+$/.test(pincode)) {
+        return res.status(400).json({ error: "Invalid pincode format. Must be a 6-digit number." });
+      }
+      
+      // Try to get from both MongoDB and in-memory storage
+      try {
+        // Try MongoDB first using Mongoose
+        const mongoose = await import('mongoose');
+        const { Pincode } = await import('./models');
+        
+        if (mongoose.connection.readyState === 1) {  // Connected
+          const pincodeData = await Pincode.findOne({ pincode });
+          
+          if (pincodeData) {
+            return res.json({
+              pincode: pincodeData.pincode,
+              city: pincodeData.officename,
+              district: pincodeData.district,
+              state: pincodeData.statename,
+              deliveryAvailable: pincodeData.delivery === 'Delivery'
+            });
+          }
+        }
+      } catch (error) {
+        console.error("MongoDB pincode lookup failed:", error);
+        // Continue to in-memory fallback
+      }
+      
+      // Fallback to in-memory search through CSV sample
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const csvParser = await import('csv-parser');
+        
+        const csvFilePath = path.default.join(process.cwd(), 'attached_assets', 'pincode.csv');
+        
+        if (!fs.default.existsSync(csvFilePath)) {
+          return res.status(404).json({ error: "Pincode database not available" });
+        }
+        
+        let found = false;
+        
+        return new Promise<void>((resolve, reject) => {
+          fs.default.createReadStream(csvFilePath)
+            .pipe(csvParser.default())
+            .on('data', (data) => {
+              if (data.pincode === pincode) {
+                found = true;
+                res.json({
+                  pincode: data.pincode,
+                  city: data.officename,
+                  district: data.district,
+                  state: data.statename,
+                  deliveryAvailable: data.delivery === 'Delivery'
+                });
+                resolve();
+              }
+            })
+            .on('end', () => {
+              if (!found) {
+                res.status(404).json({ error: "Pincode not found" });
+              }
+              resolve();
+            })
+            .on('error', (error) => {
+              console.error("CSV parsing error:", error);
+              reject(error);
+            });
+        });
+      } catch (error) {
+        console.error("In-memory pincode lookup failed:", error);
+        return res.status(500).json({ error: "Failed to lookup pincode" });
+      }
+    } catch (error) {
+      console.error("Pincode lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup pincode" });
+    }
+  });
+  
+  // Product search endpoint
+  app.get("/api/products/search", async (req: Request, res: Response) => {
+    try {
+      const { query, limit = 10, page = 1 } = req.query;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Search query is required" });
+      }
+      
+      // Try to search in MongoDB first using text index
+      try {
+        const mongoose = await import('mongoose');
+        const { Product } = await import('./models');
+        
+        if (mongoose.connection.readyState === 1) {  // Connected
+          const skip = (Number(page) - 1) * Number(limit);
+          
+          const products = await Product.find(
+            { $text: { $search: query } },
+            { score: { $meta: "textScore" } }
+          )
+          .sort({ score: { $meta: "textScore" } })
+          .skip(skip)
+          .limit(Number(limit));
+          
+          const total = await Product.countDocuments({ $text: { $search: query } });
+          
+          return res.json({
+            products,
+            pagination: {
+              total,
+              page: Number(page),
+              limit: Number(limit),
+              pages: Math.ceil(total / Number(limit))
+            }
+          });
+        }
+      } catch (error) {
+        console.error("MongoDB search failed:", error);
+        // Continue to in-memory fallback
+      }
+      
+      // Fallback to in-memory search
+      const searchQuery = query.toLowerCase();
+      const allProducts = await storage.getProducts();
+      
+      const filteredProducts = allProducts.filter(product => 
+        product.name.toLowerCase().includes(searchQuery) ||
+        (product.description && product.description.toLowerCase().includes(searchQuery)) ||
+        (product.brand && product.brand.toLowerCase().includes(searchQuery))
+      );
+      
+      const limitNum = Number(limit);
+      const pageNum = Number(page);
+      const startIndex = (pageNum - 1) * limitNum;
+      const endIndex = startIndex + limitNum;
+      
+      const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+      
+      return res.json({
+        products: paginatedProducts,
+        pagination: {
+          total: filteredProducts.length,
+          page: pageNum,
+          limit: limitNum,
+          pages: Math.ceil(filteredProducts.length / limitNum)
+        }
+      });
+    } catch (error) {
+      console.error("Search error:", error);
+      res.status(500).json({ error: "Failed to search products" });
+    }
+  });
+  
+  // Admin dashboard endpoints
+  app.post("/api/admin/products", async (req: Request, res: Response) => {
+    try {
+      // Check if user is authenticated and is an admin
+      const userSession = req.session as any;
+      if (!userSession || !userSession.user || userSession.user.role !== 'admin') {
+        return res.status(403).json({ error: "Unauthorized. Admin access required." });
+      }
+      
+      const productData = req.body;
+      
+      // Try to add to MongoDB first
+      try {
+        const mongoose = await import('mongoose');
+        const { Product } = await import('./models');
+        
+        if (mongoose.connection.readyState === 1) {  // Connected
+          const newProduct = await Product.create(productData);
+          return res.status(201).json(newProduct);
+        }
+      } catch (error) {
+        console.error("MongoDB product creation failed:", error);
+        // Continue to in-memory fallback
+      }
+      
+      // Fallback to in-memory product creation
+      const newProduct = await storage.createProduct(productData);
+      res.status(201).json(newProduct);
+    } catch (error) {
+      console.error("Admin product creation error:", error);
+      res.status(500).json({ error: "Failed to create product" });
+    }
+  });
+  
+  // Get all user data (admin only)
+  app.get("/api/admin/users", async (req: Request, res: Response) => {
+    try {
+      // Check if user is authenticated and is an admin
+      const userSession = req.session as any;
+      if (!userSession || !userSession.user || userSession.user.role !== 'admin') {
+        return res.status(403).json({ error: "Unauthorized. Admin access required." });
+      }
+      
+      // Try MongoDB first
+      try {
+        const mongoose = await import('mongoose');
+        const { User } = await import('./models');
+        
+        if (mongoose.connection.readyState === 1) {  // Connected
+          const users = await User.find({}, { password: 0 });  // Exclude passwords
+          return res.json(users);
+        }
+      } catch (error) {
+        console.error("MongoDB users fetch failed:", error);
+        // Continue to in-memory fallback
+      }
+      
+      // Fallback to in-memory
+      const users = await storage.getUsersByRole("admin");
+      // Remove passwords before sending
+      const safeUsers = users.map(({ password, ...user }) => user);
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Admin users fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

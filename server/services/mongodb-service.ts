@@ -1,65 +1,156 @@
+import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
 import csv from 'csv-parser';
-import { MongoClient, ObjectId } from 'mongodb';
-import {
-  User,
-  Category,
-  Product,
-  CartItem,
-  Article,
-  Testimonial,
-  LabTest,
-  HealthTip
+import { 
+  User, Product, Category, CartItem, Article, 
+  Testimonial, LabTest, Doctor, Pharmacy, Laboratory,
+  Appointment, LabBooking, Order, OrderItem, HealthTip, Pincode
 } from '../models';
 
-const uri = "mongodb://mongodb:27017/medadock";
-const client = new MongoClient(uri);
-let db: any;
+// MongoDB connection URL - uses environment variable or falls back to localhost
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/medadock';
 
-const connectToMongoDB = async () => {
+export const connectToDatabase = async () => {
   try {
-    await client.connect();
-    db = client.db('medadock');
-    console.log('Connected to MongoDB database');
-    return db;
+    await mongoose.connect(MONGODB_URI);
+    console.log('Connected to MongoDB');
+    return true;
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    console.log('Falling back to in-memory storage');
-    return null;
+    return false;
   }
 };
 
-const seedMedicinesFromCSV = async () => {
+// Seed data function for initial data
+export const seedData = async () => {
   try {
-    // First, make sure we have categories
-    const categories = await Category.find();
-    if (categories.length === 0) {
-      console.log('Seeding categories...');
-      await seedCategories();
+    // Check if we already have users
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      console.log('Seeding users...');
+      
+      // Create demo users
+      const users = [
+        {
+          username: 'user1',
+          email: 'user1@example.com',
+          password: 'password123',
+          name: 'Test User',
+          phone: '1234567890',
+          address: '123 Test Street, Test City',
+          role: 'customer',
+          pincode: '110001',
+          profileImageUrl: null
+        },
+        {
+          username: 'admin',
+          email: 'admin@example.com',
+          password: 'admin123',
+          name: 'Admin User',
+          phone: '0987654321',
+          address: '456 Admin Street, Admin City',
+          role: 'admin',
+          pincode: '110002',
+          profileImageUrl: null
+        },
+        {
+          username: 'doctor1',
+          email: 'doctor@example.com',
+          password: 'doctor123',
+          name: 'Dr. John Smith',
+          phone: '5554443333',
+          address: '789 Doctor Avenue, Medical City',
+          role: 'doctor',
+          pincode: '110003',
+          profileImageUrl: null
+        },
+        {
+          username: 'pharmacy1',
+          email: 'pharmacy@example.com',
+          password: 'pharmacy123',
+          name: 'City Pharmacy',
+          phone: '1112223333',
+          address: '101 Health Street, Pharma City',
+          role: 'pharmacy',
+          pincode: '110004',
+          profileImageUrl: null
+        }
+      ];
+      
+      for (const user of users) {
+        await User.create(user);
+      }
+      console.log('Users seeded successfully');
     }
+    
+    // Check if we already have categories
+    const categoryCount = await Category.countDocuments();
+    if (categoryCount === 0) {
+      console.log('Seeding categories...');
+      
+      // Create medicine categories
+      const categories = [
+        { name: 'Pregnancy & Maternal Care', description: 'Medications for expecting mothers and maternal health', imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae' },
+        { name: 'Antibiotics & Infections', description: 'Medications treating bacterial and other infections', imageUrl: 'https://images.unsplash.com/photo-1576671234524-ed58c95eab38' },
+        { name: 'Pain & Fever', description: 'Relief medications for pain, inflammation and fever', imageUrl: 'https://images.unsplash.com/photo-1605289982774-9a6fef564df8' },
+        { name: 'Diabetes & Metabolic', description: 'Medications for diabetes and metabolic conditions', imageUrl: 'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2' },
+        { name: 'Mental Health', description: 'Medications for anxiety, depression and other mental health conditions', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b' },
+        { name: 'Skin Care', description: 'Topical medications for skin conditions and infections', imageUrl: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e' }
+      ];
+      
+      for (const category of categories) {
+        await Category.create(category);
+      }
+      console.log('Categories seeded successfully');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error seeding data:', error);
+    return false;
+  }
+};
 
-    // Get category IDs
-    const allCategories = await Category.find();
+// Import medicines from CSV 
+export const importMedicinesFromCSV = async () => {
+  try {
+    console.log("Starting CSV import process...");
+    
+    // Check how many products we already have
+    const existingProducts = await Product.countDocuments();
+    if (existingProducts > 10) {
+      console.log(`Already have ${existingProducts} products in database. Skipping import.`);
+      return true;
+    }
+    
+    // Get all categories first
+    const categories = await Category.find();
     const categoryMap = new Map();
-    allCategories.forEach(cat => {
+    
+    categories.forEach(cat => {
       categoryMap.set(cat.name, cat._id);
     });
-
-    // Check if we have existing medicines
-    const existingProducts = await Product.countDocuments();
-    if (existingProducts > 0) {
-      console.log(`Already have ${existingProducts} medicines in database. Skipping import.`);
-      return;
+    
+    // Create categories if needed
+    if (categories.length === 0) {
+      console.error("No categories found. Please seed categories first.");
+      return false;
     }
-
+    
     const results: any[] = [];
     const csvFilePath = path.join(process.cwd(), 'attached_assets', '[March 25 Updated] Medicines and OTC samples - Medicines.csv');
     
     console.log('Reading CSV from:', csvFilePath);
     
-    // Read the CSV file
-    return new Promise((resolve, reject) => {
+    // Check if file exists
+    if (!fs.existsSync(csvFilePath)) {
+      console.error(`CSV file not found at ${csvFilePath}`);
+      return false;
+    }
+    
+    // Read the CSV file and return promise
+    return new Promise<boolean>((resolve, reject) => {
       fs.createReadStream(csvFilePath)
         .pipe(csv())
         .on('data', (data) => results.push(data))
@@ -67,94 +158,94 @@ const seedMedicinesFromCSV = async () => {
           console.log(`CSV parsing complete. Found ${results.length} medicines.`);
           
           try {
-            const medicineData = results.map(item => {
+            // First 50 products only to avoid overwhelming the system
+            const medicineData = results.slice(0, 50).map(item => {
               // Determine category based on primary use or medicine type
               let categoryId;
+              const primaryUse = item.primary_use || '';
+              const saltComposition = item.salt_composition || '';
               
               // Default category mapping logic
-              if (item.primary_use && item.primary_use.toLowerCase().includes('pregnancy')) {
+              if (primaryUse.toLowerCase().includes('pregnancy')) {
                 categoryId = categoryMap.get('Pregnancy & Maternal Care');
-              } else if (item.salt_composition && (
-                  item.salt_composition.toLowerCase().includes('amox') || 
-                  item.salt_composition.toLowerCase().includes('clav') ||
-                  item.salt_composition.toLowerCase().includes('cefixime')
-                )) {
+              } else if (saltComposition.toLowerCase().includes('amox') || 
+                         saltComposition.toLowerCase().includes('clav') ||
+                         saltComposition.toLowerCase().includes('cefixime')) {
                 categoryId = categoryMap.get('Antibiotics & Infections');
-              } else if (item.primary_use && (
-                  item.primary_use.toLowerCase().includes('pain') || 
-                  item.primary_use.toLowerCase().includes('fever')
-                )) {
+              } else if (primaryUse.toLowerCase().includes('pain') || 
+                         primaryUse.toLowerCase().includes('fever') ||
+                         primaryUse.toLowerCase().includes('relief')) {
                 categoryId = categoryMap.get('Pain & Fever');
-              } else if (item.primary_use && (
-                  item.primary_use.toLowerCase().includes('diabetes') || 
-                  item.primary_use.toLowerCase().includes('sugar')
-                )) {
+              } else if (primaryUse.toLowerCase().includes('diabetes') || 
+                         primaryUse.toLowerCase().includes('sugar') ||
+                         primaryUse.toLowerCase().includes('metabolic')) {
                 categoryId = categoryMap.get('Diabetes & Metabolic');
-              } else if (item.primary_use && (
-                  item.primary_use.toLowerCase().includes('anxiety') || 
-                  item.primary_use.toLowerCase().includes('depression') ||
-                  item.primary_use.toLowerCase().includes('mental')
-                )) {
+              } else if (primaryUse.toLowerCase().includes('anxiety') || 
+                         primaryUse.toLowerCase().includes('depression') ||
+                         primaryUse.toLowerCase().includes('mental')) {
                 categoryId = categoryMap.get('Mental Health');
-              } else if (item.primary_use && (
-                  item.primary_use.toLowerCase().includes('skin') || 
-                  item.primary_use.toLowerCase().includes('acne')
-                )) {
+              } else if (primaryUse.toLowerCase().includes('skin') || 
+                         primaryUse.toLowerCase().includes('acne') ||
+                         primaryUse.toLowerCase().includes('rash')) {
                 categoryId = categoryMap.get('Skin Care');
               } else {
-                // Assign a random category if we can't determine
-                const randomCategory = allCategories[Math.floor(Math.random() * allCategories.length)];
-                categoryId = randomCategory._id;
+                // If we can't determine a category, assign to Pain & Fever as default
+                categoryId = categoryMap.get('Pain & Fever');
               }
               
               // Calculate discounted price (10-20% off)
-              const price = item.mrp ? parseFloat(item.mrp) : Math.floor(Math.random() * 500) + 100;
+              const price = Number(item.mrp) || Math.floor(Math.random() * 500) + 100;
               const discountPercent = Math.floor(Math.random() * 10) + 10;
               const discountedPrice = Math.floor(price * (1 - discountPercent / 100));
-
+              
+              // Format medication name
+              const productName = item.Product_Name || item.Product_ID || 'Medicine ' + (Math.random() * 1000).toFixed(0);
+              
+              // Create description from salt composition and introduction
+              const descriptionParts = [];
+              if (saltComposition) descriptionParts.push(saltComposition);
+              if (item.introduction) {
+                const intro = item.introduction.substring(0, 200);
+                descriptionParts.push(intro + (item.introduction.length > 200 ? '...' : ''));
+              }
+              
+              const description = descriptionParts.join(' - ') || 'No description available';
+              
               return {
-                name: item.Product_Name,
-                description: `${item.salt_composition} - ${item.introduction ? item.introduction.substring(0, 200) + '...' : 'No description available'}`,
+                name: productName,
+                description: description,
                 price: price,
                 discountedPrice: discountedPrice,
                 imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae',  // Default image
                 categoryId: categoryId,
-                brand: item.Marketer_Manufacturer,
+                brand: item.Marketer_Manufacturer || 'Generic',
                 inStock: true,
                 quantity: item.Package || item.Packaging_Detail || 'Strip of 10 Tablets',
-                rating: (Math.random() * 2 + 3).toFixed(1),  // Random rating between 3 and 5
+                rating: parseFloat((Math.random() * 2 + 3).toFixed(1)),  // Random rating between 3 and 5
                 ratingCount: Math.floor(Math.random() * 300) + 50,  // Random rating count
                 isFeatured: Math.random() > 0.7,  // About 30% of products are featured
-                
-                // Additional fields from CSV
-                productId: item.Product_ID,
-                saltComposition: item.salt_composition,
-                medicineType: item.medicine_type,
-                introduction: item.introduction,
-                benefits: item.benefits,
-                howToUse: item.how_to_use,
-                safetyAdvice: item.safety_advise,
-                ifMiss: item.if_miss,
-                packageDetail: item.Packaging_Detail,
-                mrp: item.mrp ? parseFloat(item.mrp) : null,
-                prescriptionRequired: item.prescription_required === 'Yes',
-                primaryUse: item.primary_use,
-                storage: item.storage,
-                commonSideEffect: item.common_side_effect,
-                alcoholInteraction: item.alcoholInteraction,
-                pregnancyInteraction: item.pregnancyInteraction,
-                lactationInteraction: item.lactationInteraction,
-                manufacturerAddress: item.MANUFACTURER_ADDRESS,
-                countryOfOrigin: item.country_of_origin
+                composition: saltComposition || null,
+                uses: item.primary_use || null,
+                manufacturer: item.Marketer_Manufacturer || null,
+                packSize: item.Package || item.Packaging_Detail || null
               };
             });
             
-            // Insert the medicine data into MongoDB
-            const insertResult = await Product.insertMany(medicineData);
-            console.log(`Imported ${insertResult.length} medicines to MongoDB.`);
-            resolve(insertResult);
+            // Add medicines one by one to avoid overwhelming the system
+            console.log(`Importing ${medicineData.length} medicine products...`);
+            
+            for (const medicine of medicineData) {
+              try {
+                await Product.create(medicine);
+              } catch (error) {
+                console.error(`Error importing medicine ${medicine.name}:`, error);
+              }
+            }
+            
+            console.log("Medicine import from CSV completed successfully");
+            resolve(true);
           } catch (error) {
-            console.error("Error inserting medicines:", error);
+            console.error("Error processing CSV data:", error);
             reject(error);
           }
         })
@@ -164,296 +255,118 @@ const seedMedicinesFromCSV = async () => {
         });
     });
   } catch (error) {
-    console.error('Error seeding medicines from CSV:', error);
-    throw error;
+    console.error('Error importing medicines from CSV:', error);
+    return false;
   }
 };
 
-const seedCategories = async () => {
+// Import pincodes from CSV
+export const importPincodesFromCSV = async () => {
   try {
-    const categories = [
-      { name: 'Pregnancy & Maternal Care', description: 'Medications for expecting mothers and maternal health', imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae' },
-      { name: 'Antibiotics & Infections', description: 'Medications treating bacterial and other infections', imageUrl: 'https://images.unsplash.com/photo-1576671234524-ed58c95eab38' },
-      { name: 'Pain & Fever', description: 'Relief medications for pain, inflammation and fever', imageUrl: 'https://images.unsplash.com/photo-1605289982774-9a6fef564df8' },
-      { name: 'Diabetes & Metabolic', description: 'Medications for diabetes and metabolic conditions', imageUrl: 'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2' },
-      { name: 'Mental Health', description: 'Medications for anxiety, depression and other mental health conditions', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b' },
-      { name: 'Skin Care', description: 'Topical medications for skin conditions and infections', imageUrl: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e' }
-    ];
+    console.log("Starting Pincode CSV import process...");
     
-    const categoryResults = await Category.insertMany(categories);
-    console.log(`Inserted ${categoryResults.length} categories`);
-    return categoryResults;
-  } catch (error) {
-    console.error('Error seeding categories:', error);
-    throw error;
-  }
-};
-
-const seedUsers = async () => {
-  try {
-    const existingUsers = await User.countDocuments();
-    if (existingUsers > 0) {
-      console.log(`Already have ${existingUsers} users in database. Skipping user seeding.`);
-      return;
+    // Check how many pincodes we already have
+    const existingPincodes = await Pincode.countDocuments();
+    if (existingPincodes > 10) {
+      console.log(`Already have ${existingPincodes} pincodes in database. Skipping import.`);
+      return true;
     }
     
-    const usersData = [
-      {
-        username: 'user1',
-        email: 'user1@example.com',
-        password: 'password123',
-        name: 'Test User',
-        phone: '1234567890',
-        address: '123 Test Street, Test City',
-        pincode: '110001',
-        role: 'customer',
-        profileImageUrl: null
-      },
-      {
-        username: 'admin',
-        email: 'admin@example.com',
-        password: 'admin123',
-        name: 'Admin User',
-        phone: '0987654321',
-        address: '456 Admin Street, Admin City',
-        pincode: '110002',
-        role: 'admin',
-        profileImageUrl: null
-      },
-      {
-        username: 'doctor1',
-        email: 'doctor@example.com',
-        password: 'doctor123',
-        name: 'Dr. John Smith',
-        phone: '5554443333',
-        address: '789 Doctor Avenue, Medical City',
-        pincode: '110003',
-        role: 'doctor',
-        profileImageUrl: null
-      },
-      {
-        username: 'pharmacy1',
-        email: 'pharmacy@example.com',
-        password: 'pharmacy123',
-        name: 'City Pharmacy',
-        phone: '1112223333',
-        address: '101 Health Street, Pharma City',
-        pincode: '110004',
-        role: 'pharmacy',
-        profileImageUrl: null
-      }
-    ];
+    const results: any[] = [];
+    const csvFilePath = path.join(process.cwd(), 'attached_assets', 'pincode.csv');
     
-    const userResults = await User.insertMany(usersData);
-    console.log(`Inserted ${userResults.length} users`);
-    return userResults;
-  } catch (error) {
-    console.error('Error seeding users:', error);
-    throw error;
-  }
-};
-
-const seedTestimonials = async () => {
-  try {
-    const existingTestimonials = await Testimonial.countDocuments();
-    if (existingTestimonials > 0) {
-      console.log(`Already have ${existingTestimonials} testimonials in database. Skipping seeding.`);
-      return;
+    console.log('Reading Pincode CSV from:', csvFilePath);
+    
+    // Check if file exists
+    if (!fs.existsSync(csvFilePath)) {
+      console.error(`Pincode CSV file not found at ${csvFilePath}`);
+      return false;
     }
     
-    const testimonialsData = [
-      {
-        name: 'Rajesh Singh',
-        content: 'I\'ve been using Medadock for ordering my monthly medicines for over a year now. The service is prompt, and the discounts help me save a lot on my recurring medical expenses.',
-        rating: 5,
-        initials: 'RS'
-      },
-      {
-        name: 'Anjali Patel',
-        content: 'The lab test service is excellent! They came to my home for sample collection, and I received the reports on the same day. Very convenient for busy professionals like me.',
-        rating: 4,
-        initials: 'AP'
-      },
-      {
-        name: 'Varun Kumar',
-        content: 'I consulted with a doctor through the app when I was traveling and couldn\'t visit a clinic. The video consultation was smooth, and I got the prescription digitally. Really helpful service!',
-        rating: 5,
-        initials: 'VK'
-      }
-    ];
-    
-    const testimonialResults = await Testimonial.insertMany(testimonialsData);
-    console.log(`Inserted ${testimonialResults.length} testimonials`);
-    return testimonialResults;
+    // Read the CSV file
+    return new Promise<boolean>((resolve, reject) => {
+      fs.createReadStream(csvFilePath)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', async () => {
+          console.log(`Pincode CSV parsing complete. Found ${results.length} pincodes.`);
+          
+          try {
+            // First 1000 pincodes only to avoid overwhelming the system
+            const pincodeData = results.slice(0, 1000).map(item => ({
+              pincode: item.pincode,
+              officename: item.officename,
+              divisionname: item.divisionname,
+              regionname: item.regionname,
+              circlename: item.circlename,
+              district: item.district,
+              statename: item.statename,
+              latitude: parseFloat(item.latitude) || null,
+              longitude: parseFloat(item.longitude) || null,
+              delivery: item.delivery
+            }));
+            
+            // Batch insert pincodes
+            if (pincodeData.length > 0) {
+              try {
+                await Pincode.insertMany(pincodeData, { ordered: false });
+                console.log(`Imported ${pincodeData.length} pincodes successfully`);
+              } catch (error) {
+                // Some pincodes might be duplicates, but that's OK
+                console.log(`Imported pincodes with some duplicates skipped`);
+              }
+            }
+            
+            console.log("Pincode import from CSV completed");
+            resolve(true);
+          } catch (error) {
+            console.error("Error processing pincode CSV data:", error);
+            reject(error);
+          }
+        })
+        .on('error', (error) => {
+          console.error("Error reading pincode CSV:", error);
+          reject(error);
+        });
+    });
   } catch (error) {
-    console.error('Error seeding testimonials:', error);
-    throw error;
+    console.error('Error importing pincodes from CSV:', error);
+    return false;
   }
 };
 
-const seedLabTests = async () => {
+// Initialize the database with seed data and imports
+export const initializeDatabase = async () => {
   try {
-    const existingLabTests = await LabTest.countDocuments();
-    if (existingLabTests > 0) {
-      console.log(`Already have ${existingLabTests} lab tests in database. Skipping seeding.`);
-      return;
+    // Connect to MongoDB
+    const connected = await connectToDatabase();
+    if (!connected) {
+      throw new Error('Failed to connect to MongoDB');
     }
     
-    const labTestsData = [
-      {
-        name: 'Complete Body Checkup',
-        description: 'Includes 70+ tests',
-        price: 3999,
-        discountedPrice: 1999,
-        testCount: 70
-      },
-      {
-        name: 'Diabetes Screening',
-        description: 'Includes 15+ tests',
-        price: 1499,
-        discountedPrice: 799,
-        testCount: 15
-      },
-      {
-        name: 'Women\'s Health',
-        description: 'Includes 40+ tests',
-        price: 2999,
-        discountedPrice: 1599,
-        testCount: 40
-      }
-    ];
-    
-    const labTestResults = await LabTest.insertMany(labTestsData);
-    console.log(`Inserted ${labTestResults.length} lab tests`);
-    return labTestResults;
-  } catch (error) {
-    console.error('Error seeding lab tests:', error);
-    throw error;
-  }
-};
-
-const seedHealthTips = async () => {
-  try {
-    const existingHealthTips = await HealthTip.countDocuments();
-    if (existingHealthTips > 0) {
-      console.log(`Already have ${existingHealthTips} health tips in database. Skipping seeding.`);
-      return;
+    // Seed basic data
+    const seeded = await seedData();
+    if (!seeded) {
+      throw new Error('Failed to seed data');
     }
     
-    const healthTipsData = [
-      {
-        title: "Stay Hydrated Throughout the Day",
-        content: "Drink at least 8 glasses of water daily to maintain proper hydration. Water helps regulate body temperature, keeps joints lubricated, prevents infections, delivers nutrients to cells, and keeps organs functioning properly.",
-        category: "Hydration",
-        imageUrl: "https://images.unsplash.com/photo-1546842931-886c185b4c8c"
-      },
-      {
-        title: "Importance of Regular Exercise",
-        content: "Aim for at least 30 minutes of moderate physical activity each day. Regular exercise improves cardiovascular health, strengthens muscles, enhances mental wellbeing, and reduces the risk of chronic diseases.",
-        category: "Exercise",
-        imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b"
-      },
-      {
-        title: "Get Enough Quality Sleep",
-        content: "Adults should aim for 7-9 hours of quality sleep each night. Good sleep improves concentration, productivity, immune function, and helps maintain a healthy weight.",
-        category: "Sleep",
-        imageUrl: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55"
-      },
-      {
-        title: "Add More Vegetables to Your Diet",
-        content: "Try to include vegetables in at least two meals per day. Vegetables are packed with essential vitamins, minerals, and antioxidants that help protect against chronic diseases and support overall health.",
-        category: "Nutrition",
-        imageUrl: "https://images.unsplash.com/photo-1540420773420-3366772f4999"
-      },
-      {
-        title: "Practice Mindful Breathing",
-        content: "Take 5 minutes daily to practice deep, mindful breathing. This simple practice can reduce stress, lower blood pressure, and improve mental clarity and focus.",
-        category: "Mental Health",
-        imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773"
-      },
-      {
-        title: "Limit Processed Foods",
-        content: "Reduce consumption of highly processed foods that are often high in sugar, unhealthy fats, and sodium. Choose whole, unprocessed foods whenever possible for better nutrition and health.",
-        category: "Nutrition",
-        imageUrl: "https://images.unsplash.com/photo-1511909525232-61113c912358"
-      },
-      {
-        title: "Take Regular Breaks From Screens",
-        content: "Follow the 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20 seconds. This helps reduce eye strain and fatigue from prolonged screen time.",
-        category: "Eye Health",
-        imageUrl: "https://images.unsplash.com/photo-1581290141480-8b007f94642f"
-      }
-    ];
+    // Import medicines from CSV
+    await importMedicinesFromCSV();
     
-    const healthTipResults = await HealthTip.insertMany(healthTipsData);
-    console.log(`Inserted ${healthTipResults.length} health tips`);
-    return healthTipResults;
-  } catch (error) {
-    console.error('Error seeding health tips:', error);
-    throw error;
-  }
-};
-
-const seedArticles = async () => {
-  try {
-    const existingArticles = await Article.countDocuments();
-    if (existingArticles > 0) {
-      console.log(`Already have ${existingArticles} articles in database. Skipping seeding.`);
-      return;
-    }
+    // Import pincodes from CSV
+    await importPincodesFromCSV();
     
-    const articlesData = [
-      {
-        title: 'The Importance of a Balanced Diet',
-        content: 'Learn about how a balanced diet contributes to overall health and wellbeing, and discover tips for maintaining healthy eating habits.',
-        imageUrl: 'https://images.unsplash.com/photo-1505576399279-565b52d4ac71'
-      },
-      {
-        title: 'Exercise Tips for Busy Professionals',
-        content: 'Discover effective exercise routines that can be incorporated into even the busiest schedules, helping you stay fit despite time constraints.',
-        imageUrl: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c'
-      },
-      {
-        title: 'Managing Stress in Modern Life',
-        content: 'Explore effective techniques for managing stress and anxiety in today\'s fast-paced world, and learn how to prioritize your mental wellbeing.',
-        imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b'
-      }
-    ];
-    
-    const articleResults = await Article.insertMany(articlesData);
-    console.log(`Inserted ${articleResults.length} articles`);
-    return articleResults;
-  } catch (error) {
-    console.error('Error seeding articles:', error);
-    throw error;
-  }
-};
-
-const initializeDatabase = async () => {
-  try {
-    await connectToMongoDB();
-    await seedUsers();
-    await seedCategories();
-    await seedMedicinesFromCSV();
-    await seedTestimonials();
-    await seedLabTests();
-    await seedHealthTips();
-    await seedArticles();
-    console.log('Database initialization complete!');
+    return true;
   } catch (error) {
     console.error('Error initializing database:', error);
     throw error;
   }
 };
 
-export {
-  connectToMongoDB,
-  seedMedicinesFromCSV,
-  seedCategories,
-  seedUsers,
-  seedTestimonials,
-  seedLabTests,
-  seedHealthTips,
-  seedArticles,
+export default {
+  connectToDatabase,
+  seedData,
+  importMedicinesFromCSV,
+  importPincodesFromCSV,
   initializeDatabase
 };

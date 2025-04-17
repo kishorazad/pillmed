@@ -2,17 +2,68 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { importMedicinesFromCSV } from "./csv-import";
+import { initializeDatabase } from './services/mongodb-service';
+import session from 'express-session';
+import connectMongo from 'connect-mongo';
 
-// Import medicine data from CSV directly to in-memory storage
-importMedicinesFromCSV().then(() => {
-  console.log('Imported medicine data successfully');
+// MongoDB Session Store
+const MongoStore = connectMongo;
+const sessionSecret = process.env.SESSION_SECRET || 'medadock-secret-key';
+
+// Try to connect to MongoDB and initialize the database
+// If that fails, fall back to in-memory storage
+initializeDatabase().then(() => {
+  console.log('MongoDB database initialized successfully');
 }).catch(err => {
-  console.error('Failed to import medicine data:', err);
+  console.error('Failed to initialize MongoDB database', err);
+  // Fall back to in-memory storage and import medicines
+  importMedicinesFromCSV().then(() => {
+    console.log('Imported medicine data to in-memory storage successfully');
+  }).catch(err => {
+    console.error('Failed to import medicine data to in-memory storage:', err);
+  });
 });
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Add session middleware with MongoDB store
+try {
+  const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017/medadock';
+  app.use(session({
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ 
+      mongoUrl: mongoUrl,
+      autoRemove: 'interval',
+      autoRemoveInterval: 60, // In minutes (1 hour)
+      touchAfter: 24 * 3600, // Only update timestamps once per day
+      crypto: {
+        secret: sessionSecret
+      }
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    }
+  }));
+  console.log('MongoDB session store initialized');
+} catch (error) {
+  console.error('Failed to initialize MongoDB session store, falling back to memory session:', error);
+  app.use(session({
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 1 day for in-memory
+    }
+  }));
+}
 
 app.use((req, res, next) => {
   const start = Date.now();
