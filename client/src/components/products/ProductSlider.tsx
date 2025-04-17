@@ -46,65 +46,67 @@ const ProductSlider: React.FC<ProductSliderProps> = ({
       </div>
       
       <div className="relative">
-        {/* Products list - vertical layout */}
-        <div className="flex flex-col space-y-3">
-          {displayProducts.map((product) => (
-            <div key={product.id} className="flex items-start p-2 border border-gray-100 rounded-lg hover:shadow-md">
-              <Link href={`/products/${product.id}`}>
-                <div className="w-20 h-20 relative flex-shrink-0">
-                  <img 
-                    src={product.imageUrl || 'https://via.placeholder.com/120'}
-                    alt={product.name}
-                    className="h-full w-full object-contain"
-                  />
-                  
-                  {/* Discount tag */}
-                  {product.discountedPrice && product.price && (
-                    <div className="absolute top-0 left-0 bg-green-500 text-white text-xs font-bold py-1 px-1.5 rounded">
-                      {renderDiscountPercentage(product.price, product.discountedPrice) || 'SALE'}
-                    </div>
-                  )}
-                </div>
-              </Link>
-              
-              <div className="flex-1 pl-3">
+        {/* Products list - horizontal scrollable layout */}
+        <div className="overflow-x-auto">
+          <div className="flex gap-3 pb-4">
+            {displayProducts.map((product) => (
+              <div key={product.id} className="flex-shrink-0 w-36 rounded-lg p-2 border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                {/* Product image */}
                 <Link href={`/products/${product.id}`}>
-                  <h3 className="text-sm font-medium line-clamp-2">{product.name}</h3>
+                  <div className="h-24 mb-2 relative flex items-center justify-center">
+                    <img 
+                      src={product.imageUrl || 'https://via.placeholder.com/120'}
+                      alt={product.name}
+                      className="h-full object-contain mx-auto"
+                    />
+                    
+                    {/* Discount tag */}
+                    {product.discountedPrice && product.price && (
+                      <div className="absolute top-0 left-0 bg-green-500 text-white text-xs font-bold py-1 px-1.5 rounded">
+                        {renderDiscountPercentage(product.price, product.discountedPrice) || 'SALE'}
+                      </div>
+                    )}
+                  </div>
                 </Link>
                 
-                {/* Price */}
-                <div className="flex items-center mt-1">
-                  <span className="font-bold text-sm">
-                    ₹{product.discountedPrice || product.price}
-                  </span>
+                {/* Product details */}
+                <div>
+                  <Link href={`/products/${product.id}`}>
+                    <h3 className="text-xs font-medium mb-1 line-clamp-2 h-8">{product.name}</h3>
+                  </Link>
                   
-                  {product.discountedPrice && (
-                    <span className="text-gray-500 text-xs line-through ml-1">
-                      ₹{product.price}
+                  {/* Price */}
+                  <div className="flex items-center flex-wrap">
+                    <span className="font-bold text-sm">
+                      ₹{product.discountedPrice || product.price}
                     </span>
-                  )}
+                    
+                    {product.discountedPrice && (
+                      <span className="text-gray-500 text-xs line-through ml-1">
+                        ₹{product.price}
+                      </span>
+                    )}
 
-                  {/* Deal tag for special items */}
-                  {product.discountedPrice && product.price && 
-                   renderDiscountPercentage(product.price, product.discountedPrice) && 
-                   parseInt(renderDiscountPercentage(product.price, product.discountedPrice) || '0') > 20 && (
-                    <span className="ml-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-sm">
-                      Deal of the Week
-                    </span>
-                  )}
-                </div>
-                
-                {/* Add to cart button */}
-                <div className="mt-2 flex justify-between items-center">
+                    {/* Deal tag for special items */}
+                    {product.discountedPrice && product.price && 
+                     renderDiscountPercentage(product.price, product.discountedPrice) && 
+                     parseInt(renderDiscountPercentage(product.price, product.discountedPrice) || '0') > 20 && (
+                      <span className="w-full mt-1 text-xs bg-red-100 text-red-600 px-1 py-0.5 rounded-sm text-center">
+                        Deal of Week
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Add to cart button */}
                   <Button 
-                    className="bg-[#10847e] hover:bg-[#0d6e69] text-white text-xs py-1 h-8 px-2 rounded-md"
+                    className="w-full mt-2 bg-[#10847e] hover:bg-[#0d6e69] text-white text-xs py-1 h-7 px-2 rounded-md"
                   >
-                    ADD TO CART
+                    ADD
                   </Button>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 

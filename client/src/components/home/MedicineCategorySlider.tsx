@@ -5,7 +5,7 @@ import { ChevronRight } from 'lucide-react';
 interface CategoryItem {
   id: number;
   name: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   link: string;
 }
 

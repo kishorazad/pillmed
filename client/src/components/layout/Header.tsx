@@ -47,8 +47,8 @@ const Header = () => {
             <MedicineSearch />
           </div>
           
-          {/* Navigation */}
-          <div className="flex items-center gap-5 text-sm mt-2 md:mt-0">
+          {/* Navigation - Sign In and Cart buttons removed from mobile view */}
+          <div className="hidden md:flex items-center gap-5 text-sm mt-2 md:mt-0">
             <div className="relative group">
               <Link href="/profile" className="flex flex-col items-center">
                 <i className="fas fa-user text-[#666666]"></i>
