@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet';
 import { useMediaQuery } from '../hooks/use-media-query';
+import { HomeSEO } from '@/components/seo';
 
 // Define interfaces for product and category data
 interface Category {
@@ -86,14 +86,18 @@ const Home = () => {
     window.scrollTo(0, 0);
   }, []);
   
+  // Extract category names for SEO
+  const categoryNames = categories.length > 0 
+    ? categories.map((cat: Category) => cat.name) 
+    : [];
+
   return (
     <>
-      <Helmet>
-        <title>PillNow - Online Pharmacy & Healthcare Products</title>
-        <meta name="description" content="India's leading online pharmacy and healthcare platform. Order medicines, book lab tests, and consult with doctors." />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-      </Helmet>
+      {/* Advanced SEO component with structured data */}
+      <HomeSEO 
+        featuredProducts={featuredProducts.length}
+        featuredCategories={categoryNames}
+      />
       
       <div className="container mx-auto px-4 pt-2 pb-16">
         {isMobile ? (
