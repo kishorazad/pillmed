@@ -694,24 +694,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let orders = await dbStorage.getOrdersByUser(userId);
       
       // Enhance orders with items
-      for (let order of orders) {
+      const enhancedOrders = await Promise.all(orders.map(async (order) => {
         const orderItems = await dbStorage.getOrderItems(order.id);
         
         // For each order item, get product details
-        const enhancedItems = [];
-        for (const item of orderItems) {
+        const enhancedItems = await Promise.all(orderItems.map(async (item) => {
           const product = await dbStorage.getProductById(item.productId);
-          enhancedItems.push({
+          return {
             ...item,
             product
-          });
-        }
+          };
+        }));
         
-        // Add items to order
-        order.items = enhancedItems;
-      }
+        // Return a new object with items added
+        return {
+          ...order,
+          items: enhancedItems
+        };
+      }));
       
-      res.json(orders);
+      res.json(enhancedOrders);
     } catch (error) {
       console.error('Error fetching user orders:', error);
       res.status(500).json({ message: "Failed to fetch user orders" });

@@ -21,7 +21,7 @@ const OrderHistory = ({ userId }: { userId?: number }) => {
   const { addToCart } = useStore();
   
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: userId ? [`/api/orders/user/${userId}`] : null,
+    queryKey: ['/api/orders/user', userId],
     enabled: !!userId,
   });
   
