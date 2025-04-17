@@ -11,16 +11,28 @@ import {
 // MongoDB connection URL - uses environment variable or falls back to localhost
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/medadock';
 
-export const connectToDatabase = async () => {
-  try {
-    await mongoose.connect(MONGODB_URI);
-    console.log('Connected to MongoDB');
-    return true;
-  } catch (error) {
-    // Just log the message, not the full error object to avoid verbose logs
-    console.error('MongoDB connection error: Cannot connect to MongoDB - using in-memory storage');
-    return false;
+export const connectToDatabase = async (retries = 5) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        family: 4  // Force IPv4
+      });
+      console.log('Connected to MongoDB successfully');
+      return true;
+    } catch (error) {
+      console.error(`MongoDB connection attempt ${attempt} failed: ${error.message}`);
+      if (attempt === retries) {
+        console.error('MongoDB connection error: Cannot connect to MongoDB - using in-memory storage');
+        return false;
+      }
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)));
+    }
   }
+  return false;
 };
 
 // Seed data function for initial data
