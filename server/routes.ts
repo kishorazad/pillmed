@@ -94,9 +94,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
   // Data will be imported from CSV in index.ts
-  // Get all categories
+  // Get all categories with caching (categories rarely change)
   app.get("/api/categories", async (_req: Request, res: Response) => {
+    // Try to get from cache first
+    const cacheKey = 'categories:all';
+    const cachedCategories = cacheService.get(cacheKey);
+    
+    if (cachedCategories) {
+      return res.json(cachedCategories);
+    }
+    
+    // If not in cache, get from storage
     const categories = await dbStorage.getCategories();
+    
+    // Save to cache with longer TTL since categories rarely change
+    cacheService.set(cacheKey, categories, cacheService.getTTL('category'));
+    
     res.json(categories);
   });
   
@@ -172,6 +185,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 12, 30); // Cap at 30 for performance
     
+    // Generate cache key based on category and pagination parameters
+    const cacheKey = `products:category=${categoryId}:page=${page}:limit=${limit}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
+    
     const allProducts = await dbStorage.getProductsByCategory(categoryId);
     
     // Calculate pagination
@@ -193,7 +215,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ratingCount: product.ratingCount
     }));
     
-    res.json({
+    // Prepare response
+    const response = {
       products: paginatedProducts,
       pagination: {
         total: totalProducts,
@@ -201,12 +224,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit,
         totalPages
       }
-    });
+    };
+    
+    // Save to cache - use product list TTL (10 minutes)
+    cacheService.set(cacheKey, response, cacheService.getTTL('product-list'));
+    
+    res.json(response);
   });
   
   // Get featured products with limited fields for better performance
   app.get("/api/products/featured", async (req: Request, res: Response) => {
     const limit = Math.min(parseInt(req.query.limit as string) || 8, 12); // Cap featured products
+    
+    // Generate cache key based on limit
+    const cacheKey = `products:featured:limit=${limit}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
     
     const allFeatured = await dbStorage.getFeaturedProducts();
     const featuredProducts = allFeatured.slice(0, limit).map(product => ({
@@ -221,25 +258,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ratingCount: product.ratingCount
     }));
     
+    // Save to cache
+    cacheService.set(cacheKey, featuredProducts, cacheService.getTTL('product-list'));
+    
     res.json(featuredProducts);
   });
   
-  // Get product by ID
+  // Get product by ID with caching
   app.get("/api/products/:id", async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
+    
+    // Generate cache key for this product
+    const cacheKey = `product:id=${id}`;
+    
+    // Try to get from cache first
+    const cachedProduct = cacheService.get(cacheKey);
+    if (cachedProduct) {
+      return res.json(cachedProduct);
+    }
+    
+    // If not in cache, get from storage
     const product = await dbStorage.getProductById(id);
     
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
     
+    // Save to cache with product details TTL (30 minutes)
+    cacheService.set(cacheKey, product, cacheService.getTTL('product-detail'));
+    
     res.json(product);
   });
   
-  // Get cart items for a user
+  // Get cart items for a user with caching
   app.get("/api/cart/:userId", async (req: Request, res: Response) => {
     const userId = parseInt(req.params.userId);
+    
+    // Generate cache key for this user's cart
+    const cacheKey = `cart:user=${userId}`;
+    
+    // Try to get from cache first - carts are often viewed multiple times
+    const cachedCart = cacheService.get(cacheKey);
+    if (cachedCart) {
+      console.log(`Fetching cart for userId: ${userId} (cached), found ${cachedCart.length} items`);
+      return res.json(cachedCart);
+    }
+    
+    // If not in cache, get from storage
     const cartItems = await dbStorage.getCartItemWithProductDetails(userId);
+    
+    // Save to cache for a shorter time (2 minutes) since cart updates are common
+    cacheService.set(cacheKey, cartItems, 2 * 60 * 1000);
     
     // Add debug information
     console.log(`Fetching cart for userId: ${userId}, found ${cartItems.length} items`);
@@ -369,6 +438,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const newCartItem = await dbStorage.addToCart(cartItem);
+      
+      // Clear user's cart cache when adding items
+      cacheService.deletePattern(`cart:user=${cartItem.userId}`);
+      
       res.status(201).json(newCartItem);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -381,7 +454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update cart item quantity
   app.put("/api/cart/:id", async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const { quantity } = req.body;
+    const { quantity, userId } = req.body;
     
     if (typeof quantity !== "number" || quantity < 1) {
       return res.status(400).json({ message: "Invalid quantity" });
@@ -393,16 +466,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Cart item not found" });
     }
     
+    // Clear user's cart cache when updating items
+    if (userId) {
+      cacheService.deletePattern(`cart:user=${userId}`);
+    }
+    
     res.json(updatedItem);
   });
   
   // Remove item from cart
   app.delete("/api/cart/:id", async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
+    const { userId } = req.query;
     const success = await dbStorage.removeFromCart(id);
     
     if (!success) {
       return res.status(404).json({ message: "Cart item not found" });
+    }
+    
+    // Clear user's cart cache when removing items
+    if (userId) {
+      cacheService.deletePattern(`cart:user=${userId}`);
     }
     
     res.status(204).send();
@@ -412,6 +496,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/cart/user/:userId", async (req: Request, res: Response) => {
     const userId = parseInt(req.params.userId);
     await dbStorage.clearCart(userId);
+    
+    // Clear user's cart cache when clearing cart
+    cacheService.deletePattern(`cart:user=${userId}`);
+    
     res.status(204).send();
   });
   
