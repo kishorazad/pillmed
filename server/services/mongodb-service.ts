@@ -8,8 +8,8 @@ import {
   Appointment, LabBooking, Order, OrderItem, HealthTip, Pincode
 } from '../models';
 
-// MongoDB connection URL - uses environment variable or falls back to localhost
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/medadock';
+// MongoDB connection URL - directly use the MongoDB Atlas URI passed in environment
+const MONGODB_URI = 'mongodb+srv://brijkishorazad:2BGRnOzioM5N2WjN@cluster0.d385vzc.mongodb.net/pillnowinfo?retryWrites=true&w=majority&appName=Cluster0';
 
 export const connectToDatabase = async (retries = 5) => {
   console.log('Attempting to connect to MongoDB...');
