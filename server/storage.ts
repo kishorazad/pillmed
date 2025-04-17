@@ -745,6 +745,68 @@ export class MemStorage implements IStorage {
     return true;
   }
 
+  // Order methods
+  async getOrders(): Promise<Order[]> {
+    return Array.from(this.orders.values());
+  }
+  
+  async getOrderById(id: number): Promise<Order | undefined> {
+    return this.orders.get(id);
+  }
+  
+  async getOrdersByUser(userId: number): Promise<Order[]> {
+    return Array.from(this.orders.values()).filter(
+      (order) => order.userId === userId
+    );
+  }
+  
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const id = this.currentOrderId++;
+    const newOrder: Order = { 
+      ...order, 
+      id,
+      status: order.status || 'processing',
+      createdAt: order.createdAt || new Date()
+    };
+    
+    this.orders.set(id, newOrder);
+    return newOrder;
+  }
+  
+  async updateOrderStatus(id: number, status: string): Promise<Order | undefined> {
+    const order = this.orders.get(id);
+    
+    if (!order) {
+      return undefined;
+    }
+    
+    const updatedOrder = {
+      ...order,
+      status
+    };
+    
+    this.orders.set(id, updatedOrder);
+    return updatedOrder;
+  }
+  
+  // Order Item methods
+  async getOrderItems(orderId: number): Promise<OrderItem[]> {
+    return Array.from(this.orderItems.values()).filter(
+      (item) => item.orderId === orderId
+    );
+  }
+  
+  async createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem> {
+    const id = this.currentOrderItemId++;
+    const newOrderItem: OrderItem = {
+      ...orderItem,
+      id
+    };
+    
+    this.orderItems.set(id, newOrderItem);
+    return newOrderItem;
+  }
+
   // Article methods
   async getArticles(): Promise<Article[]> {
     return Array.from(this.articles.values());
