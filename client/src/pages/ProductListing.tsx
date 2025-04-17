@@ -35,7 +35,24 @@ const ProductListing = () => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      return response.json();
+      
+      const result = await response.json();
+      
+      // Handle both paginated and non-paginated responses
+      if (Array.isArray(result)) {
+        // Handle non-paginated response
+        return {
+          products: result,
+          pagination: {
+            total: result.length,
+            page: 1,
+            limit: result.length,
+            totalPages: 1
+          }
+        };
+      }
+      
+      return result; // Return paginated response
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -56,7 +73,7 @@ const ProductListing = () => {
   const filteredProducts = productsData
     ? productsData.filter((product: any) => {
         // Search filter
-        if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        if (searchQuery && product.name && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
           return false;
         }
         
@@ -152,16 +169,16 @@ const ProductListing = () => {
     <>
       <Helmet>
         <title>{pageTitle}</title>
-        <meta name="description" content={`Browse our collection of ${category ? category.name.toLowerCase() : ''} products and medications.`} />
+        <meta name="description" content={`Browse our collection of ${(category as any)?.name ? (category as any).name.toLowerCase() : ''} products and medications.`} />
       </Helmet>
       
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">
-            {category ? category.name : searchQuery ? `Search Results for "${searchQuery}"` : 'All Products'}
+            {(category as any)?.name ? (category as any).name : searchQuery ? `Search Results for "${searchQuery}"` : 'All Products'}
           </h1>
-          {category?.description && (
-            <p className="text-gray-600 mt-2">{category.description}</p>
+          {(category as any)?.description && (
+            <p className="text-gray-600 mt-2">{(category as any).description}</p>
           )}
         </div>
         
@@ -273,6 +290,58 @@ const ProductListing = () => {
                 <Button variant="outline" onClick={resetFilters}>
                   Reset Filters
                 </Button>
+              </div>
+            )}
+            
+            {/* Pagination */}
+            {!isLoading && sortedProducts.length > 0 && pagination.totalPages > 1 && (
+              <div className="flex justify-center mt-8">
+                <div className="flex space-x-1">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2"
+                  >
+                    Previous
+                  </Button>
+                  
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                    .filter(page => {
+                      // Show first page, last page, current page, and pages adjacent to current
+                      return page === 1 || 
+                             page === pagination.totalPages || 
+                             (page >= currentPage - 1 && page <= currentPage + 1);
+                    })
+                    .map((page, index, array) => {
+                      // Add ellipsis where there are gaps in the sequence
+                      const showEllipsisBefore = index > 0 && page > array[index - 1] + 1;
+                      return (
+                        <div key={page} className="flex items-center">
+                          {showEllipsisBefore && (
+                            <span className="px-3 py-2">...</span>
+                          )}
+                          <Button
+                            variant={currentPage === page ? "default" : "outline"}
+                            onClick={() => handlePageChange(page)}
+                            className="px-4 py-2"
+                          >
+                            {page}
+                          </Button>
+                        </div>
+                      );
+                    })
+                  }
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handlePageChange(Math.min(pagination.totalPages, currentPage + 1))}
+                    disabled={currentPage === pagination.totalPages}
+                    className="px-4 py-2"
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
           </div>
