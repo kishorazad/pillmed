@@ -1160,10 +1160,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Try to search in MongoDB first for better performance with large datasets
       try {
-        const mongoose = await import('mongoose');
-        const { Product } = await import('./models');
+        // Import mongoose but use the existing connection
+        const mongoose = require('mongoose');
+        const { Product } = require('./models');
         
-        if (mongoose.connection.readyState === 1) {  // Connected to MongoDB
+        // Check if we're connected to MongoDB 
+        if (global.useMongoStorage === true && mongoose.connection.readyState === 1) {  // Connected to MongoDB
           console.log('Using MongoDB for optimized medicine search');
           
           // Create weighted text index if not exists (better than standard)
@@ -1500,10 +1502,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Try MongoDB first for better performance with large datasets
       try {
-        const mongoose = await import('mongoose');
-        const { Product } = await import('./models');
+        // Import mongoose but use the existing connection
+        const mongoose = require('mongoose');
+        const { Product } = require('./models');
         
-        if (mongoose.connection.readyState === 1) {  // Connected to MongoDB
+        // Check if we're connected to MongoDB 
+        if (global.useMongoStorage === true && mongoose.connection.readyState === 1) {  // Connected to MongoDB
           console.log('Using MongoDB for substitutes search');
           
           let query: any = {};
