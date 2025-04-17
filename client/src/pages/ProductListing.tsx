@@ -116,10 +116,10 @@ const ProductListing = () => {
   
   // Page title
   const pageTitle = category 
-    ? `${category.name} Products - Medadock`
+    ? `${category.name} Products - PillNow`
     : searchQuery 
-      ? `Search Results for "${searchQuery}" - Medadock`
-      : 'All Products - Medadock';
+      ? `Search Results for "${searchQuery}" - PillNow`
+      : 'All Products - PillNow';
   
   return (
     <>
