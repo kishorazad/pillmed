@@ -1381,20 +1381,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       filteredProducts = filteredProducts.filter(product => {
         // For large datasets, use early returns for performance
         
-        // Check name first (most common match)
-        const nameMatch = product.name.toLowerCase().includes(query);
-        if (nameMatch) return true;
+        // First check for exact matches (highest priority)
+        const productWithExtras = product as any;
+        if (product.name.toLowerCase() === query) return true;
+        
+        // Then check for starts with matches (high priority)
+        if (product.name.toLowerCase().startsWith(query)) return true;
+        
+        // Check brand starts with
+        if (product.brand && product.brand.toLowerCase().startsWith(query)) return true;
+        
+        // Check manufacturer starts with
+        if (productWithExtras.manufacturer && productWithExtras.manufacturer.toLowerCase().startsWith(query)) return true;
+        
+        // Check composition starts with (important for medication searches)
+        if (productWithExtras.composition && productWithExtras.composition.toLowerCase().startsWith(query)) return true;
+        
+        // Then check for contains matches in name (medium priority)
+        if (product.name.toLowerCase().includes(query)) return true;
+        
+        // Check for partial name matches with split words (handles multi-word searches)
+        const nameWords = product.name.toLowerCase().split(/\s+/);
+        if (nameWords.some(word => word.startsWith(query))) return true;
         
         // Only check other fields if name doesn't match
         if (product.brand && product.brand.toLowerCase().includes(query)) return true;
         
+        // Check extra fields for contains
+        if (productWithExtras.manufacturer && productWithExtras.manufacturer.toLowerCase().includes(query)) return true;
+        if (productWithExtras.composition && productWithExtras.composition.toLowerCase().includes(query)) return true;
+        
+        // Also check for similar words (handle typos) - simple character count comparison
+        const nameSimilarity = product.name.toLowerCase().split('').filter(char => query.includes(char)).length;
+        if (nameSimilarity > query.length * 0.7) return true; // 70% character match
+        
         // Check description last as it's the largest text field
         if (product.description && product.description.toLowerCase().includes(query)) return true;
         
-        // Only check extended properties if basic properties don't match
-        const productWithExtras = product as any;
-        if (productWithExtras.composition && productWithExtras.composition.toLowerCase().includes(query)) return true;
-        if (productWithExtras.manufacturer && productWithExtras.manufacturer.toLowerCase().includes(query)) return true;
+        // Check any other extended properties
+        if (productWithExtras.uses && productWithExtras.uses.toLowerCase().includes(query)) return true;
+        if (productWithExtras.sideEffects && productWithExtras.sideEffects.toLowerCase().includes(query)) return true;
+        if (productWithExtras.contraindications && productWithExtras.contraindications.toLowerCase().includes(query)) return true;
+        if (productWithExtras.packSize && productWithExtras.packSize.toLowerCase().includes(query)) return true;
           
         return false;
       });

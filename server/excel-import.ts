@@ -84,8 +84,8 @@ export async function importMedicinesFromExcel(): Promise<boolean> {
       categoryMap.set(cat.name, cat.id);
     });
     
-    // Process only 30 medicines for faster loading
-    const medicineData: MedicineData[] = (results as any[]).slice(0, 30).map((item: any) => {
+    // Process more medicines for better search coverage (increased from 30 to 100)
+    const medicineData: MedicineData[] = (results as any[]).slice(0, 100).map((item: any) => {
       // Debugging - log the keys of the first item to understand structure
       if (results.indexOf(item) === 0) {
         console.log('First item keys:', Object.keys(item));
