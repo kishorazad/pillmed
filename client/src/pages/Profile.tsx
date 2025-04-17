@@ -79,9 +79,9 @@ const OrderHistory = ({ userId }: { userId?: number }) => {
           <div className="bg-gray-50 p-4 border-b border-gray-200 flex flex-wrap justify-between items-center">
             <div>
               <p className="text-sm text-gray-500">
-                Order #{order.id} • {format(new Date(order.createdAt), 'PPP')}
+                Order #{order.id} • {format(new Date(order.orderDate), 'PPP')}
               </p>
-              <h3 className="font-medium">₹{order.total.toFixed(2)}</h3>
+              <h3 className="font-medium">₹{order.totalAmount.toFixed(2)}</h3>
             </div>
             <div className="flex items-center space-x-3 mt-2 sm:mt-0">
               <Badge className={
@@ -137,7 +137,7 @@ const OrderHistory = ({ userId }: { userId?: number }) => {
             <div className="border-t border-gray-200 pt-3 flex justify-between text-sm">
               <span className="font-medium">Delivery Address:</span>
               <span className="text-gray-600 text-right">
-                {order.address || 'Address not available'}
+                {order.shippingAddress || 'Address not available'}
               </span>
             </div>
           </div>

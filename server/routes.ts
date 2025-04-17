@@ -744,15 +744,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new order
   app.post("/api/orders", async (req: Request, res: Response) => {
     try {
-      const { userId, address, total, items } = req.body;
+      const { userId, shippingAddress, totalAmount, items, paymentMethod } = req.body;
       
       // Create the order
       const order = await dbStorage.createOrder({
         userId,
-        address,
-        total,
+        shippingAddress,
+        totalAmount,
+        paymentMethod: paymentMethod || 'credit_card',
         status: 'processing',
-        createdAt: new Date()
+        orderDate: new Date()
       });
       
       // Create order items
