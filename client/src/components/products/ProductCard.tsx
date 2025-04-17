@@ -46,7 +46,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           />
         </Link>
         {discountPercentage > 0 && (
-          <span className="absolute top-2 left-2 bg-green-500 text-white text-xs py-1 px-2 rounded">
+          <span className="absolute top-2 left-2 bg-orange-500 text-white text-xs py-1 px-2 rounded">
             {discountPercentage}% OFF
           </span>
         )}
@@ -54,7 +54,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <div className="p-3">
         {product.rating && (
           <div className="flex items-center mb-1">
-            <span className="bg-green-100 text-green-800 text-xs px-2 rounded">
+            <span className="bg-orange-100 text-orange-800 text-xs px-2 rounded">
               {product.rating} ★
             </span>
             {product.ratingCount && (
@@ -81,7 +81,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </div>
           <Button
             variant="outline"
-            className="text-[#ff6f61] border border-[#ff6f61] rounded px-2 py-1 text-sm hover:bg-[#ff6f61] hover:text-white transition"
+            className="text-orange-500 border border-orange-500 rounded px-3 py-1 text-sm hover:bg-orange-500 hover:text-white transition"
             onClick={handleAddToCart}
           >
             ADD

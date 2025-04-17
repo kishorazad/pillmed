@@ -40,7 +40,7 @@ const ProductSlider: React.FC<ProductSliderProps> = ({
         <h2 className="text-lg font-bold">{title}</h2>
         {viewMoreLink && (
           <Link href={viewMoreLink}>
-            <span className="text-sm font-medium text-[#10847e]">View All</span>
+            <span className="text-sm font-medium text-orange-500">View All</span>
           </Link>
         )}
       </div>
@@ -62,7 +62,7 @@ const ProductSlider: React.FC<ProductSliderProps> = ({
                     
                     {/* Discount tag */}
                     {product.discountedPrice && product.price && (
-                      <div className="absolute top-0 left-0 bg-green-500 text-white text-xs font-bold py-1 px-1.5 rounded">
+                      <div className="absolute top-0 left-0 bg-orange-500 text-white text-xs font-bold py-1 px-1.5 rounded">
                         {renderDiscountPercentage(product.price, product.discountedPrice) || 'SALE'}
                       </div>
                     )}
@@ -91,7 +91,7 @@ const ProductSlider: React.FC<ProductSliderProps> = ({
                     {product.discountedPrice && product.price && 
                      renderDiscountPercentage(product.price, product.discountedPrice) && 
                      parseInt(renderDiscountPercentage(product.price, product.discountedPrice) || '0') > 20 && (
-                      <span className="w-full mt-1 text-xs bg-red-100 text-red-600 px-1 py-0.5 rounded-sm text-center">
+                      <span className="w-full mt-1 text-xs bg-orange-100 text-orange-600 px-1 py-0.5 rounded-sm text-center">
                         Deal of Week
                       </span>
                     )}
@@ -99,7 +99,7 @@ const ProductSlider: React.FC<ProductSliderProps> = ({
                   
                   {/* Add to cart button */}
                   <Button 
-                    className="w-full mt-2 bg-[#10847e] hover:bg-[#0d6e69] text-white text-xs py-1 h-7 px-2 rounded-md"
+                    className="w-full mt-2 bg-orange-500 hover:bg-orange-600 text-white text-xs py-1 h-7 px-2 rounded-md"
                   >
                     ADD
                   </Button>
@@ -116,11 +116,11 @@ const ProductSlider: React.FC<ProductSliderProps> = ({
           <span className="font-medium">Need help with medicines?</span>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex gap-1 text-xs items-center text-green-700 border-green-700">
+          <Button size="sm" variant="outline" className="flex gap-1 text-xs items-center text-orange-500 border-orange-500">
             <PhoneCall size={16} />
             <span>Call 8770762307</span>
           </Button>
-          <Button size="sm" variant="outline" className="flex gap-1 text-xs items-center text-green-700 border-green-700">
+          <Button size="sm" variant="outline" className="flex gap-1 text-xs items-center text-orange-500 border-orange-500">
             <MessagesSquare size={16} />
             <span>WhatsApp</span>
           </Button>
