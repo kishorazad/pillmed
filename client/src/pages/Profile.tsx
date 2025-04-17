@@ -113,8 +113,11 @@ const Profile = () => {
   // Handle login
   const onLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
     try {
-      // Get the temporary user ID to transfer the cart
-      const { tempUserId } = useStore.getState();
+      // Get the temporary user ID and cart info to transfer the cart
+      const { tempUserId, cart } = useStore.getState();
+      const cartCount = cart.length;
+      
+      console.log(`Login: Transferring cart with ${cartCount} items from guest user ${tempUserId} to authenticated user`);
       
       const response = await fetch('/api/login', {
         method: 'POST',
@@ -133,10 +136,18 @@ const Profile = () => {
       const userData = await response.json();
       setUser(userData);
       
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${userData.name}!`,
-      });
+      // Show appropriate toast message depending on if cart had items
+      if (cartCount > 0) {
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${userData.name}! Your cart with ${cartCount} items has been preserved.`,
+        });
+      } else {
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${userData.name}!`,
+        });
+      }
       
       setActiveTab('profile');
     } catch (error) {
@@ -153,10 +164,19 @@ const Profile = () => {
     try {
       const { confirmPassword, ...registerData } = data;
       
+      // Get the temporary user ID and cart info to transfer the cart
+      const { tempUserId, cart } = useStore.getState();
+      const cartCount = cart.length;
+      
+      console.log(`Registration: Transferring cart with ${cartCount} items from guest user ${tempUserId} to new user`);
+      
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(registerData),
+        body: JSON.stringify({
+          ...registerData,
+          tempUserId
+        }),
       });
       
       if (!response.ok) {
@@ -167,10 +187,18 @@ const Profile = () => {
       const userData = await response.json();
       setUser(userData);
       
-      toast({
-        title: "Registration successful",
-        description: `Welcome, ${userData.name}!`,
-      });
+      // Show appropriate toast message depending on if cart had items
+      if (cartCount > 0) {
+        toast({
+          title: "Registration successful",
+          description: `Welcome, ${userData.name}! Your cart with ${cartCount} items has been preserved.`,
+        });
+      } else {
+        toast({
+          title: "Registration successful",
+          description: `Welcome, ${userData.name}!`,
+        });
+      }
       
       setActiveTab('profile');
     } catch (error) {
