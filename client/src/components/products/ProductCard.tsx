@@ -19,7 +19,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
-  const { addToCart } = useStore();
+  const { addToCart, searchQuery } = useStore();
   const { toast } = useToast();
   
   const handleAddToCart = async () => {
@@ -34,6 +34,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const discountPercentage = product.discountedPrice
     ? Math.round(((product.price - product.discountedPrice) / product.price) * 100)
     : 0;
+  
+  // Show detailed card with ratings, etc. only when search is performed
+  const isDetailedView = !!searchQuery;
   
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition">
@@ -52,7 +55,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
         )}
       </div>
       <div className="p-3">
-        {product.rating && (
+        {/* Show ratings only on detailed view (search results) */}
+        {isDetailedView && product.rating && (
           <div className="flex items-center mb-1">
             <span className="bg-orange-100 text-orange-800 text-xs px-2 rounded">
               {product.rating} ★
