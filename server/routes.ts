@@ -1272,9 +1272,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               break;
           }
           
-          // Build projection - only select fields we need
+          // Build projection - include all medicine information fields
           const projection: any = {
             _id: 0, // Exclude MongoDB _id field
+            // Basic product fields
             id: 1,
             name: 1,
             price: 1,
@@ -1283,7 +1284,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             brand: 1,
             quantity: 1,
             categoryId: 1,
-            inStock: 1
+            inStock: 1,
+            description: 1,
+            // Medicine-specific fields
+            composition: 1,
+            uses: 1,
+            sideEffects: 1,
+            contraindications: 1,
+            manufacturer: 1,
+            packSize: 1,
+            dosage: 1,
+            storageInstructions: 1,
+            warnings: 1
           };
           
           // Add text score to projection for relevance sorting
@@ -1469,18 +1481,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const total = filteredProducts.length;
       const paginatedProducts = filteredProducts.slice(skip, skip + limitNum);
       
-      // Project only needed fields for smaller response
-      const projectedProducts = paginatedProducts.map(p => ({
-        id: p.id,
-        name: p.name,
-        price: p.price,
-        discountedPrice: p.discountedPrice,
-        imageUrl: p.imageUrl,
-        brand: p.brand,
-        quantity: p.quantity,
-        categoryId: p.categoryId,
-        inStock: p.inStock
-      }));
+      // Include complete product data with all extended fields
+      const projectedProducts = paginatedProducts.map(p => {
+        // Start with base product fields
+        const product: any = {
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          discountedPrice: p.discountedPrice,
+          imageUrl: p.imageUrl,
+          brand: p.brand,
+          quantity: p.quantity,
+          categoryId: p.categoryId,
+          inStock: p.inStock,
+          description: p.description
+        };
+        
+        // Add all extended fields that may be present
+        const extendedProduct = p as any;
+        
+        // Medicine-specific fields
+        if (extendedProduct.composition) product.composition = extendedProduct.composition;
+        if (extendedProduct.uses) product.uses = extendedProduct.uses;
+        if (extendedProduct.sideEffects) product.sideEffects = extendedProduct.sideEffects;
+        if (extendedProduct.contraindications) product.contraindications = extendedProduct.contraindications;
+        if (extendedProduct.manufacturer) product.manufacturer = extendedProduct.manufacturer;
+        if (extendedProduct.packSize) product.packSize = extendedProduct.packSize;
+        if (extendedProduct.dosage) product.dosage = extendedProduct.dosage;
+        if (extendedProduct.storageInstructions) product.storageInstructions = extendedProduct.storageInstructions;
+        if (extendedProduct.warnings) product.warnings = extendedProduct.warnings;
+        
+        return product;
+      });
       
       console.timeEnd('search-time');
       
@@ -1578,7 +1610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Find matching products, limiting to 10 and sorting by price
           const substitutes = await Product.find(query)
-            .select('id name price discountedPrice imageUrl brand quantity composition')
+            .select('id name price discountedPrice imageUrl brand quantity description composition uses sideEffects contraindications manufacturer packSize dosage storageInstructions warnings')
             .sort({ price: 1 }) // Sort by price ascending
             .limit(10)
             .lean();
@@ -1631,17 +1663,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return priceA - priceB;
       });
       
-      // Return only essential fields for better network performance
-      const simplifiedSubstitutes = substitutes.slice(0, 10).map(p => ({
-        id: p.id,
-        name: p.name,
-        price: p.price,
-        discountedPrice: p.discountedPrice,
-        imageUrl: p.imageUrl,
-        brand: p.brand,
-        quantity: p.quantity,
-        composition: (p as any).composition
-      }));
+      // Return comprehensive medicine data with all extended fields
+      const simplifiedSubstitutes = substitutes.slice(0, 10).map(p => {
+        // Start with base product fields
+        const product: any = {
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          discountedPrice: p.discountedPrice,
+          imageUrl: p.imageUrl,
+          brand: p.brand,
+          quantity: p.quantity,
+          description: p.description
+        };
+        
+        // Add all extended fields that may be present
+        const extendedProduct = p as any;
+        
+        // Medicine-specific fields
+        if (extendedProduct.composition) product.composition = extendedProduct.composition;
+        if (extendedProduct.uses) product.uses = extendedProduct.uses;
+        if (extendedProduct.sideEffects) product.sideEffects = extendedProduct.sideEffects;
+        if (extendedProduct.contraindications) product.contraindications = extendedProduct.contraindications;
+        if (extendedProduct.manufacturer) product.manufacturer = extendedProduct.manufacturer;
+        if (extendedProduct.packSize) product.packSize = extendedProduct.packSize;
+        if (extendedProduct.dosage) product.dosage = extendedProduct.dosage;
+        if (extendedProduct.storageInstructions) product.storageInstructions = extendedProduct.storageInstructions;
+        if (extendedProduct.warnings) product.warnings = extendedProduct.warnings;
+        
+        return product;
+      });
       
       // Cache the results for future requests
       cacheService.set(cacheKey, simplifiedSubstitutes, cacheService.getTTL('search'));
