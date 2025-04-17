@@ -17,54 +17,62 @@ declare global {
 }
 
 // Connect to MongoDB or fallback to in-memory storage
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://user1:password123@cluster0.mongodb.net/medadockdb';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/medadockdb';
 
-// Try connecting to MongoDB
-mongoose.connect(MONGODB_URI)
-  .then(async () => {
-    console.log('✅ Connected to MongoDB successfully');
+// Try connecting to MongoDB with improved connection handling
+// Use IIFE to immediately execute async code
+(async () => {
+  let isMongoConnected = false;
+  
+  try {
+    // Use connection options for better reliability
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      family: 4  // Force IPv4
+    });
     
+    console.log('✅ Connected to MongoDB successfully');
     global.useMongoStorage = true;
+    isMongoConnected = true;
     
     // Optimize database for large datasets (up to 700,000 products)
     try {
       await optimizeDatabaseForLargeDatasets();
       console.log('Database optimized for large datasets (up to 700,000 products)');
     } catch (optimizationError) {
-      console.warn('Database optimization skipped:', optimizationError instanceof Error ? optimizationError.message : 'Unknown error');
+      console.warn('MongoDB not connected, skipping optimization');
     }
-    
-    // After MongoDB connection is established, import medicines
-    return importMedicinesFromExcel();
-  })
-  .catch(() => {
-    console.log('Using in-memory storage');
-    
+  } catch (error) {
+    console.log('Using in-memory storage for database operations');
     global.useMongoStorage = false;
-    
-    // Use Excel import for in-memory storage too
-    return importMedicinesFromExcel();
-  })
-  .then((success) => {
-    if (success) {
+  }
+  
+  // Import data regardless of MongoDB connection status
+  try {
+    const excelSuccess = await importMedicinesFromExcel();
+    if (excelSuccess) {
       console.log('Imported medicine data from Excel successfully');
-    } else {
-      // Fall back to CSV
-      return importMedicinesFromCSV();
+      return;
     }
-  })
-  .catch(err => {
-    console.error('Failed to import medicine data from Excel, trying CSV:', err);
-    return importMedicinesFromCSV();
-  })
-  .then((success) => {
-    if (success) {
+  } catch (excelError) {
+    console.error('Failed to import medicine data from Excel, trying CSV');
+  }
+  
+  // If Excel import failed or returned false, try CSV
+  try {
+    const csvSuccess = await importMedicinesFromCSV();
+    if (csvSuccess === true) {
       console.log('Imported medicine data from CSV successfully');
+      return;
     }
-  })
-  .catch(err => {
-    console.error('Failed to import medicine data from both Excel and CSV:', err);
-  });
+  } catch (csvError) {
+    console.error('Failed to import medicine data from CSV');
+  }
+  
+  console.warn('Warning: Could not import medicine data from either Excel or CSV');
+})();
 
 const app = express();
 app.use(express.json());

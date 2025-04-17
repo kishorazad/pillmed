@@ -5,6 +5,7 @@ import { mongoDBStorage } from "./mongodb-storage"; // MongoDB storage
 import { insertCartItemSchema, insertUserSchema } from "@shared/schema";
 import { processHealthQuery, getMedicationInfo, analyzeMedicationInteractions } from "./ai-service";
 import { sendNotificationToUser, sendNotificationToAllUsers } from './notification-service';
+import cacheService from './cache-service'; // Cache service for reducing database load
 import { z } from "zod";
 import multer from 'multer';
 import path from 'path';
@@ -117,6 +118,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 50); // Cap at 50 for performance
     const skip = (page - 1) * limit;
     
+    // Generate cache key based on pagination parameters
+    const cacheKey = `products:page=${page}:limit=${limit}`;
+    
+    // Try to get from cache first
+    const cachedData = cacheService.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
+    
+    // If not in cache, get from storage
     const allProducts = await dbStorage.getProducts();
     
     // Calculate pagination values
@@ -138,7 +149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ratingCount: product.ratingCount
     }));
     
-    res.json({
+    // Prepare response
+    const response = {
       products: paginatedProducts,
       pagination: {
         total: totalProducts,
@@ -146,7 +158,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit,
         totalPages
       }
-    });
+    };
+    
+    // Save to cache - use product list TTL (10 minutes)
+    cacheService.set(cacheKey, response, cacheService.getTTL('product-list'));
+    
+    res.json(response);
   });
   
   // Get products by category with limited fields for better performance
