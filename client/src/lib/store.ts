@@ -121,22 +121,42 @@ export const useStore = create<AppState>((set, get) => ({
   
   // User actions
   setUser: async (user) => {
+    const { tempUserId } = get();
+    const prevUser = get().user;
+    
     set({ user });
     
-    // If a user just logged in, refresh their cart
-    if (user) {
+    // If a user just logged in
+    if (user && !prevUser) {
       try {
-        console.log("User logged in, fetching their cart items for user ID:", user.id);
+        console.log("User logged in with ID:", user.id, "- Transferring cart from tempUserId:", tempUserId);
+        
+        // First transfer any items from the temp cart to the user's cart
+        await apiRequest('POST', '/api/cart/transfer', {
+          fromUserId: tempUserId,
+          toUserId: user.id
+        });
+        
+        // Then fetch the updated cart
+        console.log("Fetching cart after transfer for user ID:", user.id);
         const response = await fetch(`/api/cart/${user.id}`);
         const cartItems = await response.json();
-        console.log("Cart items fetched after login:", cartItems);
+        console.log("Cart items after login and transfer:", cartItems);
         set({ cart: cartItems });
       } catch (error) {
-        console.error('Failed to fetch cart items after login:', error);
+        console.error('Failed to transfer or fetch cart items after login:', error);
+        
+        // As a fallback, just fetch the cart without transfer
+        try {
+          const response = await fetch(`/api/cart/${user.id}`);
+          const cartItems = await response.json();
+          set({ cart: cartItems });
+        } catch (innerError) {
+          console.error('Failed to fetch cart as fallback:', innerError);
+        }
       }
-    } else {
+    } else if (!user) {
       // User logged out, go back to using tempUserId for cart operations
-      const { tempUserId } = get();
       try {
         console.log("User logged out, fetching temp cart items for ID:", tempUserId);
         const response = await fetch(`/api/cart/${tempUserId}`);

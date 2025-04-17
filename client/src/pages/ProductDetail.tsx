@@ -36,22 +36,29 @@ const ProductDetail = () => {
     if (!product) return;
     
     // Get the current userId from store state for logging purposes
-    const { user, tempUserId } = useStore.getState();
+    const { user, tempUserId, openCart } = useStore.getState();
     const currentUserId = user?.id || tempUserId;
     
-    console.log("Adding to cart:", { 
-      productId: product.id, 
-      quantity, 
-      userId: currentUserId,
-      userLoggedIn: !!user
-    });
+    console.log("Adding to cart for user ID:", currentUserId, "Product ID:", product.id, "Quantity:", quantity);
     
-    await addToCart(product.id, quantity);
-    
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart`,
-    });
+    try {
+      await addToCart(product.id, quantity);
+      
+      toast({
+        title: "Added to cart",
+        description: `${product.name} has been added to your cart`,
+      });
+      
+      // Open cart sidebar after adding item
+      openCart();
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add product to cart",
+        variant: "destructive"
+      });
+    }
   };
   
   // Handle direct booking
