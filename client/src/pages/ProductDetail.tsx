@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import ProductCard from '@/components/products/ProductCard';
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import SubstituteMedicines from '@/components/products/SubstituteMedicines';
 
 const ProductDetail = () => {
   const params = useParams();
@@ -416,6 +417,13 @@ const ProductDetail = () => {
         </div>
         
         {/* Related products */}
+        {/* Medicine Substitutes */}
+        <SubstituteMedicines 
+          medicineId={parseInt(params.id)}
+          medicineName={product.name}
+          composition={product.composition}
+        />
+        
         {filteredRelatedProducts.length > 0 && (
           <div className="mt-12">
             <h2 className="text-xl font-bold mb-4">Frequently Bought Together</h2>
