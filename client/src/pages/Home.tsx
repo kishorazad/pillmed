@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 // Components
 import HeroSection from '@/components/home/HeroSection';
@@ -14,16 +15,51 @@ import AppPromotion from '@/components/home/AppPromotion';
 import HealthTipOfTheDay from '@/components/home/HealthTipOfTheDay';
 import PrescriptionUpload from '@/components/home/PrescriptionUpload';
 
+// Mobile-optimized components
+import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
+import CategoryGrid from '@/components/home/CategoryGrid';
+import OffersCarousel from '@/components/home/OffersCarousel';
+import QuickLinks from '@/components/home/QuickLinks';
+import ProductSlider from '@/components/products/ProductSlider';
+
 // Categories
 import { useQuery } from '@tanstack/react-query';
 import CategoryCard from '@/components/products/CategoryCard';
 
 const Home = () => {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['/api/categories'],
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
   
+  const { data: featuredProducts, isLoading: productsLoading } = useQuery({
+    queryKey: ['/api/products/featured'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Sample offer slides for demonstration
+  const offerSlides = [
+    {
+      id: 1,
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/11d75cea0ea-GRAND20.jpg',
+      alt: 'Flat 20% off on medicines',
+      link: '/products'
+    },
+    {
+      id: 2,
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/9fe349e05e7-LABTEST.jpg',
+      alt: 'Up to 60% off on lab tests',
+      link: '/lab-tests'
+    },
+    {
+      id: 3,
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/414524ad3dd-WELLNESS.jpg',
+      alt: 'Wellness Products',
+      link: '/products'
+    }
+  ];
+
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -38,52 +74,120 @@ const Home = () => {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </Helmet>
       
-      <HeroSection />
-      <ServicesSection />
-      
-      <section className="container mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-6">Health Services</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="h-full flex">
-            <PrescriptionUpload />
-          </div>
-          <div className="h-full flex">
-            <HealthTipOfTheDay />
-          </div>
-        </div>
-      </section>
-      
-      <PromotionalBanner />
-      
-      {/* Top Categories */}
-      <section className="py-8">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>
-          {categoriesLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-              {Array(6).fill(0).map((_, i) => (
-                <div key={i} className="text-center p-3 rounded-lg animate-pulse">
-                  <div className="h-24 w-24 mx-auto mb-2 bg-gray-200 rounded-full"></div>
-                  <div className="h-4 bg-gray-200 rounded mx-auto w-16"></div>
+      <div className="container mx-auto px-4 pt-2 pb-16">
+        {isMobile ? (
+          <>
+            {/* Search bar for mobile (just visual, not functional in this demo) */}
+            <div className="flex items-center bg-gray-100 rounded-full p-2 mb-4">
+              <i className="fas fa-search text-gray-400 mx-2"></i>
+              <span className="text-gray-400 text-sm">Search medicines/healthcare products</span>
+            </div>
+            
+            {/* Mobile Quick Links */}
+            <QuickLinks />
+            
+            {/* Mobile Banner Carousel */}
+            <MobileBannerCarousel />
+            
+            {/* Offers for You */}
+            <div className="my-4">
+              <h2 className="text-lg font-bold mb-3">Offers for You</h2>
+              <OffersCarousel offers={offerSlides} />
+            </div>
+            
+            {/* Categories Grid for Mobile */}
+            {!categoriesLoading && categories?.length > 0 && (
+              <CategoryGrid 
+                categories={categories.map((cat: any) => ({
+                  id: cat.id,
+                  name: cat.name,
+                  imageUrl: cat.imageUrl || 'https://via.placeholder.com/80',
+                  link: `/products/category/${cat.id}`
+                }))}
+              />
+            )}
+            
+            {/* Featured Products Slider */}
+            {!productsLoading && featuredProducts?.length > 0 && (
+              <ProductSlider 
+                title="Featured Products"
+                viewMoreLink="/products?featured=true"
+                products={featuredProducts}
+              />
+            )}
+            
+            {/* Top Deals Section */}
+            {!productsLoading && featuredProducts?.length > 0 && (
+              <ProductSlider 
+                title="Top Deals"
+                viewMoreLink="/products?sort=discountDesc"
+                products={featuredProducts.filter((p: any) => p.discountedPrice)}
+              />
+            )}
+            
+            {/* Health Services */}
+            <section className="my-6">
+              <h2 className="text-lg font-bold mb-4">Health Services</h2>
+              <div className="space-y-4">
+                <PrescriptionUpload />
+                <HealthTipOfTheDay />
+              </div>
+            </section>
+          </>
+        ) : (
+          /* Desktop View */
+          <>
+            <HeroSection />
+            <ServicesSection />
+            
+            <section className="py-8">
+              <h2 className="text-2xl font-bold mb-6">Health Services</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="h-full flex">
+                  <PrescriptionUpload />
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-              {categories?.map((category: any) => (
-                <CategoryCard key={category.id} category={category} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-      
-      <FeaturedProducts />
-      <LabTests />
-      <ConsultDoctors />
-      <HealthArticles />
-      <Testimonials />
-      <AppPromotion />
+                <div className="h-full flex">
+                  <HealthTipOfTheDay />
+                </div>
+              </div>
+            </section>
+            
+            <PromotionalBanner />
+            
+            {/* Top Categories */}
+            <section className="py-8">
+              <div className="container mx-auto">
+                <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>
+                {categoriesLoading ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                    {Array(6).fill(0).map((_, i) => (
+                      <div key={i} className="text-center p-3 rounded-lg animate-pulse">
+                        <div className="h-24 w-24 mx-auto mb-2 bg-gray-200 rounded-full"></div>
+                        <div className="h-4 bg-gray-200 rounded mx-auto w-16"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                    {categories?.map((category: any) => (
+                      <CategoryCard key={category.id} category={category} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+            
+            <FeaturedProducts />
+            <LabTests />
+            <ConsultDoctors />
+            <HealthArticles />
+            <Testimonials />
+          </>
+        )}
+
+        {/* App Promotion (both mobile and desktop) */}
+        <AppPromotion />
+      </div>
     </>
   );
 };
