@@ -239,7 +239,7 @@ const Header = () => {
               <i className="fas fa-shopping-cart text-[#666666]"></i>
               <span>Cart</span>
               {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#ff6f61] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-[#10847e] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                   {cart.reduce((total, item) => total + item.quantity, 0)}
                 </span>
               )}
@@ -252,19 +252,19 @@ const Header = () => {
       <nav className="border-t border-gray-200 py-2 overflow-x-auto hidden md:block">
         <div className="container mx-auto px-4">
           <ul className="flex space-x-8 text-sm font-medium">
-            <li><Link href="/products" className="hover:text-[#ff6f61]">Medicines</Link></li>
-            <li><Link href="/lab-tests" className="hover:text-[#ff6f61]">Lab Tests</Link></li>
-            <li><Link href="/consult" className="hover:text-[#ff6f61]">Consult Doctors</Link></li>
-            <li><Link href="/ai-healthcare" className="text-[#14bef0] font-semibold flex items-center">
+            <li><Link href="/products" className="hover:text-[#10847e]">Medicines</Link></li>
+            <li><Link href="/lab-tests" className="hover:text-[#10847e]">Lab Tests</Link></li>
+            <li><Link href="/consult" className="hover:text-[#10847e]">Consult Doctors</Link></li>
+            <li><Link href="/ai-healthcare" className="text-[#10847e] font-semibold flex items-center">
               <i className="fas fa-robot mr-1"></i> AI Health Assistant
             </Link></li>
-            <li><Link href="/products/category/4" className="hover:text-[#ff6f61]">COVID-19</Link></li>
-            <li><Link href="/products/category/5" className="hover:text-[#ff6f61]">Ayurveda</Link></li>
-            <li><Link href="/products/category/6" className="hover:text-[#ff6f61]">Healthcare Devices</Link></li>
-            <li><Link href="/health-blog" className="hover:text-[#ff6f61]">Health Blog</Link></li>
-            <li><Link href="/plus" className="hover:text-[#ff6f61]">PLUS</Link></li>
-            <li><Link href="/offers" className="hover:text-[#ff6f61]">Offers</Link></li>
-            <li><Link href="/value-store" className="text-[#14bef0] font-semibold">Value Store</Link></li>
+            <li><Link href="/products/category/4" className="hover:text-[#10847e]">COVID-19</Link></li>
+            <li><Link href="/products/category/5" className="hover:text-[#10847e]">Ayurveda</Link></li>
+            <li><Link href="/products/category/6" className="hover:text-[#10847e]">Healthcare Devices</Link></li>
+            <li><Link href="/health-blog" className="hover:text-[#10847e]">Health Blog</Link></li>
+            <li><Link href="/plus" className="hover:text-[#10847e]">PLUS</Link></li>
+            <li><Link href="/offers" className="hover:text-[#10847e]">Offers</Link></li>
+            <li><Link href="/value-store" className="text-[#10847e] font-semibold">Value Store</Link></li>
           </ul>
         </div>
       </nav>
@@ -273,7 +273,7 @@ const Header = () => {
       <nav className="border-t border-gray-200 py-2 block md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-t z-50">
         <div className="flex justify-between px-4">
           <Link href="/" className="flex flex-col items-center text-xs">
-            <i className="fas fa-home text-[#ff6f61]"></i>
+            <i className="fas fa-home text-[#10847e]"></i>
             <span>Home</span>
           </Link>
           
@@ -300,23 +300,23 @@ const Header = () => {
             </Link>
           ) : (
             <Link href="/lab-tests" className="flex flex-col items-center text-xs">
-              <i className="fas fa-flask"></i>
+              <i className="fas fa-flask text-[#10847e]"></i>
               <span>Lab Tests</span>
             </Link>
           )}
           
           <Link href="/products" className="flex flex-col items-center text-xs">
-            <i className="fas fa-pills"></i>
+            <i className="fas fa-pills text-[#10847e]"></i>
             <span>Medicines</span>
           </Link>
           
           <Link href="/ai-healthcare" className="flex flex-col items-center text-xs">
-            <i className="fas fa-robot text-[#14bef0]"></i>
-            <span className="text-[#14bef0]">AI Chat</span>
+            <i className="fas fa-robot text-[#10847e]"></i>
+            <span className="text-[#10847e]">AI Chat</span>
           </Link>
           
           <Link href="/profile" className="flex flex-col items-center text-xs">
-            <i className="fas fa-user"></i>
+            <i className="fas fa-user text-[#10847e]"></i>
             <span>Profile</span>
           </Link>
         </div>
