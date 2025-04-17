@@ -111,23 +111,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(category);
   });
   
-  // Get all products
-  app.get("/api/products", async (_req: Request, res: Response) => {
-    const products = await dbStorage.getProducts();
-    res.json(products);
+  // Get all products with pagination and limited fields for better performance
+  app.get("/api/products", async (req: Request, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 50); // Cap at 50 for performance
+    const skip = (page - 1) * limit;
+    
+    const allProducts = await dbStorage.getProducts();
+    
+    // Calculate pagination values
+    const totalProducts = allProducts.length;
+    const totalPages = Math.ceil(totalProducts / limit);
+    
+    // Return paginated results with limited fields for better performance
+    const paginatedProducts = allProducts.slice(skip, skip + limit).map(product => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      discountedPrice: product.discountedPrice,
+      imageUrl: product.imageUrl,
+      brand: product.brand,
+      quantity: product.quantity,
+      inStock: product.inStock,
+      categoryId: product.categoryId,
+      rating: product.rating,
+      ratingCount: product.ratingCount
+    }));
+    
+    res.json({
+      products: paginatedProducts,
+      pagination: {
+        total: totalProducts,
+        page,
+        limit,
+        totalPages
+      }
+    });
   });
   
-  // Get products by category
+  // Get products by category with limited fields for better performance
   app.get("/api/products/category/:categoryId", async (req: Request, res: Response) => {
     const categoryId = parseInt(req.params.categoryId);
-    const products = await dbStorage.getProductsByCategory(categoryId);
-    res.json(products);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 12, 30); // Cap at 30 for performance
+    
+    const allProducts = await dbStorage.getProductsByCategory(categoryId);
+    
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+    const totalProducts = allProducts.length;
+    const totalPages = Math.ceil(totalProducts / limit);
+    
+    // Return only necessary fields for better network performance
+    const paginatedProducts = allProducts.slice(skip, skip + limit).map(product => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      discountedPrice: product.discountedPrice,
+      imageUrl: product.imageUrl,
+      brand: product.brand,
+      quantity: product.quantity,
+      inStock: product.inStock,
+      rating: product.rating,
+      ratingCount: product.ratingCount
+    }));
+    
+    res.json({
+      products: paginatedProducts,
+      pagination: {
+        total: totalProducts,
+        page,
+        limit,
+        totalPages
+      }
+    });
   });
   
-  // Get featured products
-  app.get("/api/products/featured", async (_req: Request, res: Response) => {
-    const products = await dbStorage.getFeaturedProducts();
-    res.json(products);
+  // Get featured products with limited fields for better performance
+  app.get("/api/products/featured", async (req: Request, res: Response) => {
+    const limit = Math.min(parseInt(req.query.limit as string) || 8, 12); // Cap featured products
+    
+    const allFeatured = await dbStorage.getFeaturedProducts();
+    const featuredProducts = allFeatured.slice(0, limit).map(product => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      discountedPrice: product.discountedPrice,
+      imageUrl: product.imageUrl,
+      brand: product.brand,
+      categoryId: product.categoryId,
+      rating: product.rating,
+      ratingCount: product.ratingCount
+    }));
+    
+    res.json(featuredProducts);
   });
   
   // Get product by ID

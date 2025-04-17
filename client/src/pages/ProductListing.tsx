@@ -16,24 +16,45 @@ const ProductListing = () => {
   const [priceFilter, setPriceFilter] = useState<string[]>([]);
   const [ratingFilter, setRatingFilter] = useState<number[]>([]);
   
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
+  
   const apiEndpoint = params.categoryId 
     ? `/api/products/category/${params.categoryId}`
     : '/api/products';
   
-  const { data: products, isLoading } = useQuery({
-    queryKey: [apiEndpoint],
+  // Add query params for pagination
+  const { data, isLoading } = useQuery({
+    queryKey: [apiEndpoint, currentPage, itemsPerPage],
+    queryFn: async () => {
+      const url = new URL(apiEndpoint, window.location.origin);
+      url.searchParams.append('page', currentPage.toString());
+      url.searchParams.append('limit', itemsPerPage.toString());
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
-  const { data: category } = useQuery({
-    queryKey: params.categoryId ? [`/api/categories/${params.categoryId}`] : null,
+  const { data: categoryData } = useQuery({
+    queryKey: params.categoryId ? [`/api/categories/${params.categoryId}`] : ['no-category'],
     enabled: !!params.categoryId,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
   
+  const category = categoryData || {};
+  
+  // Extract products from paginated API response
+  const productsData = data?.products || [];
+  const pagination = data?.pagination || { total: 0, page: 1, limit: itemsPerPage, totalPages: 0 };
+  
   // Filtered and sorted products
-  const filteredProducts = products
-    ? products.filter((product: any) => {
+  const filteredProducts = productsData
+    ? productsData.filter((product: any) => {
         // Search filter
         if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
           return false;
@@ -114,9 +135,15 @@ const ProductListing = () => {
     window.scrollTo(0, 0);
   }, [location]);
   
+  // Handle page change for pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo(0, 0);
+  };
+  
   // Page title
-  const pageTitle = category 
-    ? `${category.name} Products - PillNow`
+  const pageTitle = category && (category as any).name
+    ? `${(category as any).name} Products - PillNow`
     : searchQuery 
       ? `Search Results for "${searchQuery}" - PillNow`
       : 'All Products - PillNow';
