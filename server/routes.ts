@@ -973,6 +973,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Setup SEO routes for sitemap.xml and robots.txt
+  setupSeoRoutes(app);
+  
   const httpServer = createServer(app);
 
   return httpServer;

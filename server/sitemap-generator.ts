@@ -1,7 +1,7 @@
 import { SitemapStream, streamToPromise } from 'sitemap';
 import { createWriteStream } from 'fs';
 import { Request, Response } from 'express';
-import { storage } from './mongodb-storage';
+import { mongoDBStorage as dbStorage } from './mongodb-storage';
 
 /**
  * Generates and serves a dynamic XML sitemap for better search engine indexing
@@ -37,8 +37,8 @@ export async function generateSitemap(req: Request, res: Response) {
     
     // Add all categories to the sitemap
     try {
-      const categories = await storage.getCategories();
-      categories.forEach(category => {
+      const categories = await dbStorage.getCategories();
+      categories.forEach((category: any) => {
         smStream.write({
           url: `/products/category/${category.id}`,
           changefreq: 'weekly',
@@ -52,8 +52,8 @@ export async function generateSitemap(req: Request, res: Response) {
     
     // Add all products to the sitemap
     try {
-      const products = await storage.getProducts();
-      products.forEach(product => {
+      const products = await dbStorage.getProducts();
+      products.forEach((product: any) => {
         smStream.write({
           url: `/products/${product.id}`,
           changefreq: 'weekly',
@@ -67,8 +67,8 @@ export async function generateSitemap(req: Request, res: Response) {
     
     // Add all blog articles to the sitemap
     try {
-      const articles = await storage.getArticles();
-      articles.forEach(article => {
+      const articles = await dbStorage.getArticles();
+      articles.forEach((article: any) => {
         smStream.write({
           url: `/health-blog/${article.id}`,
           changefreq: 'monthly',
@@ -82,8 +82,8 @@ export async function generateSitemap(req: Request, res: Response) {
     
     // Add all lab tests to the sitemap
     try {
-      const labTests = await storage.getLabTests();
-      labTests.forEach(test => {
+      const labTests = await dbStorage.getLabTests();
+      labTests.forEach((test: any) => {
         smStream.write({
           url: `/lab-tests/${test.id}`,
           changefreq: 'monthly',
