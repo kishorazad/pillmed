@@ -62,7 +62,7 @@ const Footer = () => {
         </div>
         
         <div className="mt-10 pt-6 border-t border-gray-700 text-center text-gray-400 text-sm">
-          <p>© 2023 Medadock. All Rights Reserved.</p>
+          <p>© 2025 PillNow. All Rights Reserved.</p>
           <p className="mt-2">The content is for informational purposes only and not intended to be a substitute for professional medical advice.</p>
         </div>
       </div>

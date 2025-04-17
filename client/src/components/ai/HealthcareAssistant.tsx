@@ -70,7 +70,7 @@ const HealthcareAssistant = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: 'Hello! I\'m the Medadock AI Health Assistant. I can help you with health-related questions, medication information, and general wellness advice. How may I assist you today?',
+      content: 'Hello! I\'m the PillNow AI Health Assistant. I can help you with health-related questions, medication information, and general wellness advice. How may I assist you today?',
       timestamp: new Date()
     }
   ]);

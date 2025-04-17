@@ -414,7 +414,7 @@ const AdminDashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-          <p className="text-gray-500">Manage your Medadock healthcare platform and monitor performance.</p>
+          <p className="text-gray-500">Manage your PillNow healthcare platform and monitor performance.</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
