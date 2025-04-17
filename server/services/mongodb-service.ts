@@ -12,6 +12,15 @@ import {
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/medadock';
 
 export const connectToDatabase = async (retries = 5) => {
+  console.log('Attempting to connect to MongoDB...');
+  
+  // Log the MongoDB URI with masked password for debugging
+  const uriWithoutPassword = MONGODB_URI.replace(
+    /mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/,
+    (match, srv, username) => `mongodb${srv || ''}://${username}:****@`
+  );
+  console.log(`Using MongoDB URI: ${uriWithoutPassword}`);
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       await mongoose.connect(MONGODB_URI, {
@@ -24,6 +33,16 @@ export const connectToDatabase = async (retries = 5) => {
       return true;
     } catch (error) {
       console.error(`MongoDB connection attempt ${attempt} failed: ${error.message}`);
+      
+      // Check for specific error types and log more details
+      if (error.name === 'MongoServerSelectionError') {
+        console.error('Server selection error - check if MongoDB server is running');
+      } else if (error.name === 'MongoNetworkError') {
+        console.error('Network error - check connectivity and MongoDB URI');
+      } else if (error.message.includes('bad auth')) {
+        console.error('Authentication failed - check username, password and authentication database');
+      }
+      
       if (attempt === retries) {
         console.error('MongoDB connection error: Cannot connect to MongoDB - using in-memory storage');
         return false;
