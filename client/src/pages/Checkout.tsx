@@ -88,21 +88,58 @@ const Checkout = () => {
     if (currentStep === 'address') {
       setCurrentStep('payment');
     } else if (currentStep === 'payment') {
-      // In a real app, you would process the payment here
-      
-      // Generate a random order ID
-      const orderNumber = Math.floor(100000 + Math.random() * 900000);
-      setOrderId(`ORD${orderNumber}`);
-      
-      // Clear the cart and set order as complete
-      await clearCart();
-      setOrderComplete(true);
-      setCurrentStep('confirmation');
-      
-      toast({
-        title: "Order placed successfully",
-        description: "Thank you for your order!",
-      });
+      try {
+        // Create a complete shipping address
+        const shippingAddress = `${data.address}, ${data.city}, ${data.state} - ${data.pincode}`;
+        
+        // Prepare order items
+        const items = cartItems.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.product.discountedPrice || item.product.price
+        }));
+        
+        // Send order to server
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            userId,
+            shippingAddress,
+            totalAmount: totalCartPrice,
+            paymentMethod: data.paymentMethod,
+            items
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create order');
+        }
+        
+        const orderData = await response.json();
+        
+        // Set order ID from server response
+        setOrderId(`ORD${orderData.id}`);
+        
+        // Clear the cart and set order as complete
+        await clearCart();
+        setOrderComplete(true);
+        setCurrentStep('confirmation');
+        
+        toast({
+          title: "Order placed successfully",
+          description: "Thank you for your order!",
+        });
+      } catch (error) {
+        console.error('Error creating order:', error);
+        toast({
+          title: "Error placing order",
+          description: "There was a problem placing your order. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
   
