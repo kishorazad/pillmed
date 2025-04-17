@@ -42,10 +42,10 @@ import QuickLinks from '@/components/home/QuickLinks';
 import ProductSlider from '@/components/products/ProductSlider';
 import MedicineSearch from '@/components/search/MedicineSearch';
 import MedicineCategorySlider from '@/components/home/MedicineCategorySlider';
+import CategoryCard from '@/components/categories/CategoryCard';
 
-// Categories
+// Data fetching
 import { useQuery } from '@tanstack/react-query';
-import CategoryCard from '@/components/products/CategoryCard';
 
 const Home = () => {
   const isMobile = useMediaQuery('(max-width: 768px)');
