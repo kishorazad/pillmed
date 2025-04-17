@@ -52,12 +52,12 @@ const QuickLinks: React.FC = () => {
     <div className="flex overflow-x-auto gap-3 pb-2 my-4 hide-scrollbar">
       {quickLinks.map((link) => (
         <Link key={link.id} href={link.link}>
-          <a className="flex-shrink-0 flex flex-col items-center justify-center w-20">
+          <div className="flex-shrink-0 flex flex-col items-center justify-center w-20 cursor-pointer">
             <div className={`w-12 h-12 rounded-full ${link.color} flex items-center justify-center mb-1 text-xl`}>
               <span role="img" aria-label={link.name}>{link.icon}</span>
             </div>
             <span className="text-xs font-medium text-center">{link.name}</span>
-          </a>
+          </div>
         </Link>
       ))}
     </div>

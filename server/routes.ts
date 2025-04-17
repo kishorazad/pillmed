@@ -596,61 +596,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Product search endpoint
   app.get("/api/products/search", async (req: Request, res: Response) => {
     try {
-      const { query, limit = 10, page = 1 } = req.query;
+      const { query, limit = 10, page = 1, categoryId } = req.query;
       
       if (!query || typeof query !== 'string') {
         return res.status(400).json({ error: "Search query is required" });
       }
       
-      // Try to search in MongoDB first using text index
+      const limitNum = Number(limit);
+      const pageNum = Number(page);
+      const skip = (pageNum - 1) * limitNum;
+      
+      // Try to search in MongoDB first - optimized for large datasets (up to 700,000 products)
       try {
         const mongoose = await import('mongoose');
         const { Product } = await import('./models');
         
         if (mongoose.connection.readyState === 1) {  // Connected
-          const skip = (Number(page) - 1) * Number(limit);
+          console.log('Using MongoDB for product search with indexes');
           
-          const products = await Product.find(
-            { $text: { $search: query } },
-            { score: { $meta: "textScore" } }
-          )
-          .sort({ score: { $meta: "textScore" } })
-          .skip(skip)
-          .limit(Number(limit));
+          // Create indexes if they don't exist yet (run once)
+          try {
+            await Product.collection.createIndex({ 
+              name: "text", 
+              description: "text", 
+              brand: "text",
+              composition: "text",
+              manufacturer: "text" 
+            });
+            
+            // Create regular indexes for better performance with range queries and sorting
+            await Product.collection.createIndex({ price: 1 });
+            await Product.collection.createIndex({ categoryId: 1 });
+            await Product.collection.createIndex({ isFeatured: 1 });
+            await Product.collection.createIndex({ name: 1 });
+          } catch (indexError) {
+            // If index already exists or other error, log but continue
+            console.log('Index operation completed or already exists');
+          }
           
-          const total = await Product.countDocuments({ $text: { $search: query } });
+          // Build query object
+          const searchQuery: any = {};
+          
+          // Add text search
+          searchQuery.$or = [
+            { name: { $regex: query, $options: 'i' } },  // Case-insensitive partial name match
+            { $text: { $search: query } }                // Full text search for other fields
+          ];
+          
+          // Add category filter if provided
+          if (categoryId && !isNaN(Number(categoryId))) {
+            searchQuery.categoryId = Number(categoryId);
+          }
+          
+          // Execute the optimized query
+          const products = await Product.find(searchQuery)
+            .select('id name price discountedPrice imageUrl brand quantity categoryId') // Only select needed fields
+            .skip(skip)
+            .limit(limitNum)
+            .lean(); // Use lean for better performance
+          
+          // Get total count for pagination
+          const total = await Product.countDocuments(searchQuery);
           
           return res.json({
             products,
             pagination: {
               total,
-              page: Number(page),
-              limit: Number(limit),
-              pages: Math.ceil(total / Number(limit))
+              page: pageNum,
+              limit: limitNum,
+              pages: Math.ceil(total / limitNum)
             }
           });
         }
       } catch (error) {
-        console.error("MongoDB search failed:", error);
-        // Continue to in-memory fallback
+        console.log('MongoDB search fallback to in-memory:', error instanceof Error ? error.message : 'unknown error');
       }
       
-      // Fallback to in-memory search
+      // Fallback to in-memory search with optimizations for large datasets
+      console.log('Using in-memory product search');
       const searchQuery = query.toLowerCase();
       const allProducts = await dbStorage.getProducts();
       
-      const filteredProducts = allProducts.filter(product => 
-        product.name.toLowerCase().includes(searchQuery) ||
-        (product.description && product.description.toLowerCase().includes(searchQuery)) ||
-        (product.brand && product.brand.toLowerCase().includes(searchQuery))
-      );
+      // Apply category filter first if provided (reduces dataset size early)
+      let filteredByCategoryProducts = allProducts;
+      if (categoryId && !isNaN(Number(categoryId))) {
+        filteredByCategoryProducts = allProducts.filter(p => p.categoryId === Number(categoryId));
+      }
       
-      const limitNum = Number(limit);
-      const pageNum = Number(page);
-      const startIndex = (pageNum - 1) * limitNum;
+      // Use early return pattern for better performance with large arrays
+      const filteredProducts = filteredByCategoryProducts.filter(product => {
+        // Check name first as most likely match (faster short-circuit)
+        if (product.name.toLowerCase().includes(searchQuery)) return true;
+        
+        // Only check description and brand if name doesn't match
+        if (product.description && product.description.toLowerCase().includes(searchQuery)) return true;
+        if (product.brand && product.brand.toLowerCase().includes(searchQuery)) return true;
+        
+        return false;
+      });
+      
+      // Calculate pagination
+      const startIndex = skip;
       const endIndex = startIndex + limitNum;
       
-      const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+      // Create a simplified version of the products array for better performance
+      const paginatedProducts = filteredProducts
+        .slice(startIndex, endIndex)
+        .map(p => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          discountedPrice: p.discountedPrice,
+          imageUrl: p.imageUrl,
+          brand: p.brand,
+          quantity: p.quantity,
+          categoryId: p.categoryId
+        }));
       
       return res.json({
         products: paginatedProducts,
@@ -667,7 +728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Real-time medicine search endpoint
+  // Real-time medicine search endpoint - Optimized for large datasets
   app.get("/api/medicine/search", async (req: Request, res: Response) => {
     try {
       const { q, limit = 10 } = req.query;
@@ -677,34 +738,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const query = q.toLowerCase();
+      const limitNum = Number(limit);
       
-      // Fallback to in-memory search
+      // Try to search in MongoDB first for better performance with large datasets
+      try {
+        const mongoose = await import('mongoose');
+        const { Product } = await import('./models');
+        
+        if (mongoose.connection.readyState === 1) {  // Connected to MongoDB
+          console.log('Using MongoDB for medicine search');
+          
+          // Create an index if not exists for performance
+          try {
+            await Product.collection.createIndex({ 
+              name: "text", 
+              description: "text", 
+              brand: "text",
+              composition: "text",
+              manufacturer: "text" 
+            });
+          } catch (indexError) {
+            // If index already exists, this is fine
+            console.log('Index operation:', indexError instanceof Error ? indexError.message : 'completed');
+          }
+          
+          // For partial matching, use regex with index-utilizing prefixes
+          const products = await Product.find({
+            $or: [
+              { name: { $regex: query, $options: 'i' } },
+              { brand: { $regex: query, $options: 'i' } },
+              { composition: { $regex: query, $options: 'i' } },
+              // Use text search for description as it can be longer
+              { $text: { $search: query } }
+            ]
+          })
+          .select('id name price discountedPrice imageUrl brand quantity') // Only select needed fields
+          .limit(limitNum);
+          
+          return res.json(products);
+        }
+      } catch (error) {
+        console.log('MongoDB search fallback to in-memory');
+        // Continue to in-memory fallback
+      }
+      
+      // Fallback to in-memory search with optimization
       const allProducts = await dbStorage.getProducts();
       
+      // Use an early-return filter pattern for better performance with large arrays
       const filteredProducts = allProducts.filter(product => {
-        // Always check basic fields that are guaranteed to exist
-        const nameMatch = product.name.toLowerCase().includes(query);
-        const brandMatch = product.brand ? product.brand.toLowerCase().includes(query) : false;
-        const descriptionMatch = product.description ? product.description.toLowerCase().includes(query) : false;
+        // Check name first as the most likely match (faster short-circuit)
+        if (product.name.toLowerCase().includes(query)) return true;
         
-        // Handle additional properties safely using type assertion
+        // Check other fields only if name doesn't match
+        if (product.brand && product.brand.toLowerCase().includes(query)) return true;
+        if (product.description && product.description.toLowerCase().includes(query)) return true;
+        
+        // Only check extended properties as a last resort
         const productWithExtras = product as any;
-        const compositionMatch = productWithExtras.composition ? 
-          productWithExtras.composition.toLowerCase().includes(query) : false;
-        const manufacturerMatch = productWithExtras.manufacturer ? 
-          productWithExtras.manufacturer.toLowerCase().includes(query) : false;
+        if (productWithExtras.composition && productWithExtras.composition.toLowerCase().includes(query)) return true;
+        if (productWithExtras.manufacturer && productWithExtras.manufacturer.toLowerCase().includes(query)) return true;
           
-        return nameMatch || brandMatch || descriptionMatch || compositionMatch || manufacturerMatch;
+        return false;
       });
       
-      return res.json(filteredProducts.slice(0, Number(limit)));
+      // Return only a limited subset with minimal fields
+      const simplifiedProducts = filteredProducts.slice(0, limitNum).map(p => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        discountedPrice: p.discountedPrice,
+        imageUrl: p.imageUrl,
+        brand: p.brand,
+        quantity: p.quantity
+      }));
+      
+      return res.json(simplifiedProducts);
     } catch (error) {
       console.error("Medicine search error:", error);
       res.status(500).json({ error: "Error searching medicines" });
     }
   });
   
-  // Medicine substitutes endpoint
+  // Medicine substitutes endpoint - Optimized for large datasets
   app.get("/api/medicine/substitutes", async (req: Request, res: Response) => {
     try {
       const { name, composition, excludeId } = req.query;
@@ -714,41 +830,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const excludedId = excludeId ? parseInt(excludeId as string) : undefined;
-      const allProducts = await dbStorage.getProducts();
-      let substitutes = [];
       
-      if (composition) {
+      // Try MongoDB first for better performance with large datasets
+      try {
+        const mongoose = await import('mongoose');
+        const { Product } = await import('./models');
+        
+        if (mongoose.connection.readyState === 1) {  // Connected to MongoDB
+          console.log('Using MongoDB for substitutes search');
+          
+          let query: any = {};
+          
+          // Exclude the current product
+          if (excludedId) {
+            query._id = { $ne: excludedId };
+          }
+          
+          if (composition && typeof composition === 'string') {
+            // For composition-based search (more accurate)
+            // Make sure composition index exists
+            try {
+              await Product.collection.createIndex({ composition: "text" });
+            } catch (indexError) {
+              // If index already exists, this is fine
+              console.log('Composition index operation completed or already exists');
+            }
+            
+            // Use both text index and case-insensitive regex for better matches
+            query.$or = [
+              { composition: { $regex: composition, $options: 'i' } },
+              { $text: { $search: composition } }
+            ];
+          } else if (name && typeof name === 'string') {
+            // Extract likely generic name from first word
+            const nameParts = name.split(' ');
+            const likelyGenericName = nameParts[0];
+            
+            // Use text index on name field
+            try {
+              await Product.collection.createIndex({ name: "text" });
+            } catch (indexError) {
+              // If index already exists, this is fine
+              console.log('Name index operation completed or already exists');
+            }
+            
+            query.name = { $regex: likelyGenericName, $options: 'i' };
+          }
+          
+          // Find matching products, limiting to 10 and sorting by price
+          const substitutes = await Product.find(query)
+            .select('id name price discountedPrice imageUrl brand quantity composition')
+            .sort({ price: 1 }) // Sort by price ascending
+            .limit(10)
+            .lean();
+          
+          return res.json(substitutes);
+        }
+      } catch (error) {
+        console.log('MongoDB substitutes search fallback to in-memory');
+        // Continue to in-memory fallback
+      }
+      
+      // Fallback to in-memory search with optimizations
+      const allProducts = await dbStorage.getProducts();
+      let substitutes: any[] = [];
+      
+      // Apply early filters first to reduce dataset size
+      const productsExcludingCurrent = excludedId 
+        ? allProducts.filter(p => p.id !== excludedId)
+        : allProducts;
+      
+      if (composition && typeof composition === 'string') {
         // If we have composition, use that for a more accurate match
         const compositionLower = composition.toLowerCase();
-        substitutes = allProducts.filter(product => {
-          // First check if product matches the excluded ID
-          if (product.id === excludedId) return false;
-          
+        
+        // Use early-return filter pattern for better performance
+        substitutes = productsExcludingCurrent.filter(product => {
           // Use type assertion to safely access composition
           const productExt = product as any;
           return productExt.composition && 
                  productExt.composition.toLowerCase().includes(compositionLower);
         });
-      } else if (name) {
-        // Otherwise try to match by name, extracting the likely generic name
-        // Heuristic: Try to get the first word which might be the generic name
+      } else if (name && typeof name === 'string') {
+        // Extract likely generic name from first word
         const nameParts = name.split(' ');
         const likelyGenericName = nameParts[0].toLowerCase();
         
-        substitutes = allProducts.filter(product => 
-          product.id !== excludedId && 
+        // Use efficient filtering
+        substitutes = productsExcludingCurrent.filter(product => 
           product.name.toLowerCase().includes(likelyGenericName)
         );
       }
       
-      // Sort substitutes by price (lowest first)
+      // Sort substitutes by price (lowest first) using more stable sort approach
       substitutes.sort((a, b) => {
-        const priceA = a.discountedPrice || a.price;
-        const priceB = b.discountedPrice || b.price;
+        const priceA = a.discountedPrice !== null ? a.discountedPrice : a.price;
+        const priceB = b.discountedPrice !== null ? b.discountedPrice : b.price;
         return priceA - priceB;
       });
       
-      res.json(substitutes.slice(0, 10));
+      // Return only essential fields for better network performance
+      const simplifiedSubstitutes = substitutes.slice(0, 10).map(p => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        discountedPrice: p.discountedPrice,
+        imageUrl: p.imageUrl,
+        brand: p.brand,
+        quantity: p.quantity,
+        composition: (p as any).composition
+      }));
+      
+      res.json(simplifiedSubstitutes);
     } catch (error) {
       console.error("Substitutes search error:", error);
       res.status(500).json({ error: "Error finding substitute medicines" });
