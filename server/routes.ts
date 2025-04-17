@@ -67,6 +67,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/cart", async (req: Request, res: Response) => {
     try {
       const cartItem = insertCartItemSchema.parse(req.body);
+      
+      // Check if user is logged in via session
+      const userSession = req.session as any;
+      if (userSession && userSession.user) {
+        // If logged in, make sure to use the session user ID
+        cartItem.userId = userSession.user.id;
+      }
+      
       const newCartItem = await storage.addToCart(cartItem);
       res.status(201).json(newCartItem);
     } catch (error) {

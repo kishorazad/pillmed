@@ -655,6 +655,27 @@ export class MemStorage implements IStorage {
       })
     );
   }
+  
+  // New method to transfer cart items from one user to another (guest to authenticated)
+  async transferCartItems(fromUserId: number, toUserId: number): Promise<boolean> {
+    // Get all cart items from the source user
+    const sourceCartItems = await this.getCartItems(fromUserId);
+    
+    // For each item, add it to the target user's cart and remove from source
+    for (const item of sourceCartItems) {
+      // Add to target user's cart
+      await this.addToCart({
+        userId: toUserId,
+        productId: item.productId,
+        quantity: item.quantity
+      });
+      
+      // Remove from source user's cart
+      await this.removeFromCart(item.id);
+    }
+    
+    return true;
+  }
 
   async addToCart(insertCartItem: InsertCartItem): Promise<CartItem> {
     // Check if this product is already in the cart
