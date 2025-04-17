@@ -1,89 +1,86 @@
-// Firebase Cloud Messaging Service Worker
-// This file must be named 'firebase-messaging-sw.js' and placed in the root of the public directory
+// This service worker is needed for Firebase Cloud Messaging to work in the background
+// It will be automatically registered when the app loads
 
-// Firebase app version (will be replaced in build process)
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+// Scripts imported by the service worker must be fetched from the network
+importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
-// This configuration is public and doesn't need to be secured
-firebase.initializeApp({
-  apiKey: 'API_KEY_PLACEHOLDER', // Will be replaced in runtime
-  authDomain: 'PROJECT_ID_PLACEHOLDER.firebaseapp.com', // Will be replaced in runtime
-  projectId: 'PROJECT_ID_PLACEHOLDER', // Will be replaced in runtime
-  storageBucket: 'PROJECT_ID_PLACEHOLDER.appspot.com', // Will be replaced in runtime
-  messagingSenderId: 'MESSAGING_SENDER_ID_PLACEHOLDER', // Will be replaced in runtime
-  appId: 'APP_ID_PLACEHOLDER', // Will be replaced in runtime
+// Store Firebase config values
+self.FIREBASE_API_KEY = '';
+self.FIREBASE_PROJECT_ID = '';
+self.FIREBASE_MESSAGING_SENDER_ID = '';
+self.FIREBASE_APP_ID = '';
+
+// Listen for messages from the main application with config values
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'FIREBASE_CONFIG') {
+    self[event.data.key] = event.data.value;
+    console.log(`[firebase-messaging-sw.js] Received config ${event.data.key}`);
+    
+    // Try to initialize Firebase if we have all the required config
+    if (self.FIREBASE_API_KEY && self.FIREBASE_PROJECT_ID && 
+        self.FIREBASE_MESSAGING_SENDER_ID && self.FIREBASE_APP_ID) {
+      initializeFirebase();
+    }
+  }
 });
 
-// Initialize Firebase Cloud Messaging
+// Flag to track if Firebase has been initialized
+let firebaseInitialized = false;
+
+// Initialize Firebase with the received config
+function initializeFirebase() {
+  // Prevent multiple initializations
+  if (firebaseInitialized) return;
+  
+  // Initialize the Firebase app
+  firebase.initializeApp({
+    apiKey: self.FIREBASE_API_KEY,
+    authDomain: `${self.FIREBASE_PROJECT_ID}.firebaseapp.com`,
+    projectId: self.FIREBASE_PROJECT_ID,
+    storageBucket: `${self.FIREBASE_PROJECT_ID}.appspot.com`,
+    messagingSenderId: self.FIREBASE_MESSAGING_SENDER_ID,
+    appId: self.FIREBASE_APP_ID,
+  });
+  
+  firebaseInitialized = true;
+  console.log('[firebase-messaging-sw.js] Firebase initialized');
+}
+
+// Get Firebase Messaging instance
 const messaging = firebase.messaging();
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  console.log('Background message received:', payload);
+  console.log('[firebase-messaging-sw.js] Received background message', payload);
   
-  const notificationTitle = payload.notification.title || 'PillNow';
+  // Customize notification here
+  const notificationTitle = payload.notification.title || 'New PillNow Notification';
   const notificationOptions = {
-    body: payload.notification.body || 'You have a new notification',
-    icon: '/pillnow.png',
-    badge: '/pillnow.png',
-    tag: payload.data?.tag || 'default',
-    data: payload.data || {},
-    actions: [
-      {
-        action: 'view',
-        title: 'View',
-      },
-    ],
+    body: payload.notification.body || '',
+    icon: '/logo.png',
+    badge: '/logo.png',
+    data: payload.data,
   };
-  
-  // Show the notification
+
+  // Show notification
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
-  console.log('Notification clicked:', event);
+  console.log('[firebase-messaging-sw.js] Notification click:', event);
   
+  // Close the notification
   event.notification.close();
   
-  // Get the notification data
-  const data = event.notification.data;
-  
-  // Handle different notification types
-  let url = '/';
-  if (data && data.url) {
-    url = data.url;
-  } else if (data && data.type) {
-    switch (data.type) {
-      case 'order':
-        url = `/orders/${data.orderId}`;
-        break;
-      case 'medication':
-        url = '/medication-tracking';
-        break;
-      case 'offer':
-        url = `/products/${data.productId}`;
-        break;
-      default:
-        url = '/';
-    }
+  // Handle click action - typically opening a specific URL
+  const clickAction = event.notification.data?.clickAction;
+  if (clickAction) {
+    // Navigate to the URL
+    clients.openWindow(clickAction);
+  } else {
+    // Default action - open the app
+    clients.openWindow('/');
   }
-  
-  // Focus or open a new window
-  event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
-      // Check if there's already a window/tab open with the target URL
-      for (const client of clientList) {
-        if (client.url === url && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      
-      // If no window/tab is open with the URL, open a new one
-      if (clients.openWindow) {
-        return clients.openWindow(url);
-      }
-    })
-  );
 });

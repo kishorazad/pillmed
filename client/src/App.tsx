@@ -11,6 +11,7 @@ import Footer from "./components/layout/Footer";
 import CartSidebar from "./components/cart/CartSidebar";
 import MobileNavigation from "./components/layout/MobileNavigation";
 import FloatingContactButtons from "./components/contact/FloatingContactButtons";
+import NotificationHandler from "./components/notifications/NotificationHandler";
 
 // Pages
 import Home from "./pages/Home";
@@ -90,6 +91,7 @@ function App() {
           message="Hello! I'm interested in ordering medicines from PillNow."
         />
       </div>
+      <NotificationHandler />
       <Toaster />
     </QueryClientProvider>
   );

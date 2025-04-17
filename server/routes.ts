@@ -4,6 +4,7 @@ import { storage as memStorage } from "./storage"; // In-memory storage
 import { mongoDBStorage } from "./mongodb-storage"; // MongoDB storage
 import { insertCartItemSchema, insertUserSchema } from "@shared/schema";
 import { processHealthQuery, getMedicationInfo, analyzeMedicationInteractions } from "./ai-service";
+import { sendNotificationToUser, sendNotificationToAllUsers } from './notification-service';
 import { z } from "zod";
 import multer from 'multer';
 import path from 'path';
@@ -1026,6 +1027,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting notification token:', error);
       res.status(500).json({ message: "Failed to delete notification token" });
+    }
+  });
+  
+  // Send notification to a specific user
+  app.post("/api/notifications/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { title, body, data, clickAction, icon } = req.body;
+      
+      if (!title || !body) {
+        return res.status(400).json({ message: "Title and body are required" });
+      }
+      
+      const success = await sendNotificationToUser(userId, {
+        title,
+        body,
+        data,
+        clickAction,
+        icon
+      });
+      
+      if (!success) {
+        return res.status(404).json({ message: "No valid notification tokens found for user" });
+      }
+      
+      res.status(200).json({ message: "Notification sent successfully" });
+    } catch (error) {
+      console.error('Error sending notification to user:', error);
+      res.status(500).json({ message: "Failed to send notification" });
+    }
+  });
+  
+  // Send notification to all users
+  app.post("/api/notifications/all", async (req: Request, res: Response) => {
+    try {
+      const { title, body, data, clickAction, icon } = req.body;
+      
+      if (!title || !body) {
+        return res.status(400).json({ message: "Title and body are required" });
+      }
+      
+      const success = await sendNotificationToAllUsers({
+        title,
+        body,
+        data,
+        clickAction,
+        icon
+      });
+      
+      if (!success) {
+        return res.status(404).json({ message: "No valid notification tokens found" });
+      }
+      
+      res.status(200).json({ message: "Notification sent to all users successfully" });
+    } catch (error) {
+      console.error('Error sending notification to all users:', error);
+      res.status(500).json({ message: "Failed to send notification to all users" });
     }
   });
 
