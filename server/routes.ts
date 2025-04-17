@@ -775,7 +775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Product search endpoint - Ultra-optimized for 700,000+ products
+  // Product search endpoint - Ultra-optimized for 700,000+ products with caching
   app.get("/api/products/search", async (req: Request, res: Response) => {
     try {
       const { 
@@ -793,6 +793,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!query || typeof query !== 'string') {
         return res.status(400).json({ error: "Search query is required" });
       }
+      
+      // Generate a deterministic cache key based on all search parameters
+      const cacheKey = `search:${query}:limit=${limit}:page=${page}:category=${categoryId || ''}:price=${minPrice || ''}-${maxPrice || ''}:sort=${sortBy}:brand=${brand || ''}:inStock=${inStock || ''}`;
+      
+      // Try to get from cache first
+      const cachedResults = cacheService.get(cacheKey);
+      if (cachedResults) {
+        console.log(`Cache HIT for search: "${query}"`);
+        return res.json(cachedResults);
+      }
+      console.log(`Cache MISS for search: "${query}"`);
+      
       
       const limitNum = Math.min(Number(limit), 50); // Cap at 50 for performance
       const pageNum = Number(page);
@@ -953,7 +965,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           console.timeEnd('product-search-time');
           
-          return res.json({
+          // Prepare response
+          const response = {
             products,
             pagination: {
               total: typeof totalCount === 'number' ? totalCount : 1000,
@@ -963,7 +976,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
             engine: 'mongodb',
             searchTime: true
-          });
+          };
+          
+          // Save to cache with search TTL (5 minutes)
+          cacheService.set(cacheKey, response, cacheService.getTTL('search'));
+          
+          return res.json(response);
         }
       } catch (error) {
         console.log('MongoDB search fallback to in-memory:', error instanceof Error ? error.message : 'unknown error');
@@ -1080,7 +1098,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.timeEnd('product-search-time');
       
-      return res.json({
+      // Prepare response
+      const inMemoryResponse = {
         products: paginatedProducts,
         pagination: {
           total: filteredProducts.length,
@@ -1089,14 +1108,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           pages: Math.ceil(filteredProducts.length / limitNum)
         },
         engine: 'memory'
-      });
+      };
+      
+      // Save to cache with search TTL (5 minutes)
+      cacheService.set(cacheKey, inMemoryResponse, cacheService.getTTL('search'));
+      
+      return res.json(inMemoryResponse);
     } catch (error) {
       console.error("Search error:", error);
       res.status(500).json({ error: "Failed to search products" });
     }
   });
   
-  // Real-time medicine search endpoint - Ultra-optimized for 700,000+ products
+  // Real-time medicine search endpoint - Ultra-optimized for 700,000+ products with caching
   app.get("/api/medicine/search", async (req: Request, res: Response) => {
     try {
       const { 
@@ -1114,6 +1138,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!q || typeof q !== 'string') {
         return res.status(400).json({ error: "Search query is required" });
       }
+      
+      // Generate a deterministic cache key based on all search parameters
+      const cacheKey = `medicine:search:${q}:limit=${limit}:page=${page}:category=${categoryId || ''}:price=${minPrice || ''}-${maxPrice || ''}:sort=${sortBy}:brand=${brand || ''}:inStock=${inStock || ''}`;
+      
+      // Try to get from cache first
+      const cachedResults = cacheService.get(cacheKey);
+      if (cachedResults) {
+        console.log(`Cache HIT for medicine search: "${q}"`);
+        return res.json(cachedResults);
+      }
+      console.log(`Cache MISS for medicine search: "${q}"`);
+      
       
       const query = q.toLowerCase();
       const limitNum = Math.min(parseInt(limit as string) || 10, 50); // Cap at 50 for performance
@@ -1279,7 +1315,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             console.timeEnd('search-time');
             
-            return res.json({
+            // Prepare response
+            const response = {
               results: products,
               pagination: {
                 page: pageNum,
@@ -1288,7 +1325,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 totalPages: Math.ceil(totalCount / limitNum)
               },
               searchTime: true
-            });
+            };
+            
+            // Save to cache with search TTL (5 minutes)
+            cacheService.set(cacheKey, response, cacheService.getTTL('search'));
+            
+            return res.json(response);
           }
         }
       } catch (error) {
@@ -1412,7 +1454,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.timeEnd('search-time');
       
-      return res.json({
+      // Prepare response
+      const inMemoryResponse = {
         results: projectedProducts,
         pagination: {
           page: pageNum,
@@ -1420,14 +1463,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalCount: total,
           totalPages: Math.ceil(total / limitNum)
         }
-      });
+      };
+      
+      // Save to cache with search TTL (5 minutes)
+      cacheService.set(cacheKey, inMemoryResponse, cacheService.getTTL('search'));
+      
+      return res.json(inMemoryResponse);
     } catch (error) {
       console.error("Medicine search error:", error);
       res.status(500).json({ error: "Error searching medicines" });
     }
   });
   
-  // Medicine substitutes endpoint - Optimized for large datasets
+  // Medicine substitutes endpoint - Optimized for large datasets with caching
   app.get("/api/medicine/substitutes", async (req: Request, res: Response) => {
     try {
       const { name, composition, excludeId } = req.query;
@@ -1435,6 +1483,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if ((!name && !composition) || (name && typeof name !== 'string') || (composition && typeof composition !== 'string')) {
         return res.status(400).json({ error: "Either name or composition is required" });
       }
+      
+      // Generate a cache key based on query parameters
+      const cacheKey = `substitutes:${composition || ''}:${name || ''}:${excludeId || ''}`;
+      
+      // Try to get from cache first
+      const cachedResults = cacheService.get(cacheKey);
+      if (cachedResults) {
+        console.log(`Cache HIT for medicine substitutes: "${composition || name}"`);
+        return res.json(cachedResults);
+      }
+      console.log(`Cache MISS for medicine substitutes: "${composition || name}"`);
+      
       
       const excludedId = excludeId ? parseInt(excludeId as string) : undefined;
       
@@ -1490,6 +1550,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .sort({ price: 1 }) // Sort by price ascending
             .limit(10)
             .lean();
+          
+          // Cache the results for future requests
+          cacheService.set(cacheKey, substitutes, cacheService.getTTL('search'));
           
           return res.json(substitutes);
         }
@@ -1548,6 +1611,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         composition: (p as any).composition
       }));
       
+      // Cache the results for future requests
+      cacheService.set(cacheKey, simplifiedSubstitutes, cacheService.getTTL('search'));
+      
       res.json(simplifiedSubstitutes);
     } catch (error) {
       console.error("Substitutes search error:", error);
@@ -1573,6 +1639,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (mongoose.connection.readyState === 1) {  // Connected
           const newProduct = await Product.create(productData);
+          
+          // Invalidate relevant product caches after creating a new product
+          cacheService.deletePattern('products:*');
+          cacheService.deletePattern('search:*');
+          cacheService.deletePattern('medicine:search:*');
+          // If the product belongs to a category, invalidate that category cache
+          if (productData.categoryId) {
+            cacheService.deletePattern(`products:category:${productData.categoryId}*`);
+          }
+          
           return res.status(201).json(newProduct);
         }
       } catch (error) {
@@ -1582,6 +1658,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Fallback to in-memory product creation
       const newProduct = await dbStorage.createProduct(productData);
+      
+      // Invalidate relevant product caches after creating a new product
+      cacheService.deletePattern('products:*');
+      cacheService.deletePattern('search:*');
+      cacheService.deletePattern('medicine:search:*');
+      // If the product belongs to a category, invalidate that category cache
+      if (productData.categoryId) {
+        cacheService.deletePattern(`products:category:${productData.categoryId}*`);
+      }
+      
       res.status(201).json(newProduct);
     } catch (error) {
       console.error("Admin product creation error:", error);
