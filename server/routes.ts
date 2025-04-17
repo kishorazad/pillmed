@@ -1,22 +1,96 @@
-import type { Express, Request, Response } from "express";
+import express, { type Express, type Request, type Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage"; // Use the in-memory storage implementation
+import { storage as dbStorage } from "./storage"; // Use the in-memory storage implementation
 import { insertCartItemSchema, insertUserSchema } from "@shared/schema";
 import { processHealthQuery, getMedicationInfo, analyzeMedicationInteractions } from "./ai-service";
 import { z } from "zod";
+import multer from 'multer';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup uploads directory
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)){
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  
+  // Configure multer storage
+  const multerStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+      // Generate a unique filename to avoid collisions
+      const uniqueFilename = `${uuidv4()}-${file.originalname.replace(/\s+/g, '-').toLowerCase()}`;
+      cb(null, uniqueFilename);
+    }
+  });
+  
+  // Create multer instance with file filter for images
+  const upload = multer({
+    storage: multerStorage,
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB max file size
+    },
+    fileFilter: (req, file, cb) => {
+      // Accept only image files
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed') as any);
+      }
+    }
+  });
+  
+  // Serve uploads directory statically
+  app.use('/uploads', express.static(uploadsDir));
+  
+  // Add image upload endpoint
+  app.post('/api/upload-image', upload.single('file'), (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+      
+      // Generate URL for the uploaded file
+      const imageUrl = `/uploads/${req.file.filename}`;
+      
+      // Return the URL to the client
+      res.status(201).json({ 
+        imageUrl,
+        message: 'Image uploaded successfully'
+      });
+    } catch (error) {
+      console.error('Image upload error:', error);
+      res.status(500).json({ error: 'Failed to upload image' });
+    }
+  });
+  
+  // Add error handling middleware for multer
+  app.use((err: any, req: Request, res: Response, next: Function) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File size exceeds the 5MB limit' });
+      }
+      return res.status(400).json({ error: err.message });
+    } else if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    next();
+  });
   // Data will be imported from CSV in index.ts
   // Get all categories
   app.get("/api/categories", async (_req: Request, res: Response) => {
-    const categories = await storage.getCategories();
+    const categories = await dbStorage.getCategories();
     res.json(categories);
   });
   
   // Get category by ID
   app.get("/api/categories/:id", async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const category = await storage.getCategoryById(id);
+    const category = await dbStorage.getCategoryById(id);
     
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
@@ -27,27 +101,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Get all products
   app.get("/api/products", async (_req: Request, res: Response) => {
-    const products = await storage.getProducts();
+    const products = await dbStorage.getProducts();
     res.json(products);
   });
   
   // Get products by category
   app.get("/api/products/category/:categoryId", async (req: Request, res: Response) => {
     const categoryId = parseInt(req.params.categoryId);
-    const products = await storage.getProductsByCategory(categoryId);
+    const products = await dbStorage.getProductsByCategory(categoryId);
     res.json(products);
   });
   
   // Get featured products
   app.get("/api/products/featured", async (_req: Request, res: Response) => {
-    const products = await storage.getFeaturedProducts();
+    const products = await dbStorage.getFeaturedProducts();
     res.json(products);
   });
   
   // Get product by ID
   app.get("/api/products/:id", async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const product = await storage.getProductById(id);
+    const product = await dbStorage.getProductById(id);
     
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -59,7 +133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get cart items for a user
   app.get("/api/cart/:userId", async (req: Request, res: Response) => {
     const userId = parseInt(req.params.userId);
-    const cartItems = await storage.getCartItemWithProductDetails(userId);
+    const cartItems = await dbStorage.getCartItemWithProductDetails(userId);
     
     // Add debug information
     console.log(`Fetching cart for userId: ${userId}, found ${cartItems.length} items`);
@@ -77,15 +151,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       // Get cart before transfer
-      const beforeFromCart = await storage.getCartItems(fromUserId);
-      const beforeToCart = await storage.getCartItems(toUserId);
+      const beforeFromCart = await dbStorage.getCartItems(fromUserId);
+      const beforeToCart = await dbStorage.getCartItems(toUserId);
       
       // Perform the transfer
-      const success = await storage.transferCartItems(fromUserId, toUserId);
+      const success = await dbStorage.transferCartItems(fromUserId, toUserId);
       
       // Get cart after transfer
-      const afterFromCart = await storage.getCartItems(fromUserId);
-      const afterToCart = await storage.getCartItems(toUserId);
+      const afterFromCart = await dbStorage.getCartItems(fromUserId);
+      const afterToCart = await dbStorage.getCartItems(toUserId);
       
       res.json({
         success,
@@ -116,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cartItem.userId = userSession.user.id;
       }
       
-      const newCartItem = await storage.addToCart(cartItem);
+      const newCartItem = await dbStorage.addToCart(cartItem);
       res.status(201).json(newCartItem);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -135,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Invalid quantity" });
     }
     
-    const updatedItem = await storage.updateCartItem(id, quantity);
+    const updatedItem = await dbStorage.updateCartItem(id, quantity);
     
     if (!updatedItem) {
       return res.status(404).json({ message: "Cart item not found" });
@@ -147,7 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Remove item from cart
   app.delete("/api/cart/:id", async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
-    const success = await storage.removeFromCart(id);
+    const success = await dbStorage.removeFromCart(id);
     
     if (!success) {
       return res.status(404).json({ message: "Cart item not found" });
@@ -159,32 +233,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clear user's cart
   app.delete("/api/cart/user/:userId", async (req: Request, res: Response) => {
     const userId = parseInt(req.params.userId);
-    await storage.clearCart(userId);
+    await dbStorage.clearCart(userId);
     res.status(204).send();
   });
   
   // Get all articles
   app.get("/api/articles", async (_req: Request, res: Response) => {
-    const articles = await storage.getArticles();
+    const articles = await dbStorage.getArticles();
     res.json(articles);
   });
   
   // Get all testimonials
   app.get("/api/testimonials", async (_req: Request, res: Response) => {
-    const testimonials = await storage.getTestimonials();
+    const testimonials = await dbStorage.getTestimonials();
     res.json(testimonials);
   });
   
   // Get all lab tests
   app.get("/api/lab-tests", async (_req: Request, res: Response) => {
-    const labTests = await storage.getLabTests();
+    const labTests = await dbStorage.getLabTests();
     res.json(labTests);
   });
   
   // Get all health tips
   app.get("/api/health-tips", async (_req: Request, res: Response) => {
     try {
-      const healthTips = await storage.getHealthTips();
+      const healthTips = await dbStorage.getHealthTips();
       res.json(healthTips);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch health tips" });
@@ -194,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get random health tip
   app.get("/api/health-tips/random", async (_req: Request, res: Response) => {
     try {
-      const healthTip = await storage.getRandomHealthTip();
+      const healthTip = await dbStorage.getRandomHealthTip();
       if (!healthTip) {
         return res.status(404).json({ error: "No health tips found" });
       }
@@ -212,7 +286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid ID format" });
       }
       
-      const healthTip = await storage.getHealthTipById(id);
+      const healthTip = await dbStorage.getHealthTipById(id);
       if (!healthTip) {
         return res.status(404).json({ error: "Health tip not found" });
       }
@@ -230,12 +304,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validUserData = insertUserSchema.parse(userData);
       
       // Check if user with the username already exists
-      const existingUser = await storage.getUserByUsername(validUserData.username);
+      const existingUser = await dbStorage.getUserByUsername(validUserData.username);
       if (existingUser) {
         return res.status(409).json({ message: "Username already exists" });
       }
       
-      const newUser = await storage.createUser(validUserData);
+      const newUser = await dbStorage.createUser(validUserData);
       
       // Set user in session
       (req.session as any).user = newUser;
@@ -244,7 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (tempUserId && tempUserId !== newUser.id) {
         console.log(`Transferring cart items from temp user ${tempUserId} to new user ${newUser.id}`);
         try {
-          await storage.transferCartItems(tempUserId, newUser.id);
+          await dbStorage.transferCartItems(tempUserId, newUser.id);
         } catch (err) {
           console.error("Error transferring cart items during registration:", err);
         }
@@ -269,7 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Username and password are required" });
     }
     
-    const user = await storage.getUserByUsername(username);
+    const user = await dbStorage.getUserByUsername(username);
     
     if (!user || user.password !== password) {
       return res.status(401).json({ message: "Invalid username or password" });
@@ -282,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (tempUserId && tempUserId !== user.id) {
       console.log(`Transferring cart items from temp user ${tempUserId} to user ${user.id}`);
       try {
-        await storage.transferCartItems(tempUserId, user.id);
+        await dbStorage.transferCartItems(tempUserId, user.id);
       } catch (err) {
         console.error("Error transferring cart items:", err);
       }
@@ -479,7 +553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Fallback to in-memory search
       const searchQuery = query.toLowerCase();
-      const allProducts = await storage.getProducts();
+      const allProducts = await dbStorage.getProducts();
       
       const filteredProducts = allProducts.filter(product => 
         product.name.toLowerCase().includes(searchQuery) ||
@@ -535,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Fallback to in-memory product creation
-      const newProduct = await storage.createProduct(productData);
+      const newProduct = await dbStorage.createProduct(productData);
       res.status(201).json(newProduct);
     } catch (error) {
       console.error("Admin product creation error:", error);
@@ -567,7 +641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Fallback to in-memory - get all users
-      const allUsers = await storage.getUsers();
+      const allUsers = await dbStorage.getUsers();
       // Filter to admin users only
       const users = allUsers.filter((user) => user.role === 'admin');
       // Remove passwords before sending

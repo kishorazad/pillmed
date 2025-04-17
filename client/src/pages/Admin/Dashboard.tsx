@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UserManagement from '@/components/admin/UserManagement';
 import SystemOverview from '@/components/admin/SystemOverview';
+import ProductManagement from '@/components/admin/ProductManagement';
 import { 
   Users, 
   Settings, 
@@ -16,7 +17,8 @@ import {
   GanttChart,
   Shield,
   UserPlus,
-  Database as DatabaseIcon
+  Database as DatabaseIcon,
+  ShoppingBag
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -171,7 +173,7 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-2">
           <TabsTrigger value="overview">
             <BarChart className="mr-2 h-4 w-4" /> 
             Overview
@@ -179,6 +181,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="users">
             <Users className="mr-2 h-4 w-4" /> 
             Users
+          </TabsTrigger>
+          <TabsTrigger value="products">
+            <ShoppingBag className="mr-2 h-4 w-4" /> 
+            Products
           </TabsTrigger>
           <TabsTrigger value="settings">
             <Settings className="mr-2 h-4 w-4" /> 
@@ -200,6 +206,10 @@ const AdminDashboard = () => {
         
         <TabsContent value="users">
           <UserManagement />
+        </TabsContent>
+        
+        <TabsContent value="products">
+          <ProductManagement />
         </TabsContent>
         
         <TabsContent value="settings">
