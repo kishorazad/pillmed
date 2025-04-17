@@ -2,6 +2,25 @@ import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useMediaQuery } from '../hooks/use-media-query';
 
+// Define interfaces for product and category data
+interface Category {
+  id: number;
+  name: string;
+  imageUrl?: string;
+  description?: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  discountedPrice?: number | null;
+  imageUrl?: string | null;
+  rating?: number | null;
+  ratingCount?: number | null;
+}
+
 // Components
 import HeroSection from '@/components/home/HeroSection';
 import ServicesSection from '@/components/home/ServicesSection';
@@ -28,12 +47,12 @@ import CategoryCard from '@/components/products/CategoryCard';
 
 const Home = () => {
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
   
-  const { data: featuredProducts, isLoading: productsLoading } = useQuery({
+  const { data: featuredProducts = [], isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ['/api/products/featured'],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -98,7 +117,7 @@ const Home = () => {
             {/* Categories Grid for Mobile */}
             {!categoriesLoading && categories?.length > 0 && (
               <CategoryGrid 
-                categories={categories.map((cat: any) => ({
+                categories={categories.map((cat: Category) => ({
                   id: cat.id,
                   name: cat.name,
                   imageUrl: cat.imageUrl || 'https://via.placeholder.com/80',
@@ -121,7 +140,7 @@ const Home = () => {
               <ProductSlider 
                 title="Top Deals"
                 viewMoreLink="/products?sort=discountDesc"
-                products={featuredProducts.filter((p: any) => p.discountedPrice)}
+                products={featuredProducts.filter((p: Product) => p.discountedPrice)}
               />
             )}
             
@@ -169,7 +188,7 @@ const Home = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-                    {categories?.map((category: any) => (
+                    {categories?.map((category: Category) => (
                       <CategoryCard key={category.id} category={category} />
                     ))}
                   </div>
