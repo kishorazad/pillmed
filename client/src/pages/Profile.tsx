@@ -291,15 +291,55 @@ const Profile = () => {
       useStore.getState().setUser(userData);
       
       // Explicitly fetch cart after login to ensure it's up to date
-      setTimeout(() => {
-        useStore.getState().fetchCart(userData.id);
-      }, 500);
+      setTimeout(async () => {
+        await useStore.getState().fetchCart(userData.id);
+        
+        // After fetching the cart, check if there are items and automatically create an order
+        const updatedCart = useStore.getState().cart;
+        
+        if (updatedCart.length > 0) {
+          try {
+            // Process the cart items to create an order automatically
+            const cartTotal = updatedCart.reduce((total, item) => {
+              const itemPrice = item.product.discountedPrice || item.product.price;
+              return total + (itemPrice * item.quantity);
+            }, 0);
+            
+            // Get shipping address from user profile or use a default
+            const shippingAddress = userData.address || 'Default Shipping Address';
+            
+            // Create an order with cart items
+            const orderResponse = await fetch('/api/orders', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: userData.id,
+                totalAmount: cartTotal,
+                shippingAddress,
+                paymentMethod: 'credit_card',
+                items: updatedCart.map(item => ({
+                  productId: item.productId,
+                  quantity: item.quantity,
+                  price: item.product.discountedPrice || item.product.price
+                }))
+              })
+            });
+            
+            if (orderResponse.ok) {
+              console.log('Order created automatically after login');
+              // The cart should be cleared automatically by the API
+            }
+          } catch (orderError) {
+            console.error('Failed to create automatic order:', orderError);
+          }
+        }
+      }, 1000);
       
       // Show appropriate toast message depending on if cart had items
       if (cartCount > 0) {
         toast({
           title: "Login successful",
-          description: `Welcome back, ${userData.name}! Your cart with ${cartCount} items has been preserved.`,
+          description: `Welcome back, ${userData.name}! Your cart items have been processed as an order.`,
         });
       } else {
         toast({
@@ -349,15 +389,55 @@ const Profile = () => {
       useStore.getState().setUser(userData);
       
       // Explicitly fetch cart after registration to ensure it's up to date
-      setTimeout(() => {
-        useStore.getState().fetchCart(userData.id);
-      }, 500);
+      setTimeout(async () => {
+        await useStore.getState().fetchCart(userData.id);
+        
+        // After fetching the cart, check if there are items and automatically create an order
+        const updatedCart = useStore.getState().cart;
+        
+        if (updatedCart.length > 0) {
+          try {
+            // Process the cart items to create an order automatically
+            const cartTotal = updatedCart.reduce((total, item) => {
+              const itemPrice = item.product.discountedPrice || item.product.price;
+              return total + (itemPrice * item.quantity);
+            }, 0);
+            
+            // Get shipping address from user profile or use a default
+            const shippingAddress = userData.address || 'Default Shipping Address';
+            
+            // Create an order with cart items
+            const orderResponse = await fetch('/api/orders', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: userData.id,
+                totalAmount: cartTotal,
+                shippingAddress,
+                paymentMethod: 'credit_card',
+                items: updatedCart.map(item => ({
+                  productId: item.productId,
+                  quantity: item.quantity,
+                  price: item.product.discountedPrice || item.product.price
+                }))
+              })
+            });
+            
+            if (orderResponse.ok) {
+              console.log('Order created automatically after registration');
+              // The cart should be cleared automatically by the API
+            }
+          } catch (orderError) {
+            console.error('Failed to create automatic order:', orderError);
+          }
+        }
+      }, 1000);
       
       // Show appropriate toast message depending on if cart had items
       if (cartCount > 0) {
         toast({
           title: "Registration successful",
-          description: `Welcome, ${userData.name}! Your cart with ${cartCount} items has been preserved.`,
+          description: `Welcome, ${userData.name}! Your cart items have been processed as an order.`,
         });
       } else {
         toast({
