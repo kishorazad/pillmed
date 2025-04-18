@@ -29,6 +29,9 @@ interface Prescription {
   uploadDate: string;
   medicines: Medicine[];
   extraMedicines?: ExtraMedicine[]; // Optional array for medicines added by chemist
+  medicalEquipment?: MedicalEquipment[]; // Optional array for equipment rentals or purchases
+  medicalServices?: MedicalService[]; // Optional array for doctor/nurse services
+  emergencyServices?: EmergencyService; // Optional emergency ambulance services
   orderNotes?: string;
   doctorId?: number; // Doctor who uploaded or needs to approve
   doctorName?: string;
@@ -85,6 +88,63 @@ interface ChemistMedicine {
   updatedAt: string;
   rejectionReason?: string;
   equipmentType?: 'medical_device' | 'surgical_instrument' | 'diagnostic_equipment' | 'monitoring_device' | 'mobility_aid';
+}
+
+interface MedicalEquipment {
+  id: number;
+  name: string;
+  type: 'medical_device' | 'surgical_instrument' | 'diagnostic_equipment' | 'monitoring_device' | 'mobility_aid';
+  description: string;
+  price: number;
+  rentalPrice?: number; // Optional for equipment available for rent
+  rentalDuration?: string; // e.g., "per day", "per week"
+  isRental: boolean; // Whether this is a rental or purchase
+  quantity: number;
+  status: 'pending_approval' | 'approved' | 'rejected' | 'delivered' | 'returned';
+  addedDate: string;
+  requestNotes?: string;
+  approvalDate?: string;
+  approvedBy?: {
+    id: number;
+    name: string;
+    role: 'admin' | 'hospital_staff';
+  };
+}
+
+interface MedicalService {
+  id: number;
+  serviceType: 'doctor_visit' | 'nurse_visit' | 'specialist_consultation' | 'home_care' | 'physiotherapy' | 'other';
+  description: string;
+  requestedFor: Date; // Date and time service is requested for
+  duration: string; // e.g., "2 hours", "full day"
+  patientCondition: string; // Description of patient's condition
+  specialInstructions?: string; // Any special instructions
+  price: number;
+  status: 'pending' | 'approved' | 'assigned' | 'completed' | 'cancelled';
+  assignedTo?: {
+    id: number;
+    name: string;
+    role: 'doctor' | 'nurse' | 'specialist';
+    specialization?: string; // For specialists
+  };
+  requestNotes?: string;
+}
+
+interface EmergencyService {
+  id: number;
+  serviceType: 'ambulance' | 'air_ambulance' | 'emergency_medical_team';
+  requestedAt: Date;
+  pickupLocation: string;
+  destinationLocation: string;
+  patientCondition: string;
+  contactName: string;
+  contactPhone: string;
+  status: 'requested' | 'dispatched' | 'in_transit' | 'completed' | 'cancelled';
+  dispatchedAt?: Date;
+  arrivalEstimate?: Date;
+  price: number;
+  specialInstructions?: string;
+  medicalEquipmentNeeded?: string[];
 }
 
 interface Customer {
@@ -386,6 +446,59 @@ const ChemistDashboard: React.FC = () => {
           currentPrice: 75,
           priceChanged: true
         }
+      ],
+      medicalEquipment: [
+        {
+          id: 101,
+          name: 'Oxygen Concentrator',
+          type: 'medical_device',
+          description: 'Portable oxygen concentrator for home use',
+          price: 3500,
+          rentalPrice: 250,
+          rentalDuration: 'per week',
+          isRental: true,
+          quantity: 1,
+          status: 'approved',
+          addedDate: '2025-04-16T10:15:00',
+          requestNotes: 'Patient needs home oxygen therapy',
+          approvalDate: '2025-04-16T11:30:00',
+          approvedBy: {
+            id: 15,
+            name: 'Hospital Admin',
+            role: 'hospital_staff'
+          }
+        },
+        {
+          id: 102,
+          name: 'Blood Pressure Monitor',
+          type: 'monitoring_device',
+          description: 'Digital BP monitor for home use',
+          price: 1200,
+          isRental: false,
+          quantity: 1,
+          status: 'approved',
+          addedDate: '2025-04-16T10:20:00',
+          approvalDate: '2025-04-16T11:30:00',
+          approvedBy: {
+            id: 15,
+            name: 'Hospital Admin',
+            role: 'hospital_staff'
+          }
+        }
+      ],
+      medicalServices: [
+        {
+          id: 201,
+          serviceType: 'nurse_visit',
+          description: 'Home nursing care for post-surgery recovery',
+          requestedFor: new Date('2025-04-20T09:00:00'),
+          duration: '2 hours',
+          patientCondition: 'Post-surgery recovery, needs dressing change and IV medication',
+          specialInstructions: 'Patient has latex allergy',
+          price: 1200,
+          status: 'pending',
+          requestNotes: 'Patient needs dressing change and IV medication'
+        }
       ]
     },
     {
@@ -407,7 +520,23 @@ const ChemistDashboard: React.FC = () => {
           currentPrice: 24,
           priceChanged: false
         }
-      ]
+      ],
+      emergencyServices: {
+        id: 301,
+        serviceType: 'ambulance',
+        requestedAt: new Date('2025-04-15T16:30:00'),
+        pickupLocation: '222 Ring Road, Navrangpura, Ahmedabad',
+        destinationLocation: 'Apollo Hospital, Gandhinagar Highway',
+        patientCondition: 'Elderly patient with sudden chest pain and difficulty breathing',
+        contactName: 'Suresh Patel',
+        contactPhone: '+91 5432109876',
+        status: 'completed',
+        dispatchedAt: new Date('2025-04-15T16:40:00'),
+        arrivalEstimate: new Date('2025-04-15T17:00:00'),
+        price: 1500,
+        specialInstructions: 'Patient has history of cardiac issues, bring oxygen support',
+        medicalEquipmentNeeded: ['Oxygen', 'ECG Monitor', 'Emergency medication kit']
+      }
     },
     {
       id: 6,
@@ -571,6 +700,137 @@ const ChemistDashboard: React.FC = () => {
     console.log('Extra medicine would be added with status:', status);
     
     return extraMedicine;
+  };
+  
+  // Function to add medical equipment to prescription
+  const handleAddEquipmentToPrescription = (
+    prescriptionId: number, 
+    equipment: { 
+      name: string;
+      type: 'medical_device' | 'surgical_instrument' | 'diagnostic_equipment' | 'monitoring_device' | 'mobility_aid';
+      description: string;
+      price: number;
+      isRental: boolean;
+      rentalPrice?: number;
+      rentalDuration?: string;
+      quantity: number;
+      requestNotes?: string;
+    }
+  ) => {
+    // In a real app, this would make an API call to add equipment to the prescription
+    console.log('Adding equipment to prescription:', prescriptionId, equipment);
+    
+    const medicalEquipment: MedicalEquipment = {
+      id: Math.floor(Math.random() * 1000) + 1000, // Generate random ID for demo
+      name: equipment.name,
+      type: equipment.type,
+      description: equipment.description,
+      price: equipment.price,
+      rentalPrice: equipment.rentalPrice,
+      rentalDuration: equipment.rentalDuration,
+      isRental: equipment.isRental,
+      quantity: equipment.quantity,
+      status: 'pending_approval',
+      addedDate: new Date().toISOString(),
+      requestNotes: equipment.requestNotes
+    };
+    
+    toast({
+      title: "Medical Equipment Request Added",
+      description: `${equipment.name} request has been added to the prescription and is awaiting approval.`,
+    });
+    
+    // If this was a real app, we would update the prescription state after the API call
+    console.log('Medical equipment would be added with status: pending_approval');
+    
+    return medicalEquipment;
+  };
+  
+  // Function to add medical service request to prescription
+  const handleAddMedicalServiceToPrescription = (
+    prescriptionId: number, 
+    service: { 
+      serviceType: 'doctor_visit' | 'nurse_visit' | 'specialist_consultation' | 'home_care' | 'physiotherapy' | 'other';
+      description: string;
+      requestedFor: Date;
+      duration: string;
+      patientCondition: string;
+      specialInstructions?: string;
+      price: number;
+      requestNotes?: string;
+    }
+  ) => {
+    // In a real app, this would make an API call to add medical service to the prescription
+    console.log('Adding medical service to prescription:', prescriptionId, service);
+    
+    const medicalService: MedicalService = {
+      id: Math.floor(Math.random() * 1000) + 2000, // Generate random ID for demo
+      serviceType: service.serviceType,
+      description: service.description,
+      requestedFor: service.requestedFor,
+      duration: service.duration,
+      patientCondition: service.patientCondition,
+      specialInstructions: service.specialInstructions,
+      price: service.price,
+      status: 'pending',
+      requestNotes: service.requestNotes
+    };
+    
+    toast({
+      title: "Medical Service Request Added",
+      description: `${service.serviceType.replace('_', ' ')} request has been added to the prescription and will be processed.`,
+    });
+    
+    // If this was a real app, we would update the prescription state after the API call
+    console.log('Medical service would be added with status: pending');
+    
+    return medicalService;
+  };
+  
+  // Function to add emergency service to prescription
+  const handleAddEmergencyServiceToPrescription = (
+    prescriptionId: number, 
+    service: { 
+      serviceType: 'ambulance' | 'air_ambulance' | 'emergency_medical_team';
+      pickupLocation: string;
+      destinationLocation: string;
+      patientCondition: string;
+      contactName: string;
+      contactPhone: string;
+      specialInstructions?: string;
+      medicalEquipmentNeeded?: string[];
+    }
+  ) => {
+    // In a real app, this would make an API call to add emergency service to the prescription
+    console.log('Adding emergency service to prescription:', prescriptionId, service);
+    
+    const emergencyService: EmergencyService = {
+      id: Math.floor(Math.random() * 1000) + 3000, // Generate random ID for demo
+      serviceType: service.serviceType,
+      requestedAt: new Date(),
+      pickupLocation: service.pickupLocation,
+      destinationLocation: service.destinationLocation,
+      patientCondition: service.patientCondition,
+      contactName: service.contactName,
+      contactPhone: service.contactPhone,
+      status: 'requested',
+      price: service.serviceType === 'air_ambulance' ? 25000 : 1500, // Higher price for air ambulance
+      specialInstructions: service.specialInstructions,
+      medicalEquipmentNeeded: service.medicalEquipmentNeeded
+    };
+    
+    toast({
+      title: "Emergency Service Requested",
+      description: `${service.serviceType.replace('_', ' ')} has been requested and dispatchers have been notified. You will receive confirmation shortly.`,
+      variant: "destructive" // Using destructive variant for emergency alert
+    });
+    
+    // If this was a real app, we would update the prescription state after the API call
+    // and trigger immediate notifications to dispatchers
+    console.log('Emergency service would be added with status: requested');
+    console.log('NOTIFICATION to EMERGENCY DISPATCHERS: New emergency service request received!');
+    
+    return emergencyService;
   };
 
   const handleMedicineInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
