@@ -20,6 +20,12 @@ export const LANGUAGES = {
   gu: { name: 'Gujarati', nativeName: 'ગુજરાતી' },
   mr: { name: 'Marathi', nativeName: 'मराठी' },
   pa: { name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ' },
+  ar: { name: 'Arabic', nativeName: 'العربية' },
+  zh: { name: 'Chinese', nativeName: '中文' },
+  fr: { name: 'French', nativeName: 'Français' },
+  de: { name: 'German', nativeName: 'Deutsch' },
+  es: { name: 'Spanish', nativeName: 'Español' },
+  ru: { name: 'Russian', nativeName: 'Русский' },
 };
 
 // Create types for language context
@@ -154,7 +160,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Apply language direction for RTL languages (if needed)
   useEffect(() => {
     // Add RTL languages here if needed
-    const rtlLanguages: string[] = [];
+    const rtlLanguages: string[] = ['ar'];
     
     if (rtlLanguages.includes(language)) {
       document.documentElement.dir = 'rtl';

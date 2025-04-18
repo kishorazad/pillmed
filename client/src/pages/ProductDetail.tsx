@@ -10,12 +10,14 @@ import ProductCard from '@/components/products/ProductCard';
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import SubstituteMedicines from '@/components/products/SubstituteMedicines';
+import { useLanguage } from '@/components/LanguageSwitcher';
 
 const ProductDetail = () => {
   const params = useParams();
   const [_, navigate] = useLocation();
   const { addToCart } = useStore();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("uses");
   
@@ -174,10 +176,10 @@ const ProductDetail = () => {
             </div>
             <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
               <Button onClick={handleAddToCart} className="w-full sm:flex-1 bg-[#ff6f61] hover:bg-[#ff6f61]/90">
-                ADD TO CART
+                {t('add_to_cart')}
               </Button>
               <Button onClick={handleDirectBooking} className="w-full sm:flex-1 bg-[#10847e] hover:bg-[#10847e]/90">
-                BUY NOW
+                {t('buy_now')}
               </Button>
             </div>
           </div>
@@ -275,43 +277,43 @@ const ProductDetail = () => {
                   className={`py-3 px-4 whitespace-nowrap ${activeTab === 'uses' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
                   onClick={() => setActiveTab('uses')}
                 >
-                  Uses
+                  {t('uses')}
                 </button>
                 <button 
                   className={`py-3 px-4 whitespace-nowrap ${activeTab === 'directions' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
                   onClick={() => setActiveTab('directions')}
                 >
-                  Directions for Use
+                  {t('directions_for_use')}
                 </button>
                 <button 
                   className={`py-3 px-4 whitespace-nowrap ${activeTab === 'storage' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
                   onClick={() => setActiveTab('storage')}
                 >
-                  Storage and Disposal
+                  {t('storage_and_disposal')}
                 </button>
                 <button 
                   className={`py-3 px-4 whitespace-nowrap ${activeTab === 'quicktips' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
                   onClick={() => setActiveTab('quicktips')}
                 >
-                  Quick Tips
+                  {t('quick_tips')}
                 </button>
                 <button 
                   className={`py-3 px-4 whitespace-nowrap ${activeTab === 'interactions' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
                   onClick={() => setActiveTab('interactions')}
                 >
-                  Interactions
+                  {t('interactions')}
                 </button>
                 <button 
                   className={`py-3 px-4 whitespace-nowrap ${activeTab === 'composition' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
                   onClick={() => setActiveTab('composition')}
                 >
-                  Ingredients and Benefits
+                  {t('ingredients_and_benefits')}
                 </button>
                 <button 
                   className={`py-3 px-4 whitespace-nowrap ${activeTab === 'facts' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
                   onClick={() => setActiveTab('facts')}
                 >
-                  Fact Box
+                  {t('fact_box')}
                 </button>
               </div>
               
