@@ -1,66 +1,80 @@
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Search, Check, X, MapPin, Loader2 } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { getCityByPincode, PincodeData } from '@/services/location-service';
 import { useLanguage } from '@/components/LanguageSwitcher';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CheckCircle, XCircle, MapPin, Loader2 } from 'lucide-react';
+import { getPincodeData, PincodeData } from '@/services/location-service';
 
 interface PincodeCheckerProps {
-  onPincodeData?: (data: PincodeData) => void;
+  onPincodeData?: (data: PincodeData | null) => void;
   onDeliveryAvailability?: (available: boolean) => void;
+  initialPincode?: string;
 }
 
 /**
- * A component to check pincode and validate delivery availability
- * Integrates with auto-language detection to show messages in user's language
+ * PincodeChecker Component
+ * 
+ * Allows users to check if delivery is available for their location
+ * by entering a pincode. Shows appropriate messages based on availability.
  */
-const PincodeChecker = ({ onPincodeData, onDeliveryAvailability }: PincodeCheckerProps) => {
-  const [pincode, setPincode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pincodeData, setPincodeData] = useState<PincodeData | null>(null);
+const PincodeChecker = ({ 
+  onPincodeData, 
+  onDeliveryAvailability, 
+  initialPincode 
+}: PincodeCheckerProps) => {
   const { t } = useLanguage();
+  const [pincode, setPincode] = useState(initialPincode || '');
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<PincodeData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [deliveryAvailable, setDeliveryAvailable] = useState(false);
 
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    // Only allow numbers and limit to 6 digits
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
     setPincode(value);
     
-    // Clear previous results when changing pincode
-    if (value.length !== 6) {
-      setPincodeData(null);
+    // Reset states when pincode changes
+    if (data) {
+      setData(null);
+      setDeliveryAvailable(false);
       setError(null);
+      
+      // Notify parent components
+      if (onPincodeData) onPincodeData(null);
       if (onDeliveryAvailability) onDeliveryAvailability(false);
-      if (onPincodeData) onPincodeData(null as any);
     }
   };
 
   const checkPincode = async () => {
     if (pincode.length !== 6) {
-      setError(t('pincode_error_desc'));
+      setError(t('pincode_error_title'));
       return;
     }
 
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
+      const pincodeData = await getPincodeData(pincode);
+      setData(pincodeData);
       
-      const data = await getCityByPincode(pincode);
+      // Determine if delivery is available based on service area
+      // This is a simplified example - in a real app, you would check against your
+      // actual service areas stored in the database
+      const isDeliveryAvailable = pincodeData.serviceAvailable;
+      setDeliveryAvailable(isDeliveryAvailable);
       
-      if (!data) {
-        setError(t('pincode_error_desc'));
-        setPincodeData(null);
-        if (onDeliveryAvailability) onDeliveryAvailability(false);
-        return;
-      }
-      
-      setPincodeData(data);
-      if (onPincodeData) onPincodeData(data);
-      if (onDeliveryAvailability) onDeliveryAvailability(data.deliveryAvailable);
+      // Notify parent components
+      if (onPincodeData) onPincodeData(pincodeData);
+      if (onDeliveryAvailability) onDeliveryAvailability(isDeliveryAvailable);
     } catch (err) {
       console.error('Error checking pincode:', err);
       setError(t('pincode_error_desc'));
-      setPincodeData(null);
+      
+      // Notify parent components
+      if (onPincodeData) onPincodeData(null);
       if (onDeliveryAvailability) onDeliveryAvailability(false);
     } finally {
       setLoading(false);
@@ -69,63 +83,61 @@ const PincodeChecker = ({ onPincodeData, onDeliveryAvailability }: PincodeChecke
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       checkPincode();
     }
   };
 
   return (
-    <div className="w-full space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-          <Input
-            value={pincode}
-            onChange={handlePincodeChange}
-            onKeyDown={handleKeyDown}
-            placeholder={t('enter_pincode')}
-            className="pl-9"
-            maxLength={6}
-            disabled={loading}
-          />
-        </div>
+        <Input
+          value={pincode}
+          onChange={handlePincodeChange}
+          onKeyDown={handleKeyDown}
+          placeholder={t('enter_pincode')}
+          className="max-w-[150px]"
+          maxLength={6}
+        />
         <Button 
           onClick={checkPincode} 
-          disabled={pincode.length !== 6 || loading}
-          variant="outline"
-          className="gap-2"
+          disabled={loading || pincode.length !== 6}
+          size="sm"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <MapPin className="h-4 w-4 mr-2" />}
           {t('check')}
         </Button>
       </div>
 
       {error && (
-        <Alert variant="destructive">
-          <AlertTitle className="flex items-center gap-2">
-            <X className="h-4 w-4" />
-            {t('pincode_error_title')}
-          </AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+        <Alert variant="destructive" className="p-3">
+          <XCircle className="h-4 w-4" />
+          <AlertTitle className="text-sm font-medium">{t('pincode_error_title')}</AlertTitle>
+          <AlertDescription className="text-xs">{error}</AlertDescription>
         </Alert>
       )}
 
-      {pincodeData && (
-        <Alert variant={pincodeData.deliveryAvailable ? "default" : "destructive"}>
-          <AlertTitle className="flex items-center gap-2">
-            {pincodeData.deliveryAvailable 
-              ? <><Check className="h-4 w-4" /> {t('delivery_available_title')}</>
-              : <><X className="h-4 w-4" /> {t('delivery_unavailable_title')}</>
-            }
-          </AlertTitle>
-          <AlertDescription>
-            <div>
-              <p>{pincodeData.city}, {pincodeData.district}, {pincodeData.state}</p>
-              <p className="mt-1 text-sm">
-                {pincodeData.deliveryAvailable 
-                  ? t('delivery_available_desc') + ' ' + t('delivery_time_message')
-                  : t('delivery_unavailable_desc') + ' ' + t('delivery_unavailable_message')
-                }
-              </p>
+      {data && deliveryAvailable && (
+        <Alert variant="default" className="bg-green-50 border-green-200 p-3">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-sm font-medium text-green-800">{t('delivery_available_title')}</AlertTitle>
+          <AlertDescription className="text-xs text-green-700">
+            {t('delivery_available_desc')}
+            <div className="mt-1 text-xs text-green-600">
+              {t('delivery_time_message')}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {data && !deliveryAvailable && (
+        <Alert variant="default" className="bg-orange-50 border-orange-200 p-3">
+          <XCircle className="h-4 w-4 text-orange-600" />
+          <AlertTitle className="text-sm font-medium text-orange-800">{t('delivery_unavailable_title')}</AlertTitle>
+          <AlertDescription className="text-xs text-orange-700">
+            {t('delivery_unavailable_desc')}
+            <div className="mt-1 text-xs text-orange-600">
+              {t('delivery_unavailable_message')}
             </div>
           </AlertDescription>
         </Alert>

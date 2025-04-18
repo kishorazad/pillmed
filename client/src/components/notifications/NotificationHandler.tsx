@@ -1,89 +1,82 @@
 import { useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { requestNotificationPermission, onMessageListener } from '@/lib/firebase';
-import { useStore } from '@/lib/store';
-import { apiRequest } from '@/lib/queryClient';
-import { injectFirebaseConfigIntoServiceWorker } from '@/lib/injectFirebaseConfig';
+
+interface NotificationHandlerProps {
+  userId?: number; // Optional user ID for personalized notifications
+}
+
+interface FirebaseMessage {
+  notification: {
+    title: string;
+    body: string;
+    icon?: string;
+  };
+  data?: Record<string, string>;
+}
 
 /**
- * NotificationHandler component manages Firebase Cloud Messaging (FCM) integration
- * It handles permission requests, token registration, and displaying notifications
+ * Component to handle Firebase notifications
+ * This will request permission and listen for incoming push notifications
  */
-export function NotificationHandler() {
-  const { toast } = useToast();
-  const { user } = useStore();
-  const [, setNotificationToken] = useState<string | null>(null);
+const NotificationHandler = ({ userId }: NotificationHandlerProps) => {
+  const [notificationToken, setNotificationToken] = useState<string | null>(null);
 
-  // Register service worker and inject Firebase config
+  // Request notification permission on component mount
   useEffect(() => {
-    // Register service worker for Firebase Cloud Messaging
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/firebase-messaging-sw.js')
-        .then(registration => {
-          console.log('Service Worker registered with scope:', registration.scope);
-          
-          // Inject Firebase configuration into the service worker
-          injectFirebaseConfigIntoServiceWorker();
-        })
-        .catch(error => {
-          console.error('Service Worker registration failed:', error);
-        });
+    // Only request permission if the user is logged in
+    if (userId) {
+      const requestPermission = async () => {
+        try {
+          const token = await requestNotificationPermission();
+          setNotificationToken(token);
+        } catch (error) {
+          console.error('Error requesting notification permission:', error);
+        }
+      };
+
+      requestPermission();
     }
-  }, []);
+  }, [userId]);
 
-  // Request permission and register token when user logs in
+  // Listen for incoming notifications
   useEffect(() => {
-    // Only proceed if we have a logged in user
-    if (!user) return;
+    if (!notificationToken) return;
 
-    const registerNotificationToken = async () => {
-      try {
-        // Request permission and get FCM token
-        const token = await requestNotificationPermission();
-        
-        if (!token) return;
-        
-        setNotificationToken(token);
-        
-        // Register token with our backend
-        await apiRequest('POST', '/api/notification-tokens', {
-          token,
-          userId: user.id,
-          deviceInfo: navigator.userAgent
-        });
-        
-        console.log('Notification token registered successfully');
-      } catch (error) {
-        console.error('Error registering notification token:', error);
-      }
-    };
-
-    registerNotificationToken();
-  }, [user]);
-
-  // Set up listener for foreground messages
-  useEffect(() => {
-    const unsubscribe = onMessageListener((payload) => {
-      // Display notification as toast
-      const { notification } = payload;
-      
-      if (notification) {
+    const unsubscribe = onMessageListener()
+      .then((payload: FirebaseMessage) => {
+        // Show toast notification
         toast({
-          title: notification.title || 'New notification',
-          description: notification.body || '',
-          duration: 5000,
+          title: payload.notification.title,
+          description: payload.notification.body,
+          duration: 6000,
         });
-      }
-    });
 
-    // Clean up listener on unmount
+        // You can also handle data payloads for custom actions
+        if (payload.data?.action) {
+          // Handle custom actions based on payload data
+          switch (payload.data.action) {
+            case 'ORDER_UPDATE':
+              // Navigate to order page or update order status
+              break;
+            case 'PROMOTION':
+              // Show promotion details
+              break;
+            default:
+              break;
+          }
+        }
+      })
+      .catch((err) => console.error('Error receiving notification:', err));
+
+    // Clean up
     return () => {
-      unsubscribe();
+      unsubscribe;
     };
-  }, [toast]);
+  }, [notificationToken]);
 
   // This component doesn't render anything visible
   return null;
-}
+};
 
 export default NotificationHandler;

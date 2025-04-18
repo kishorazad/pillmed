@@ -159,7 +159,7 @@ export const translations: Record<string, Record<string, string>> = {
     'products': 'उत्पाद',
     'categories': 'श्रेणियाँ',
     // Pincode Checker translations
-    'enter_pincode': 'पिनकोड दर्ज करें',
+    'enter_pincode_check': 'पिनकोड दर्ज करें',
     'check': 'जाँचें',
     'cart': 'कार्ट',
     'search': 'खोज',

@@ -6,7 +6,8 @@ import { insertCartItemSchema, insertUserSchema } from "@shared/schema";
 import { processHealthQuery, getMedicationInfo, analyzeMedicationInteractions } from "./ai-service";
 import { sendNotificationToUser, sendNotificationToAllUsers } from './notification-service';
 import cacheService from './cache-service'; // Cache service for reducing database load
-import { pincodeService } from './pincode-service'; // Pincode service for delivery availability
+import { getPincodeData, isValidPincodeFormat, isServiceablePincode, getDeliveryEstimate, initializePincodeService } from './pincode-service';
+import authRoutes from './auth-routes'; // Authentication routes for social login
 import { z } from "zod";
 import multer from 'multer';
 import path from 'path';
@@ -62,6 +63,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Serve uploads directory statically
   app.use('/uploads', express.static(uploadsDir));
+  
+  // Mount authentication routes
+  app.use('/api/auth', authRoutes);
   
   // Add image upload endpoint
   app.post('/api/upload-image', upload.single('file'), (req: Request, res: Response) => {
