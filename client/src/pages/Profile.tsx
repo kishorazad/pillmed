@@ -483,15 +483,15 @@ const Profile = () => {
                   <CardHeader>
                     <div className="flex h-9 items-center space-x-1 rounded-md border mb-2">
                       <Button
-                        variant={activeTab === 'login' ? 'default' : 'ghost'}
-                        className="rounded-none flex-1"
+                        variant="outline"
+                        className={`rounded-none flex-1 ${activeTab === 'login' ? 'bg-primary text-primary-foreground' : ''}`}
                         onClick={() => setActiveTab('login')}
                       >
                         Login
                       </Button>
                       <Button
-                        variant={activeTab === 'register' ? 'default' : 'ghost'}
-                        className="rounded-none flex-1"
+                        variant="outline"
+                        className={`rounded-none flex-1 ${activeTab === 'register' ? 'bg-primary text-primary-foreground' : ''}`}
                         onClick={() => setActiveTab('register')}
                       >
                         Register
