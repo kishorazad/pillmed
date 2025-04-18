@@ -4,12 +4,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, AlertTriangle, Package, Truck, Clock, FileText, XCircle, MapPin, User, Phone } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { 
+  CheckCircle, AlertTriangle, Package, Truck, Clock, FileText, XCircle, 
+  MapPin, User, Phone, Plus, Pill, Upload, Search, Filter, MoreVertical, 
+  PlusCircle, UploadCloud, RefreshCw
+} from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 // Mock data - would be replaced with API calls
 interface Prescription {
@@ -35,6 +41,24 @@ interface Medicine {
   priceChanged: boolean;
 }
 
+interface ChemistMedicine {
+  id: number;
+  name: string;
+  brand: string;
+  genericName: string;
+  category: string;
+  composition: string;
+  description: string;
+  price: number;
+  discountedPrice: number;
+  packSize: string;
+  imageUrl: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+  rejectionReason?: string;
+}
+
 interface Customer {
   id: number;
   name: string;
@@ -51,6 +75,112 @@ const ChemistDashboard: React.FC = () => {
   const [openRejectDialog, setOpenRejectDialog] = useState(false);
   const [assignCourier, setAssignCourier] = useState('');
   const [openAssignDialog, setOpenAssignDialog] = useState(false);
+  
+  // Medicine management state
+  const [openAddMedicineDialog, setOpenAddMedicineDialog] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [medicineSearchQuery, setMedicineSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  
+  // New medicine form state
+  const [newMedicine, setNewMedicine] = useState({
+    name: '',
+    brand: '',
+    genericName: '',
+    category: '',
+    composition: '',
+    description: '',
+    price: '',
+    discountedPrice: '',
+    packSize: '',
+    image: null as File | null
+  });
+  
+  // Sample medicine data - would be replaced with API data
+  const medicines: ChemistMedicine[] = [
+    {
+      id: 1,
+      name: 'Telma-H 40 Tablet',
+      brand: 'Glenmark',
+      genericName: 'Telmisartan/Hydrochlorothiazide',
+      category: 'Cardiac Care',
+      composition: 'Telmisartan (40mg) + Hydrochlorothiazide (12.5mg)',
+      description: 'Used for hypertension and reduces risk of cardiovascular events',
+      price: 120,
+      discountedPrice: 108,
+      packSize: '10 tablets per strip',
+      imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae',
+      status: 'approved',
+      createdAt: '2025-03-15T10:30:00',
+      updatedAt: '2025-03-16T15:20:00'
+    },
+    {
+      id: 2,
+      name: 'Glycomet-GP 1 Forte',
+      brand: 'USV Limited',
+      genericName: 'Metformin/Glimepiride',
+      category: 'Diabetes Care',
+      composition: 'Metformin (500mg) + Glimepiride (1mg)',
+      description: 'Used to control high blood sugar in type 2 diabetes',
+      price: 145,
+      discountedPrice: 130,
+      packSize: '15 tablets per strip',
+      imageUrl: 'https://images.unsplash.com/photo-1579154392429-20e114ece59e',
+      status: 'pending',
+      createdAt: '2025-04-10T09:15:00',
+      updatedAt: '2025-04-10T09:15:00'
+    },
+    {
+      id: 3,
+      name: 'Pan-D Capsule',
+      brand: 'Alkem',
+      genericName: 'Pantoprazole/Domperidone',
+      category: 'Gastro Care',
+      composition: 'Pantoprazole (40mg) + Domperidone (30mg)',
+      description: 'Used for treatment of acid reflux and indigestion',
+      price: 95,
+      discountedPrice: 85,
+      packSize: '10 capsules per strip',
+      imageUrl: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88',
+      status: 'rejected',
+      createdAt: '2025-04-05T11:20:00',
+      updatedAt: '2025-04-07T14:30:00',
+      rejectionReason: 'Product image is not clear and product description is incomplete'
+    },
+    {
+      id: 4,
+      name: 'Levocet M Tablet',
+      brand: 'Mankind',
+      genericName: 'Levocetirizine/Montelukast',
+      category: 'Respiratory Care',
+      composition: 'Levocetirizine (5mg) + Montelukast (10mg)',
+      description: 'Used for allergic rhinitis and asthma symptoms',
+      price: 110,
+      discountedPrice: 99,
+      packSize: '10 tablets per strip',
+      imageUrl: 'https://images.unsplash.com/photo-1626285861696-9f0bf5a49c6d',
+      status: 'approved',
+      createdAt: '2025-03-20T16:45:00',
+      updatedAt: '2025-03-21T10:10:00'
+    },
+    {
+      id: 5,
+      name: 'Dolo 650mg Tablet',
+      brand: 'Micro Labs',
+      genericName: 'Paracetamol',
+      category: 'Pain Relief',
+      composition: 'Paracetamol (650mg)',
+      description: 'Used for fever and mild to moderate pain relief',
+      price: 30,
+      discountedPrice: 30,
+      packSize: '15 tablets per strip',
+      imageUrl: 'https://images.unsplash.com/photo-1584362917165-526a968579e8',
+      status: 'pending',
+      createdAt: '2025-04-12T14:20:00',
+      updatedAt: '2025-04-12T14:20:00'
+    }
+  ];
   
   // Sample data - would be replaced with API data
   const prescriptions: Prescription[] = [
@@ -288,6 +418,93 @@ const ChemistDashboard: React.FC = () => {
     setAssignCourier('');
     setSelectedPrescription(null);
   };
+  
+  // Medicine management handlers
+  const handleAddMedicine = () => {
+    setOpenAddMedicineDialog(true);
+  };
+
+  const handleMedicineInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewMedicine(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setNewMedicine(prev => ({
+        ...prev,
+        image: e.target.files![0]
+      }));
+    }
+  };
+
+  const handleSubmitMedicine = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUploading(true);
+    
+    // Validate form
+    if (!newMedicine.name || !newMedicine.brand || !newMedicine.composition || 
+        !newMedicine.category || !newMedicine.price) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all the required fields.",
+        variant: "destructive"
+      });
+      setIsUploading(false);
+      return;
+    }
+    
+    // In a real app, this would make an API call to upload the medicine
+    console.log('New medicine data:', newMedicine);
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    toast({
+      title: "Medicine Submitted",
+      description: "Your medicine has been submitted for admin approval.",
+    });
+    
+    setIsUploading(false);
+    setOpenAddMedicineDialog(false);
+    
+    // Reset form
+    setNewMedicine({
+      name: '',
+      brand: '',
+      genericName: '',
+      category: '',
+      composition: '',
+      description: '',
+      price: '',
+      discountedPrice: '',
+      packSize: '',
+      image: null
+    });
+  };
+  
+  // Filter medicines based on search query and filters
+  const filteredMedicines = medicines.filter(medicine => {
+    // Apply search filter
+    const matchesSearch = medicineSearchQuery === '' || 
+      medicine.name.toLowerCase().includes(medicineSearchQuery.toLowerCase()) ||
+      medicine.composition.toLowerCase().includes(medicineSearchQuery.toLowerCase()) ||
+      medicine.brand.toLowerCase().includes(medicineSearchQuery.toLowerCase());
+      
+    // Apply category filter
+    const matchesCategory = categoryFilter === null || medicine.category === categoryFilter;
+    
+    // Apply status filter
+    const matchesStatus = statusFilter === null || medicine.status === statusFilter;
+    
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+  
+  // Get unique categories for filtering
+  const categories = Array.from(new Set(medicines.map(m => m.category)));
 
   const renderStatusBadge = (status: string) => {
     switch(status) {
@@ -339,6 +556,14 @@ const ChemistDashboard: React.FC = () => {
           <TabsTrigger value="processing">{t('processing')}</TabsTrigger>
           <TabsTrigger value="completed">{t('completed')}</TabsTrigger>
           <TabsTrigger value="all">{t('all_prescriptions')}</TabsTrigger>
+          <TabsTrigger value="medicines" className="relative">
+            {t('medicines')}
+            {medicines.filter(m => m.status === 'pending').length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {medicines.filter(m => m.status === 'pending').length}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="new" className="space-y-4">
@@ -443,6 +668,62 @@ const ChemistDashboard: React.FC = () => {
               renderStatusBadge={renderStatusBadge}
             />
           ))}
+        </TabsContent>
+
+        <TabsContent value="medicines" className="space-y-4">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex-1 mr-4">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Input 
+                  className="pl-9" 
+                  placeholder={t('search_medicines')}
+                  value={medicineSearchQuery}
+                  onChange={(e) => setMedicineSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Select value={categoryFilter || ''} onValueChange={val => setCategoryFilter(val || null)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={t('filter_by_category')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter || ''} onValueChange={val => setStatusFilter(val || null)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={t('filter_by_status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending Approval</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={handleAddMedicine}>
+                <PlusCircle className="h-4 w-4 mr-2" />
+                {t('add_medicine')}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredMedicines.length > 0 ? (
+              filteredMedicines.map(medicine => (
+                <MedicineCard key={medicine.id} medicine={medicine} />
+              ))
+            ) : (
+              <div className="col-span-full">
+                <EmptyState message={t('no_medicines_found')} />
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -718,6 +999,157 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
         </div>
         {renderActionButtons()}
       </CardFooter>
+    </Card>
+  );
+};
+
+const MedicineCard: React.FC<{ medicine: ChemistMedicine }> = ({ medicine }) => {
+  const { t } = useLanguage();
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  // Render status badge
+  const renderStatusBadge = (status: string) => {
+    switch(status) {
+      case 'pending':
+        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">Pending</Badge>;
+      case 'approved':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Approved</Badge>;
+      case 'rejected':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">Rejected</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+
+  // Calculate discount percentage
+  const discountPercentage = medicine.discountedPrice < medicine.price
+    ? Math.round(((medicine.price - medicine.discountedPrice) / medicine.price) * 100)
+    : 0;
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="h-48 overflow-hidden relative">
+        <img 
+          src={medicine.imageUrl} 
+          alt={medicine.name} 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute top-2 right-2">
+          {renderStatusBadge(medicine.status)}
+        </div>
+        {discountPercentage > 0 && (
+          <div className="absolute bottom-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+            {discountPercentage}% OFF
+          </div>
+        )}
+      </div>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">{medicine.name}</CardTitle>
+        <CardDescription>{medicine.brand}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex justify-between items-baseline">
+          <div>
+            {medicine.discountedPrice < medicine.price ? (
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-bold">₹{medicine.discountedPrice}</span>
+                <span className="text-sm text-gray-500 line-through">₹{medicine.price}</span>
+              </div>
+            ) : (
+              <span className="text-lg font-bold">₹{medicine.price}</span>
+            )}
+          </div>
+          <div className="text-sm text-gray-500">{medicine.packSize}</div>
+        </div>
+        <div className="mt-2 text-sm text-gray-700">
+          {medicine.composition}
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-between border-t pt-3">
+        <Button variant="ghost" size="sm" onClick={() => setOpenDetailsDialog(true)}>
+          {t('view_details')}
+        </Button>
+        <span className="text-xs text-gray-500">{t('added')}: {formatDate(medicine.createdAt)}</span>
+      </CardFooter>
+
+      <Dialog open={openDetailsDialog} onOpenChange={setOpenDetailsDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{medicine.name}</DialogTitle>
+            <DialogDescription>{medicine.brand} • {medicine.packSize}</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div>
+              <img 
+                src={medicine.imageUrl} 
+                alt={medicine.name} 
+                className="w-full h-64 object-cover rounded-md border"
+              />
+              <div className="mt-4">
+                <h3 className="font-medium text-gray-700 mb-2">{t('price_information')}</h3>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-lg font-bold">₹{medicine.discountedPrice}</span>
+                  {medicine.discountedPrice < medicine.price && (
+                    <span className="text-sm text-gray-500 line-through">₹{medicine.price}</span>
+                  )}
+                </div>
+                {medicine.status === 'pending' && (
+                  <p className="text-sm text-amber-700 bg-amber-50 p-2 rounded mt-2">
+                    {t('pending_approval_message')}
+                  </p>
+                )}
+                {medicine.status === 'rejected' && (
+                  <div className="text-sm text-red-700 bg-red-50 p-2 rounded mt-2">
+                    <p className="font-medium">{t('rejection_reason')}:</p>
+                    <p>{medicine.rejectionReason}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-700 mb-2">{t('medicine_information')}</h3>
+              <dl className="space-y-2">
+                <div>
+                  <dt className="text-sm text-gray-600">{t('generic_name')}</dt>
+                  <dd>{medicine.genericName}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-gray-600">{t('category')}</dt>
+                  <dd>{medicine.category}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-gray-600">{t('composition')}</dt>
+                  <dd>{medicine.composition}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-gray-600">{t('description')}</dt>
+                  <dd>{medicine.description}</dd>
+                </div>
+              </dl>
+              
+              <h3 className="font-medium text-gray-700 mt-4 mb-2">{t('status_information')}</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <span>{t('status')}:</span>
+                {renderStatusBadge(medicine.status)}
+              </div>
+              <div className="text-sm text-gray-600">
+                <div>{t('created')}: {formatDate(medicine.createdAt)}</div>
+                <div>{t('last_updated')}: {formatDate(medicine.updatedAt)}</div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
