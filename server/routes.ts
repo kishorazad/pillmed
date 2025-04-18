@@ -1560,10 +1560,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Try MongoDB first for better performance with large datasets
       try {
-        // Import mongoose but use the existing connection
-        const mongoose = require('mongoose');
-        const { Product } = require('./models');
-        
         // Check if we're connected to MongoDB 
         if (global.useMongoStorage === true && mongoose.connection.readyState === 1) {  // Connected to MongoDB
           console.log('Using MongoDB for substitutes search');
