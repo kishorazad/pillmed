@@ -68,11 +68,11 @@ const Profile = () => {
   const profileForm = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-      address: user?.address || '',
-      pincode: user?.pincode || '',
+      name: auth.user?.name || '',
+      email: auth.user?.email || '',
+      phone: auth.user?.phone || '',
+      address: auth.user?.address || '',
+      pincode: auth.user?.pincode || '',
     },
   });
   
@@ -99,25 +99,25 @@ const Profile = () => {
   
   // Update profile form when user changes
   useEffect(() => {
-    if (user) {
+    if (auth.user) {
       profileForm.reset({
-        name: user.name,
-        email: user.email,
-        phone: user.phone || '',
-        address: user.address || '',
-        pincode: user.pincode || '',
+        name: auth.user.name,
+        email: auth.user.email,
+        phone: auth.user.phone || '',
+        address: auth.user.address || '',
+        pincode: auth.user.pincode || '',
       });
     }
-  }, [user, profileForm]);
+  }, [auth.user, profileForm]);
   
   // Handle profile update
   const onProfileSubmit = async (data: z.infer<typeof profileSchema>) => {
     try {
       // In a real app, you would send this data to the server
       // For now, just update the local state
-      if (user) {
+      if (auth.user) {
         setUser({
-          ...user,
+          ...auth.user,
           ...data,
         });
         
@@ -144,7 +144,7 @@ const Profile = () => {
       const { tempUserId } = useStore.getState();
       
       // Submit login credentials through the auth provider's mutation
-      await loginMutation.mutateAsync({
+      await auth.loginMutation.mutateAsync({
         username: data.username,
         password: data.password
       });
@@ -163,7 +163,7 @@ const Profile = () => {
       const { confirmPassword, ...registerData } = data;
       
       // Submit registration data through the auth provider's mutation
-      await registerMutation.mutateAsync(registerData);
+      await auth.registerMutation.mutateAsync(registerData);
       
       // Note: Success handling, toast notifications, and redirection are all managed by the auth provider
       
@@ -177,7 +177,7 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       // Use the auth provider's logout mutation
-      await logoutMutation.mutateAsync();
+      await auth.logoutMutation.mutateAsync();
       
       // Note: Success handling, toast notifications, and redirects are handled by the auth provider
       
@@ -195,20 +195,21 @@ const Profile = () => {
   // Update user data in store when it changes
   useEffect(() => {
     // Check if userData exists and has an id property before trying to update the store
-    if (userData && typeof userData === 'object' && 'id' in userData && (!user || JSON.stringify(userData) !== JSON.stringify(user))) {
+    if (userData && typeof userData === 'object' && 'id' in userData && 
+        (!auth.user || JSON.stringify(userData) !== JSON.stringify(auth.user))) {
       setUser(userData as User);
     }
     
     // If user is logged in and tries to navigate to the login tab, redirect to profile tab
-    if (user && activeTab === 'login') {
+    if (auth.user && activeTab === 'login') {
       setActiveTab('profile');
     }
     
     // If user is logged out but tries to view profile or orders tab, redirect to login tab
-    if (!user && activeTab !== 'login') {
+    if (!auth.user && activeTab !== 'login') {
       setActiveTab('login');
     }
-  }, [userData, user, setUser, activeTab]);
+  }, [userData, auth.user, setUser, activeTab]);
 
   // Scroll to top on page load
   useEffect(() => {
@@ -218,42 +219,42 @@ const Profile = () => {
   return (
     <>
       <Helmet>
-        <title>{user ? `${user.name}'s Profile` : 'Sign In'} - PillNow</title>
+        <title>{auth.user ? `${auth.user.name}'s Profile` : 'Sign In'} - PillNow</title>
         <meta name="description" content="Manage your profile, orders, and account information" />
       </Helmet>
       
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">{user ? 'Your Account' : 'Sign In or Register'}</h1>
+        <h1 className="text-2xl font-bold mb-6">{auth.user ? 'Your Account' : 'Sign In or Register'}</h1>
         
         <div className="max-w-3xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="profile" disabled={!user ? true : undefined}>
+              <TabsTrigger value="profile" disabled={!auth.user ? true : undefined}>
                 <i className="fas fa-user mr-2"></i> Profile
               </TabsTrigger>
-              <TabsTrigger value="orders" disabled={!user ? true : undefined}>
+              <TabsTrigger value="orders" disabled={!auth.user ? true : undefined}>
                 <i className="fas fa-shopping-bag mr-2"></i> Orders
               </TabsTrigger>
-              <TabsTrigger value="login" disabled={user ? true : undefined}>
+              <TabsTrigger value="login" disabled={auth.user ? true : undefined}>
                 <i className="fas fa-sign-in-alt mr-2"></i> Login/Register
               </TabsTrigger>
             </TabsList>
             
             {/* Only show profile and orders tabs if user is logged in */}
-            {user ? (
+            {auth.user ? (
               <>
                 <TabsContent value="profile">
                   <Card>
                     <CardHeader className="border-b">
                       <CardTitle className="flex items-center">
-                        {user.profileImageUrl ? (
-                          <img src={user.profileImageUrl} alt={user.name} className="w-10 h-10 rounded-full mr-3" />
+                        {auth.user.profileImageUrl ? (
+                          <img src={auth.user.profileImageUrl} alt={auth.user.name} className="w-10 h-10 rounded-full mr-3" />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white mr-3">
-                            {user.name.charAt(0).toUpperCase()}
+                            {auth.user.name.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <span>{user.name}'s Profile</span>
+                        <span>{auth.user.name}'s Profile</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
@@ -347,7 +348,7 @@ const Profile = () => {
                       <CardTitle>Order History</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <OrderHistory userId={user.id} />
+                      <OrderHistory userId={auth.user.id} />
                     </CardContent>
                   </Card>
                 </TabsContent>
