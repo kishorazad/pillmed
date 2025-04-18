@@ -71,7 +71,7 @@ function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedR
     // Short delay to ensure store is loaded
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 500);
+    }, 1000); // Increased delay to ensure user state is fully loaded
     
     return () => clearTimeout(timer);
   }, []);
@@ -81,6 +81,7 @@ function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedR
       <Route path={path}>
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading dashboard...</span>
         </div>
       </Route>
     );
@@ -90,7 +91,16 @@ function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedR
   if (!user) {
     return (
       <Route path={path}>
-        <Redirect to="/profile" />
+        <div className="flex items-center justify-center min-h-screen flex-col">
+          <h2 className="text-xl font-semibold mb-4">Authentication Required</h2>
+          <p className="mb-4">You need to log in to access this area.</p>
+          <button 
+            onClick={() => setLocation("/profile")}
+            className="px-4 py-2 bg-primary text-white rounded"
+          >
+            Go to Login Page
+          </button>
+        </div>
       </Route>
     );
   }
@@ -114,7 +124,8 @@ function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedR
     );
   }
   
-  return <Route path={path} component={Component} />;
+  // If we get here, the user is authenticated and has the correct role
+  return <Route path={path}><Component /></Route>;
 }
 
 function Router() {

@@ -375,7 +375,17 @@ const Profile = () => {
     if (userData && (!user || JSON.stringify(userData) !== JSON.stringify(user))) {
       setUser(userData);
     }
-  }, [userData, user, setUser]);
+    
+    // If user data is loaded and user is logged in, ensure we're on the profile tab
+    if (userData && activeTab === 'login') {
+      setActiveTab('profile');
+    }
+    
+    // If user data is loaded and user is logged out, ensure we're on the login tab
+    if (!userData && activeTab !== 'login') {
+      setActiveTab('login');
+    }
+  }, [userData, user, setUser, activeTab]);
 
   // Scroll to top on page load
   useEffect(() => {

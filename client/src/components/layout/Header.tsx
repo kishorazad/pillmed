@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useStore } from '@/lib/store';
 import Logo from './Logo';
@@ -10,7 +10,23 @@ const Header = () => {
   const [location, navigate] = useLocation();
   const { cart, openCart, user } = useStore();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
+  
+  // Close user menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   
   return (
     <header className="shadow-sm sticky top-0 z-50 bg-white">
@@ -58,48 +74,71 @@ const Header = () => {
             {/* Notification Bell */}
             <NotificationHandler />
             
-            <div className="relative group">
-              <Link href="/profile" className="flex flex-col items-center">
+            <div className="relative" ref={userMenuRef}>
+              <div 
+                onClick={() => {
+                  if (user) {
+                    setIsUserMenuOpen(!isUserMenuOpen);
+                  } else {
+                    navigate('/profile');
+                  }
+                }} 
+                className="flex flex-col items-center cursor-pointer"
+              >
                 <i className="fas fa-user text-[#666666]"></i>
                 <span>{user ? user.name.split(' ')[0] : 'Sign In'}</span>
-              </Link>
+              </div>
               
-              {user && (
-                <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md hidden group-hover:block z-50">
+              {user && isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-md z-50 border border-gray-200">
                   <div className="py-1">
-                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Profile</Link>
-                    <Link href="/profile#orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</Link>
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <div className="font-medium text-sm truncate">{user.name}</div>
+                      <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                    </div>
+                    
+                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      <i className="fas fa-user-circle mr-2 text-gray-500"></i> My Profile
+                    </Link>
+                    
+                    <Link href="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      <i className="fas fa-shopping-bag mr-2 text-gray-500"></i> My Orders
+                    </Link>
                     
                     {user.role === 'admin' && (
                       <Link href="/admin" className="block px-4 py-2 text-sm text-orange-500 font-medium hover:bg-gray-100">
-                        Admin Dashboard
+                        <i className="fas fa-cog mr-2"></i> Admin Dashboard
                       </Link>
                     )}
                     
-                    {user.role === 'pharmacy' && (
-                      <Link href="/pharmacy" className="block px-4 py-2 text-sm text-orange-500 font-medium hover:bg-gray-100">
-                        Pharmacy Dashboard
+                    {user.role === 'chemist' && (
+                      <Link href="/chemist" className="block px-4 py-2 text-sm text-orange-500 font-medium hover:bg-gray-100">
+                        <i className="fas fa-flask mr-2"></i> Chemist Dashboard
                       </Link>
                     )}
                     
                     {user.role === 'doctor' && (
                       <Link href="/doctor" className="block px-4 py-2 text-sm text-orange-500 font-medium hover:bg-gray-100">
-                        Doctor Dashboard
+                        <i className="fas fa-stethoscope mr-2"></i> Doctor Dashboard
                       </Link>
                     )}
                     
                     {user.role === 'laboratory' && (
                       <Link href="/laboratory" className="block px-4 py-2 text-sm text-orange-500 font-medium hover:bg-gray-100">
-                        Laboratory Dashboard
+                        <i className="fas fa-vial mr-2"></i> Laboratory Dashboard
                       </Link>
                     )}
                     
                     <div className="border-t border-gray-200 my-1"></div>
                     <button 
-                      onClick={() => useStore.getState().setUser(null)} 
+                      onClick={() => {
+                        useStore.getState().setUser(null);
+                        useStore.getState().setTempUserId(Date.now());
+                        navigate('/');
+                      }} 
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                     >
-                      Sign Out
+                      <i className="fas fa-sign-out-alt mr-2"></i> Sign Out
                     </button>
                   </div>
                 </div>
