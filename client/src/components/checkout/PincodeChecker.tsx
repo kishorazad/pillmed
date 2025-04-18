@@ -1,149 +1,121 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { MapPin, Clock, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { useDebounce } from '@/hooks/use-debounce';
 import { useLanguage } from '@/components/LanguageSwitcher';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, XCircle, MapPin, Loader2 } from 'lucide-react';
-import { getPincodeData, PincodeData } from '@/services/location-service';
+import { PincodeData } from '@/services/location-service';
 
 interface PincodeCheckerProps {
+  initialPincode?: string;
   onPincodeData?: (data: PincodeData | null) => void;
   onDeliveryAvailability?: (available: boolean) => void;
-  initialPincode?: string;
 }
 
-/**
- * PincodeChecker Component
- * 
- * Allows users to check if delivery is available for their location
- * by entering a pincode. Shows appropriate messages based on availability.
- */
-const PincodeChecker = ({ 
-  onPincodeData, 
-  onDeliveryAvailability, 
-  initialPincode 
+const PincodeChecker = ({
+  initialPincode,
+  onPincodeData,
+  onDeliveryAvailability
 }: PincodeCheckerProps) => {
-  const { t } = useLanguage();
+  const [checking, setChecking] = useState(false);
+  const [pincodeData, setPincodeData] = useState<PincodeData | null>(null);
   const [pincode, setPincode] = useState(initialPincode || '');
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<PincodeData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [deliveryAvailable, setDeliveryAvailable] = useState(false);
+  const debouncedPincode = useDebounce(pincode, 500);
+  const { t } = useLanguage();
 
-  const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow numbers and limit to 6 digits
-    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-    setPincode(value);
-    
-    // Reset states when pincode changes
-    if (data) {
-      setData(null);
-      setDeliveryAvailable(false);
-      setError(null);
-      
-      // Notify parent components
-      if (onPincodeData) onPincodeData(null);
-      if (onDeliveryAvailability) onDeliveryAvailability(false);
+  useEffect(() => {
+    // Check pincode if it's a valid 6-digit number
+    if (debouncedPincode && debouncedPincode.length === 6 && /^[1-9][0-9]{5}$/.test(debouncedPincode)) {
+      checkPincode(debouncedPincode);
+    } else if (debouncedPincode && debouncedPincode.length > 0 && debouncedPincode.length < 6) {
+      setPincodeData(null);
+      onPincodeData && onPincodeData(null);
+      onDeliveryAvailability && onDeliveryAvailability(false);
     }
-  };
+  }, [debouncedPincode]);
 
-  const checkPincode = async () => {
-    if (pincode.length !== 6) {
-      setError(t('pincode_error_title'));
-      return;
+  useEffect(() => {
+    // Initialize with the prop value if provided
+    if (initialPincode && initialPincode.length === 6 && /^[1-9][0-9]{5}$/.test(initialPincode)) {
+      checkPincode(initialPincode);
     }
+  }, []);
 
-    setLoading(true);
-    setError(null);
-    
+  const checkPincode = async (code: string) => {
     try {
-      const pincodeData = await getPincodeData(pincode);
-      setData(pincodeData);
+      setChecking(true);
+      const response = await axios.get(`/api/pincode/${code}`);
       
-      // Determine if delivery is available based on service area
-      // This is a simplified example - in a real app, you would check against your
-      // actual service areas stored in the database
-      const isDeliveryAvailable = pincodeData.serviceAvailable;
-      setDeliveryAvailable(isDeliveryAvailable);
-      
-      // Notify parent components
-      if (onPincodeData) onPincodeData(pincodeData);
-      if (onDeliveryAvailability) onDeliveryAvailability(isDeliveryAvailable);
-    } catch (err) {
-      console.error('Error checking pincode:', err);
-      setError(t('pincode_error_desc'));
-      
-      // Notify parent components
-      if (onPincodeData) onPincodeData(null);
-      if (onDeliveryAvailability) onDeliveryAvailability(false);
+      if (response.data) {
+        setPincodeData(response.data);
+        onPincodeData && onPincodeData(response.data);
+        onDeliveryAvailability && onDeliveryAvailability(response.data.serviceAvailable);
+      } else {
+        setPincodeData(null);
+        onPincodeData && onPincodeData(null);
+        onDeliveryAvailability && onDeliveryAvailability(false);
+      }
+    } catch (error) {
+      console.error('Error checking pincode:', error);
+      setPincodeData(null);
+      onPincodeData && onPincodeData(null);
+      onDeliveryAvailability && onDeliveryAvailability(false);
     } finally {
-      setLoading(false);
+      setChecking(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      checkPincode();
-    }
-  };
+  if (!pincode && !initialPincode) {
+    return null;
+  }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Input
-          value={pincode}
-          onChange={handlePincodeChange}
-          onKeyDown={handleKeyDown}
-          placeholder={t('enter_pincode')}
-          className="max-w-[150px]"
-          maxLength={6}
-        />
-        <Button 
-          onClick={checkPincode} 
-          disabled={loading || pincode.length !== 6}
-          size="sm"
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <MapPin className="h-4 w-4 mr-2" />}
-          {t('check')}
-        </Button>
+  // If checking, show loading state
+  if (checking) {
+    return (
+      <div className="flex items-center text-muted-foreground text-sm mt-1 animate-pulse">
+        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+        <span>{t('checking_delivery')}</span>
       </div>
+    );
+  }
 
-      {error && (
-        <Alert variant="destructive" className="p-3">
-          <XCircle className="h-4 w-4" />
-          <AlertTitle className="text-sm font-medium">{t('pincode_error_title')}</AlertTitle>
-          <AlertDescription className="text-xs">{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {data && deliveryAvailable && (
-        <Alert variant="default" className="bg-green-50 border-green-200 p-3">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-sm font-medium text-green-800">{t('delivery_available_title')}</AlertTitle>
-          <AlertDescription className="text-xs text-green-700">
-            {t('delivery_available_desc')}
-            <div className="mt-1 text-xs text-green-600">
-              {t('delivery_time_message')}
+  // If we have pincode data, show the result
+  if (pincodeData) {
+    return (
+      <div className={pincodeData.serviceAvailable ? "text-green-600" : "text-red-500"}>
+        <div className="flex items-start text-sm mt-1">
+          <div className="flex-shrink-0 mt-0.5">
+            {pincodeData.serviceAvailable ? (
+              <Check className="h-4 w-4 mr-1" />
+            ) : (
+              <AlertCircle className="h-4 w-4 mr-1" />
+            )}
+          </div>
+          <div className="ml-1">
+            <div className="font-medium">
+              {pincodeData.serviceAvailable 
+                ? t('delivery_available') 
+                : t('delivery_not_available')}
             </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {data && !deliveryAvailable && (
-        <Alert variant="default" className="bg-orange-50 border-orange-200 p-3">
-          <XCircle className="h-4 w-4 text-orange-600" />
-          <AlertTitle className="text-sm font-medium text-orange-800">{t('delivery_unavailable_title')}</AlertTitle>
-          <AlertDescription className="text-xs text-orange-700">
-            {t('delivery_unavailable_desc')}
-            <div className="mt-1 text-xs text-orange-600">
-              {t('delivery_unavailable_message')}
+            <div className="text-xs">
+              <span className="flex items-center mt-0.5">
+                <MapPin className="h-3 w-3 mr-1" />
+                {pincodeData.city}, {pincodeData.state}
+              </span>
+              {pincodeData.serviceAvailable && (
+                <span className="flex items-center mt-0.5">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {t('delivery_estimate', { days: pincodeData.deliveryDays })}
+                </span>
+              )}
             </div>
-          </AlertDescription>
-        </Alert>
-      )}
-    </div>
-  );
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Return null if no valid pincode yet
+  return null;
 };
 
 export default PincodeChecker;

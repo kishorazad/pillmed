@@ -2055,6 +2055,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Initialize pincode service
+  try {
+    await initializePincodeService();
+    console.log('Pincode service initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize pincode service:', error);
+  }
+  
+  // Pincode lookup endpoint
+  app.get('/api/pincode/:pincode', async (req: Request, res: Response) => {
+    try {
+      const { pincode } = req.params;
+      
+      // Validate pincode format (6 digits for Indian pincodes)
+      if (!isValidPincodeFormat(pincode)) {
+        return res.status(400).json({
+          error: 'Invalid pincode format',
+          message: 'Pincode must be a 6-digit number starting with a non-zero digit'
+        });
+      }
+      
+      // Cache key for pincode data
+      const cacheKey = `pincode:${pincode}`;
+      
+      // Try to get from cache first
+      const cachedData = cacheService.get(cacheKey);
+      if (cachedData) {
+        return res.json(cachedData);
+      }
+      
+      // Get pincode data - using our robust implementation that falls back gracefully
+      const pincodeData = await getPincodeData(pincode);
+      
+      // Since our getPincodeData implementation now always returns something, even for fallbacks,
+      // we don't need to check for null/undefined here
+            
+      // Save to cache for 24 hours (pincode data rarely changes)
+      if (pincodeData) {
+        cacheService.set(cacheKey, pincodeData, 24 * 60 * 60 * 1000);
+      }
+      
+      res.json(pincodeData);
+    } catch (error) {
+      console.error('Pincode lookup error:', error);
+      // Gracefully handle errors with a default response
+      res.json({
+        pincode: req.params.pincode,
+        city: 'Unknown',
+        district: 'Unknown',
+        state: 'Unknown',
+        country: 'India',
+        serviceAvailable: false,
+        deliveryDays: 5
+      });
+    }
+  });
+  
+  // Check delivery availability endpoint
+  app.get('/api/pincode/:pincode/delivery', async (req: Request, res: Response) => {
+    try {
+      const { pincode } = req.params;
+      
+      // Validate pincode format
+      if (!isValidPincodeFormat(pincode)) {
+        return res.status(400).json({
+          error: 'Invalid pincode format',
+          message: 'Pincode must be a 6-digit number starting with a non-zero digit'
+        });
+      }
+      
+      // Get pincode data with our graceful fallbacks
+      const pincodeData = await getPincodeData(pincode);
+      
+      // With our improved implementation, we should always get an object back
+      const isServiceable = pincodeData ? pincodeData.serviceAvailable : false;
+      const deliveryDays = pincodeData ? pincodeData.deliveryDays : 5;
+      
+      res.json({
+        pincode,
+        isServiceable,
+        deliveryDays: isServiceable ? deliveryDays : null,
+        message: isServiceable 
+          ? `Delivery available with estimated delivery in ${deliveryDays} days`
+          : 'Delivery not available in this area'
+      });
+    } catch (error) {
+      console.error('Delivery check error:', error);
+      // Always return a response, even on error
+      res.json({
+        pincode: req.params.pincode,
+        isServiceable: false,
+        deliveryDays: null,
+        message: 'Delivery not available in this area'
+      });
+    }
+  });
+  
   // Setup SEO routes for sitemap.xml and robots.txt
   setupSeoRoutes(app);
   
