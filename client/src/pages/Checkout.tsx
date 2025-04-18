@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet';
+import { useLanguage } from '@/components/LanguageSwitcher';
 
 // Form validation schema
 const checkoutSchema = z.object({
@@ -157,6 +158,8 @@ const Checkout = () => {
     window.scrollTo(0, 0);
   }, [currentStep, location]);
   
+  const { t } = useLanguage();
+  
   return (
     <>
       <Helmet>
@@ -165,24 +168,24 @@ const Checkout = () => {
       </Helmet>
       
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+        <h1 className="text-2xl font-bold mb-6">{t('checkout')}</h1>
         
         {/* Progress steps */}
         <div className="max-w-3xl mx-auto mb-8">
           <div className="flex items-center justify-center">
             <div className={`flex flex-col items-center ${currentStep === 'address' || currentStep === 'payment' || currentStep === 'confirmation' ? 'text-[#10847e]' : 'text-gray-400'}`}>
               <div className="w-10 h-10 rounded-full border-2 border-current flex items-center justify-center font-bold">1</div>
-              <span className="mt-1">Address</span>
+              <span className="mt-1">{t('address')}</span>
             </div>
             <div className={`w-16 sm:w-28 h-1 ${currentStep === 'payment' || currentStep === 'confirmation' ? 'bg-[#10847e]' : 'bg-gray-300'}`}></div>
             <div className={`flex flex-col items-center ${currentStep === 'payment' || currentStep === 'confirmation' ? 'text-[#10847e]' : 'text-gray-400'}`}>
               <div className="w-10 h-10 rounded-full border-2 border-current flex items-center justify-center font-bold">2</div>
-              <span className="mt-1">Payment</span>
+              <span className="mt-1">{t('payment')}</span>
             </div>
             <div className={`w-16 sm:w-28 h-1 ${currentStep === 'confirmation' ? 'bg-[#10847e]' : 'bg-gray-300'}`}></div>
             <div className={`flex flex-col items-center ${currentStep === 'confirmation' ? 'text-[#10847e]' : 'text-gray-400'}`}>
               <div className="w-10 h-10 rounded-full border-2 border-current flex items-center justify-center font-bold">3</div>
-              <span className="mt-1">Confirmation</span>
+              <span className="mt-1">{t('confirmation')}</span>
             </div>
           </div>
         </div>
