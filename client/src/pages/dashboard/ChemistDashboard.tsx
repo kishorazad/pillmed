@@ -28,7 +28,10 @@ interface Prescription {
   status: 'new' | 'readable' | 'not_readable' | 'verified' | 'packed' | 'picked' | 'delivered';
   uploadDate: string;
   medicines: Medicine[];
+  extraMedicines?: ExtraMedicine[]; // Optional array for medicines added by chemist
   orderNotes?: string;
+  doctorId?: number; // Doctor who uploaded or needs to approve
+  doctorName?: string;
 }
 
 interface Medicine {
@@ -39,6 +42,25 @@ interface Medicine {
   price: number;
   currentPrice: number;
   priceChanged: boolean;
+}
+
+interface ExtraMedicine {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number;
+  isRxOnly: boolean; // Whether this is a prescription-only medicine
+  addedBy: {
+    id: number;
+    name: string;
+    role: 'chemist';
+  };
+  status: 'pending_approval' | 'approved' | 'rejected' | 'no_approval_needed';
+  reason?: string; // Reason for adding this extra medicine
+  approvalDate?: string;
+  rejectionReason?: string;
+  doctorId?: number; // Doctor who approved/rejected
+  doctorName?: string; // Doctor who approved/rejected
 }
 
 interface ChemistMedicine {
@@ -253,6 +275,8 @@ const ChemistDashboard: React.FC = () => {
       prescriptionImage: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef',
       status: 'readable',
       uploadDate: '2025-04-17T10:15:00',
+      doctorId: 201,
+      doctorName: 'Dr. Raj Kumar',
       medicines: [
         {
           id: 312,
@@ -271,6 +295,53 @@ const ChemistDashboard: React.FC = () => {
           price: 125,
           currentPrice: 149,
           priceChanged: true
+        }
+      ],
+      extraMedicines: [
+        {
+          id: 621,
+          name: 'Pantocid 40mg Tablet',
+          quantity: 1,
+          price: 85,
+          isRxOnly: true, // This is a prescription-only medicine
+          addedBy: {
+            id: 5,
+            name: 'Chemist User',
+            role: 'chemist'
+          },
+          status: 'pending_approval',
+          reason: 'Patient mentioned acid reflux symptoms; this will help with that condition'
+        },
+        {
+          id: 735,
+          name: 'Ecosprin 75mg Tablet',
+          quantity: 1,
+          price: 12,
+          isRxOnly: true, // This is a prescription-only medicine
+          addedBy: {
+            id: 5,
+            name: 'Chemist User',
+            role: 'chemist'
+          },
+          status: 'approved',
+          reason: 'Recommended based on patient profile and existing medications',
+          approvalDate: '2025-04-17T13:45:00',
+          doctorId: 201,
+          doctorName: 'Dr. Raj Kumar'
+        },
+        {
+          id: 127,
+          name: 'Crocin 500mg Tablet',
+          quantity: 2,
+          price: 24,
+          isRxOnly: false, // This is an OTC medicine
+          addedBy: {
+            id: 5,
+            name: 'Chemist User',
+            role: 'chemist'
+          },
+          status: 'no_approval_needed',
+          reason: 'Added for fever symptoms mentioned by patient'
         }
       ]
     },
