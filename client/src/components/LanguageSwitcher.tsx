@@ -239,6 +239,7 @@ export const translations: Record<string, Record<string, string>> = {
     'view_cart': 'Warenkorb anzeigen',
     'please_add_items_to_proceed': 'Bitte fügen Sie Artikel hinzu, um fortzufahren',
     'quick_links': 'Schnelllinks',
+    'quantity': 'Menge',
   },
   zh: {
     'home': '首页',
@@ -267,6 +268,7 @@ export const translations: Record<string, Record<string, string>> = {
     'view_cart': '查看购物车',
     'please_add_items_to_proceed': '请添加商品以继续',
     'quick_links': '快速链接',
+    'quantity': '数量',
   },
 };
 
