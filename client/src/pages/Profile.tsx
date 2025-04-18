@@ -306,13 +306,14 @@ const Profile = () => {
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['/api/user'],
     staleTime: 30000, // Consider data fresh for 30 seconds
-    onSuccess: (data) => {
-      if (data && !user) {
-        // Update the store with user data if not already set
-        setUser(data);
-      }
-    },
   });
+  
+  // Update user data in store when it changes
+  useEffect(() => {
+    if (userData && (!user || JSON.stringify(userData) !== JSON.stringify(user))) {
+      setUser(userData);
+    }
+  }, [userData, user, setUser]);
 
   // Scroll to top on page load
   useEffect(() => {
@@ -331,12 +332,15 @@ const Profile = () => {
         
         <div className="max-w-3xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="profile" disabled={!user}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="profile" disabled={!user ? true : undefined}>
                 <i className="fas fa-user mr-2"></i> Profile
               </TabsTrigger>
-              <TabsTrigger value="orders" disabled={!user}>
+              <TabsTrigger value="orders" disabled={!user ? true : undefined}>
                 <i className="fas fa-shopping-bag mr-2"></i> Orders
+              </TabsTrigger>
+              <TabsTrigger value="login" disabled={user ? true : undefined}>
+                <i className="fas fa-sign-in-alt mr-2"></i> Login/Register
               </TabsTrigger>
             </TabsList>
             

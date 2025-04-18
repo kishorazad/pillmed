@@ -4,6 +4,7 @@ import { Package, ShoppingCart, Clock, Calendar, CheckCircle2, TruckIcon, Rotate
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useQuery } from '@tanstack/react-query';
 
 interface OrderItem {
   id: number;
@@ -23,7 +24,11 @@ interface Order {
   trackingId?: string;
 }
 
-const OrderHistory: React.FC = () => {
+interface OrderHistoryProps {
+  userId?: number;
+}
+
+const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
   const { t } = useLanguage();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -40,8 +45,14 @@ const OrderHistory: React.FC = () => {
     }
   };
   
-  // Sample order data
-  const orders: Order[] = [
+  // Fetch user's orders from the API
+  const { data: userOrders, isLoading } = useQuery({
+    queryKey: ['/api/orders', userId],
+    enabled: !!userId, // Only run the query if userId is provided
+  });
+  
+  // Use sample data or fetched data
+  const orders: Order[] = userOrders || [
     {
       id: 'ORD12345678',
       date: '2025-04-10',
