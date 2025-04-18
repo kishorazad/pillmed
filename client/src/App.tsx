@@ -37,6 +37,8 @@ import ChemistDashboard from "./pages/dashboard/ChemistDashboard";
 // New Features
 import DeliveryDashboard from "./pages/Delivery/Dashboard";
 import NearbyHospitalsPage from "./pages/Hospitals/NearbyHospitalsPage";
+import HospitalsList from "./pages/hospitals/HospitalsList";
+import HospitalDetail from "./pages/hospitals/HospitalDetail";
 
 function Router() {
   return (
@@ -50,6 +52,8 @@ function Router() {
       <Route path="/checkout" component={Checkout} />
       <Route path="/ai-healthcare" component={AIHealthcare} />
       <Route path="/nearby-hospitals" component={NearbyHospitalsPage} />
+      <Route path="/hospitals" component={HospitalsList} />
+      <Route path="/hospitals/:id" component={HospitalDetail} />
       <Route path="/achievements" component={Achievements} />
       <Route path="/medication-tracking" component={MedicationTracking} />
       <Route path="/orders" component={OrderHistory} />
