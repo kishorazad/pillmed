@@ -77,9 +77,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <div className="flex flex-col min-h-screen pb-16 md:pb-0">
+        <div className="flex flex-col min-h-screen">
           <Header />
-          <main className="flex-grow">
+          {/* Add padding at the bottom on mobile to account for the navigation bar */}
+          <main className="flex-grow pb-16 md:pb-0">
             <Router />
           </main>
           <Footer />

@@ -141,58 +141,7 @@ const Header = () => {
         </div>
       </nav>
       
-      {/* Mobile Navigation */}
-      <nav className="border-t border-gray-200 py-2 block md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-t z-50">
-        <div className="flex justify-between px-4">
-          <Link href="/" className="flex flex-col items-center text-xs">
-            <i className="fas fa-home text-orange-500"></i>
-            <span>Home</span>
-          </Link>
-          
-          {/* Conditional Dashboard Link for Mobile */}
-          {user && user.role === 'admin' ? (
-            <Link href="/admin" className="flex flex-col items-center text-xs">
-              <i className="fas fa-tachometer-alt text-orange-500"></i>
-              <span>Admin</span>
-            </Link>
-          ) : user && user.role === 'pharmacy' ? (
-            <Link href="/pharmacy" className="flex flex-col items-center text-xs">
-              <i className="fas fa-pills text-orange-500"></i>
-              <span>Pharmacy</span>
-            </Link>
-          ) : user && user.role === 'doctor' ? (
-            <Link href="/doctor" className="flex flex-col items-center text-xs">
-              <i className="fas fa-user-md text-orange-500"></i>
-              <span>Doctor</span>
-            </Link>
-          ) : user && user.role === 'laboratory' ? (
-            <Link href="/laboratory" className="flex flex-col items-center text-xs">
-              <i className="fas fa-flask text-orange-500"></i>
-              <span>Lab</span>
-            </Link>
-          ) : (
-            <Link href="/lab-tests" className="flex flex-col items-center text-xs">
-              <i className="fas fa-flask text-orange-500"></i>
-              <span>Lab Tests</span>
-            </Link>
-          )}
-          
-          <Link href="/products" className="flex flex-col items-center text-xs">
-            <i className="fas fa-pills text-orange-500"></i>
-            <span>Medicines</span>
-          </Link>
-          
-          <Link href="/ai-healthcare" className="flex flex-col items-center text-xs">
-            <i className="fas fa-robot text-orange-500"></i>
-            <span className="text-orange-500">AI Chat</span>
-          </Link>
-          
-          <Link href="/profile" className="flex flex-col items-center text-xs">
-            <i className="fas fa-user text-orange-500"></i>
-            <span>Profile</span>
-          </Link>
-        </div>
-      </nav>
+      {/* Mobile Navigation removed - now using the separate MobileNavigation component */}
     </header>
   );
 };
