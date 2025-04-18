@@ -139,6 +139,8 @@ const Profile = () => {
       const { tempUserId, cart } = useStore.getState();
       const cartCount = cart.length;
       
+      console.log('Login attempt:', { username: data.username, tempUserId });
+      
       // Send login request with optimized payload
       const response = await fetch('/api/login', {
         method: 'POST',
