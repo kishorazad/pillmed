@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useMediaQuery } from '../hooks/use-media-query';
 import { HomeSEO } from '@/components/seo';
 
@@ -21,58 +21,67 @@ interface Product {
   ratingCount?: number | null;
 }
 
-// Components
+// Import critical components directly
 import HeroSection from '@/components/home/HeroSection';
 import ServicesSection from '@/components/home/ServicesSection';
-import PromotionalBanner from '@/components/home/PromotionalBanner';
-import FeaturedProducts from '@/components/home/FeaturedProducts';
-import LabTests from '@/components/services/LabTests';
-import ConsultDoctors from '@/components/services/ConsultDoctors';
-import HealthArticles from '@/components/home/HealthArticles';
-import Testimonials from '@/components/home/Testimonials';
-import AppPromotion from '@/components/home/AppPromotion';
-import HealthTipOfTheDay from '@/components/home/HealthTipOfTheDay';
-import PrescriptionUpload from '@/components/home/PrescriptionUpload';
-import PreviouslyBrowsedItems from '@/components/browsing/PreviouslyBrowsedItems';
-import BrandPromotions from '@/components/home/BrandPromotions';
-import FestivalOffers from '@/components/home/FestivalOffers';
-import SpecialOffers from '@/components/home/SpecialOffers';
-import TopDeals from '@/components/home/TopDeals';
-import FeaturedProductsSlider from '@/components/home/FeaturedProductsSlider';
-import OrderHistory from '@/components/orders/OrderHistory';
-import HealthServices from '@/components/home/HealthServices';
-import NearbyHospitals from '@/components/hospitals/NearbyHospitals';
-import EmergencyCallButton from '@/components/EmergencyCallButton';
-
-// New healthcare service components
-import MedicalEquipmentSection from '@/components/equipment/MedicalEquipmentSection';
-import MedicalServicesSection from '@/components/medical-services/MedicalServicesSection';
-import EmergencyServicesSection from '@/components/emergency/EmergencyServicesSection';
-
-// Mobile-optimized components
-import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
-import CategoryGrid from '@/components/home/CategoryGrid';
-import OffersCarousel from '@/components/home/OffersCarousel';
 import QuickLinks from '@/components/home/QuickLinks';
-import ProductSlider from '@/components/products/ProductSlider';
-import MedicineSearch from '@/components/search/MedicineSearch';
+import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
 import MedicineCategorySlider from '@/components/home/MedicineCategorySlider';
+import PrescriptionUpload from '@/components/home/PrescriptionUpload';
+import FeaturedProductsSlider from '@/components/home/FeaturedProductsSlider';
 import CategoryCard from '@/components/categories/CategoryCard';
 
+// Lazy load non-critical components to improve initial load time
+const PromotionalBanner = lazy(() => import('@/components/home/PromotionalBanner'));
+const LabTests = lazy(() => import('@/components/services/LabTests'));
+const ConsultDoctors = lazy(() => import('@/components/services/ConsultDoctors'));
+const HealthArticles = lazy(() => import('@/components/home/HealthArticles'));
+const Testimonials = lazy(() => import('@/components/home/Testimonials'));
+const AppPromotion = lazy(() => import('@/components/home/AppPromotion'));
+const HealthTipOfTheDay = lazy(() => import('@/components/home/HealthTipOfTheDay'));
+const PreviouslyBrowsedItems = lazy(() => import('@/components/browsing/PreviouslyBrowsedItems'));
+const BrandPromotions = lazy(() => import('@/components/home/BrandPromotions'));
+const FestivalOffers = lazy(() => import('@/components/home/FestivalOffers'));
+const SpecialOffers = lazy(() => import('@/components/home/SpecialOffers'));
+const TopDeals = lazy(() => import('@/components/home/TopDeals'));
+const OrderHistory = lazy(() => import('@/components/orders/OrderHistory'));
+const HealthServices = lazy(() => import('@/components/home/HealthServices'));
+const NearbyHospitals = lazy(() => import('@/components/hospitals/NearbyHospitals'));
+const EmergencyCallButton = lazy(() => import('@/components/EmergencyCallButton'));
+const MedicalEquipmentSection = lazy(() => import('@/components/equipment/MedicalEquipmentSection'));
+const MedicalServicesSection = lazy(() => import('@/components/medical-services/MedicalServicesSection'));
+const EmergencyServicesSection = lazy(() => import('@/components/emergency/EmergencyServicesSection'));
+const CategoryGrid = lazy(() => import('@/components/home/CategoryGrid'));
+const OffersCarousel = lazy(() => import('@/components/home/OffersCarousel'));
+const ProductSlider = lazy(() => import('@/components/products/ProductSlider'));
+const MedicineSearch = lazy(() => import('@/components/search/MedicineSearch'));
+
 // Data fetching
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
+import { Loader } from 'lucide-react';
 
 const Home = () => {
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
-    staleTime: 10 * 60 * 1000, // 10 minutes
+  
+  // Using useQueries to parallelize API calls for better performance
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: ['/api/categories'],
+        staleTime: 10 * 60 * 1000, // 10 minutes
+      },
+      {
+        queryKey: ['/api/products/featured'],
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      }
+    ]
   });
   
-  const { data: featuredProducts = [], isLoading: productsLoading } = useQuery<Product[]>({
-    queryKey: ['/api/products/featured'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  const categories = results[0].data || [];
+  const categoriesLoading = results[0].isLoading;
+  
+  const featuredProducts = results[1].data || [];
+  const productsLoading = results[1].isLoading;
 
   // Sample offer slides for demonstration
   const offerSlides = [
@@ -149,41 +158,63 @@ const Home = () => {
             />
 
             {/* Product Deals (Top Deals) with same grid & sliding */}
-            <TopDeals />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <TopDeals />
+            </Suspense>
             
             {/* Browsing History with same grid & sliding */}
-            <PreviouslyBrowsedItems />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <PreviouslyBrowsedItems />
+            </Suspense>
             
             {/* Order History with same grid & sliding */}
-            <OrderHistory />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <OrderHistory />
+            </Suspense>
             
             {/* Health Services with smaller grid & sliding */}
-            <HealthServices />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <HealthServices />
+            </Suspense>
             
             {/* Medical Equipment Section */}
-            <MedicalEquipmentSection />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <MedicalEquipmentSection />
+            </Suspense>
             
             {/* Medical Services Section */}
-            <MedicalServicesSection />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <MedicalServicesSection />
+            </Suspense>
             
             {/* Emergency Services Section */}
-            <EmergencyServicesSection />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <EmergencyServicesSection />
+            </Suspense>
             
             {/* Festival Offers */}
             <div className="my-6">
-              <FestivalOffers />
+              <Suspense fallback={<div className="h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+                <FestivalOffers />
+              </Suspense>
             </div>
             
             {/* Brand Promotions */}
             <div className="my-6">
-              <BrandPromotions />
+              <Suspense fallback={<div className="h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+                <BrandPromotions />
+              </Suspense>
             </div>
             
             {/* Nearby Hospitals Section with Google Maps integration */}
-            <NearbyHospitals />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <NearbyHospitals />
+            </Suspense>
             
             {/* Emergency Call Button */}
-            <EmergencyCallButton />
+            <Suspense fallback={<div className="fixed bottom-5 right-5 w-12 h-12 rounded-full bg-gray-200 animate-pulse"></div>}>
+              <EmergencyCallButton />
+            </Suspense>
           </>
         ) : (
           /* Desktop View */
@@ -226,46 +257,78 @@ const Home = () => {
             />
             
             {/* Product Deals with same grid & sliding */}
-            <TopDeals />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <TopDeals />
+            </Suspense>
             
             {/* Browsing History with same grid & sliding */}
-            <PreviouslyBrowsedItems />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <PreviouslyBrowsedItems />
+            </Suspense>
             
             {/* Order History with same grid & sliding */}
-            <OrderHistory />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <OrderHistory />
+            </Suspense>
             
             {/* Health Services with smaller grid & sliding */}
-            <HealthServices />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <HealthServices />
+            </Suspense>
             
             {/* Medical Equipment Section */}
-            <MedicalEquipmentSection />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <MedicalEquipmentSection />
+            </Suspense>
             
             {/* Medical Services Section */}
-            <MedicalServicesSection />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <MedicalServicesSection />
+            </Suspense>
             
             {/* Emergency Services Section */}
-            <EmergencyServicesSection />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <EmergencyServicesSection />
+            </Suspense>
             
             {/* Festival Offers */}
-            <FestivalOffers />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <FestivalOffers />
+            </Suspense>
             
             {/* Brand Promotions */}
-            <BrandPromotions />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <BrandPromotions />
+            </Suspense>
             
             {/* Nearby Hospitals Section with Google Maps integration */}
-            <NearbyHospitals />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <NearbyHospitals />
+            </Suspense>
             
-            <PromotionalBanner />
-            <HealthArticles />
-            <Testimonials />
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <PromotionalBanner />
+            </Suspense>
+            
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <HealthArticles />
+            </Suspense>
+            
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <Testimonials />
+            </Suspense>
             
             {/* Emergency Call Button */}
-            <EmergencyCallButton />
+            <Suspense fallback={<div className="fixed bottom-5 right-5 w-12 h-12 rounded-full bg-gray-200 animate-pulse"></div>}>
+              <EmergencyCallButton />
+            </Suspense>
           </>
         )}
 
         {/* App Promotion (both mobile and desktop) */}
-        <AppPromotion />
+        <Suspense fallback={<div className="my-6 h-24 bg-gray-100 animate-pulse rounded-lg"></div>}>
+          <AppPromotion />
+        </Suspense>
       </div>
     </>
   );
