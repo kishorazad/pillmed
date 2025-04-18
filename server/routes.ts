@@ -609,6 +609,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // User login with proper password verification - Optimized for performance
+  // Get the current authenticated user (if any)
+  app.get("/api/user", async (req: Request, res: Response) => {
+    try {
+      // Check if we have user stored in session
+      const sessionUser = (req.session as any)?.user;
+      
+      if (!sessionUser) {
+        return res.status(200).json(null);
+      }
+      
+      // Get the latest user data from database (may have been updated)
+      const user = await dbStorage.getUser(sessionUser.id);
+      
+      if (!user) {
+        // Session contains invalid user, clear it
+        (req.session as any).user = null;
+        return res.status(200).json(null);
+      }
+      
+      // Don't return the password
+      const { password, ...userWithoutPassword } = user;
+      return res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error fetching authenticated user:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   app.post("/api/login", async (req: Request, res: Response) => {
     const { username, password, tempUserId } = req.body;
     
