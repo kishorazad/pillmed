@@ -617,8 +617,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // Optimized user retrieval with index-based lookup
-      const user = await dbStorage.getUserByUsername(username);
+      // Support login with either username or email
+      let user;
+      
+      // Check if input contains @ symbol, treat it as email
+      if (username.includes('@')) {
+        console.log(`Login attempt with email: ${username}`);
+        user = await dbStorage.getUserByEmail(username);
+      } else {
+        console.log(`Login attempt with username: ${username}`);
+        user = await dbStorage.getUserByUsername(username);
+      }
       
       if (!user) {
         return res.status(401).json({ message: "Invalid username or password" });

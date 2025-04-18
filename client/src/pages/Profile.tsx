@@ -509,9 +509,9 @@ const Profile = () => {
                             name="username"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Username</FormLabel>
+                                <FormLabel>Username or Email</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Your username" {...field} />
+                                  <Input placeholder="Enter your username or email" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
