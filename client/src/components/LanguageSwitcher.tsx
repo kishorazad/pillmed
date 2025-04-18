@@ -296,6 +296,12 @@ export const translations: Record<string, Record<string, string>> = {
     'please_add_items_to_proceed': 'தொடர பொருட்களை சேர்க்கவும்',
     'quick_links': 'விரைவு இணைப்புகள்',
     'quantity': 'அளவு',
+    'order_summary': 'ஆர்டர் சுருக்கம்',
+    'subtotal': 'கூட்டுத்தொகை',
+    'discount': 'தள்ளுபடி',
+    'delivery_charges': 'டெலிவரி கட்டணம்',
+    'total': 'மொத்தம்',
+    'free': 'இலவசம்',
   },
   fr: {
     // Navigation & Basic UI
@@ -545,6 +551,12 @@ export const translations: Record<string, Record<string, string>> = {
     'please_add_items_to_proceed': 'الرجاء إضافة عناصر للمتابعة',
     'quick_links': 'روابط سريعة',
     'quantity': 'الكمية',
+    'order_summary': 'ملخص الطلب',
+    'subtotal': 'المجموع الفرعي',
+    'discount': 'الخصم',
+    'delivery_charges': 'رسوم التوصيل',
+    'total': 'الإجمالي',
+    'free': 'مجاناً',
     
     // Product Information Fields
     'description': 'الوصف',
@@ -654,6 +666,12 @@ export const translations: Record<string, Record<string, string>> = {
     'please_add_items_to_proceed': 'Bitte fügen Sie Artikel hinzu, um fortzufahren',
     'quick_links': 'Schnelllinks',
     'quantity': 'Menge',
+    'order_summary': 'Bestellübersicht',
+    'subtotal': 'Zwischensumme',
+    'discount': 'Rabatt',
+    'delivery_charges': 'Versandkosten',
+    'total': 'Gesamtsumme',
+    'free': 'KOSTENLOS',
     
     // Product Information Fields
     'description': 'Beschreibung',
@@ -763,6 +781,12 @@ export const translations: Record<string, Record<string, string>> = {
     'please_add_items_to_proceed': '请添加商品以继续',
     'quick_links': '快速链接',
     'quantity': '数量',
+    'order_summary': '订单摘要',
+    'subtotal': '小计',
+    'discount': '折扣',
+    'delivery_charges': '配送费',
+    'total': '总计',
+    'free': '免费',
     
     // Product Information Fields
     'description': '描述',
