@@ -608,7 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // User login with proper password verification
+  // User login with proper password verification - Optimized for performance
   app.post("/api/login", async (req: Request, res: Response) => {
     const { username, password, tempUserId } = req.body;
     
@@ -616,77 +616,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Username and password are required" });
     }
     
-    const user = await dbStorage.getUserByUsername(username);
-    
-    if (!user) {
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-    
-    // For backward compatibility, handle both hashed and plain text passwords
-    let isPasswordValid = false;
-    
-    if (user.password.includes('.')) {
-      // Password is stored in hashed format (hash.salt)
-      try {
-        const [hashedPassword, salt] = user.password.split('.');
-        const crypto = await import('crypto');
-        const hashVerify = crypto.scryptSync(password, salt, 64).toString('hex');
-        isPasswordValid = hashedPassword === hashVerify;
-      } catch (error) {
-        console.error('Error verifying hashed password:', error);
-      }
-    } else {
-      // Fallback for plain text passwords (temporary support)
-      isPasswordValid = user.password === password;
+    try {
+      // Optimized user retrieval with index-based lookup
+      const user = await dbStorage.getUserByUsername(username);
       
-      // Auto-upgrade to a hashed password if it was a match
-      if (isPasswordValid) {
+      if (!user) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+      
+      // For backward compatibility, handle both hashed and plain text passwords
+      let isPasswordValid = false;
+      let needsUpgrade = false;
+      
+      // Check if password is already in hashed format (contains a dot separator)
+      if (user.password.includes('.')) {
+        // Password is stored in hashed format (hash.salt)
         try {
-          // Create a hash function directly here
+          const [hashedPassword, salt] = user.password.split('.');
+          const crypto = await import('crypto');
+          const hashVerify = crypto.scryptSync(password, salt, 64).toString('hex');
+          isPasswordValid = hashedPassword === hashVerify;
+        } catch (error) {
+          console.error('Error verifying hashed password:', error);
+        }
+      } else {
+        // Fallback for plain text passwords (temporary support)
+        isPasswordValid = user.password === password;
+        needsUpgrade = isPasswordValid;
+      }
+      
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+      
+      // Set user in session immediately to speed up response
+      (req.session as any).user = user;
+      
+      // Don't return the password
+      const { password: _, ...userWithoutPassword } = user;
+      
+      // Send response immediately for better user experience
+      res.json(userWithoutPassword);
+      
+      // Perform background tasks after sending the response
+      
+      // 1. Auto-upgrade to a hashed password if needed (in background)
+      if (needsUpgrade) {
+        try {
           const crypto = await import('crypto');
           const salt = crypto.randomBytes(16).toString('hex');
           const hash = crypto.scryptSync(password, salt, 64).toString('hex');
           const hashedPassword = `${hash}.${salt}`;
           
           // Update the user's password to be hashed
-          try {
-            if (global.useMongoStorage) {
-              // For MongoDB storage
-              await mongoDBStorage.updateUser(user.id, { password: hashedPassword });
-            } else {
-              // For in-memory storage
-              await memStorage.updateUser(user.id, { password: hashedPassword });
-            }
-            console.log(`Upgraded password for user ${username} to hashed format`);
-          } catch (updateError) {
-            console.error('Error updating user password:', updateError);
+          if (global.useMongoStorage) {
+            // For MongoDB storage
+            await mongoDBStorage.updateUser(user.id, { password: hashedPassword });
+          } else {
+            // For in-memory storage
+            await memStorage.updateUser(user.id, { password: hashedPassword });
           }
+          console.log(`Upgraded password for user ${username} to hashed format`);
         } catch (error) {
           console.error('Failed to upgrade password:', error);
         }
       }
-    }
-    
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-    
-    // Set user in session
-    (req.session as any).user = user;
-    
-    // Transfer cart items from temp user to authenticated user
-    if (tempUserId && tempUserId !== user.id) {
-      console.log(`Transferring cart items from temp user ${tempUserId} to user ${user.id}`);
-      try {
-        await dbStorage.transferCartItems(tempUserId, user.id);
-      } catch (err) {
-        console.error("Error transferring cart items:", err);
+      
+      // 2. Transfer cart items in background
+      if (tempUserId && tempUserId !== user.id) {
+        console.log(`Transferring cart items from temp user ${tempUserId} to user ${user.id}`);
+        try {
+          await dbStorage.transferCartItems(tempUserId, user.id);
+        } catch (err) {
+          console.error("Error transferring cart items:", err);
+        }
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      return res.status(500).json({ message: "Authentication failed due to server error" });
     }
-    
-    // Don't return the password
-    const { password: _, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
   });
 
   // AI Healthcare Assistant endpoints

@@ -138,28 +138,35 @@ export class MongoDBStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<UserType | undefined> {
     try {
-      let user = await User.findOne({ username }).lean();
+      // Create an index on username for faster lookups if needed
+      await User.collection.createIndex({ username: 1 }, { background: true });
       
-      if (user) {
-        // If user exists but doesn't have numericId, update it based on our type system
-        const convertedUser = this.convertToUserType(user);
-        
-        if (!user.numericId && convertedUser.id) {
-          // Add the numericId field if missing
-          await User.updateOne(
-            { _id: user._id },
-            { $set: { numericId: convertedUser.id } }
-          );
-          console.log(`Added numericId ${convertedUser.id} to user ${username}`);
-          
-          // Get the updated user
-          user = await User.findOne({ username }).lean();
-        }
-        
-        return this.convertToUserType(user);
+      // Optimized lean query for better performance
+      let user = await User.findOne({ username }, { lean: { virtuals: true } }).exec();
+      
+      if (!user) {
+        return undefined;
       }
       
-      return undefined;
+      // Convert the user document to a plain object
+      const userObj = user.toObject ? user.toObject() : user;
+      
+      // Check for numericId field and update if needed
+      const convertedUser = this.convertToUserType(userObj);
+      
+      if (!userObj.numericId && convertedUser.id) {
+        // Add the numericId field if missing - do this asynchronously without waiting
+        User.updateOne(
+          { _id: userObj._id },
+          { $set: { numericId: convertedUser.id } }
+        ).then(() => {
+          console.log(`Added numericId ${convertedUser.id} to user ${username}`);
+        }).catch(err => {
+          console.error(`Failed to add numericId to user ${username}:`, err);
+        });
+      }
+      
+      return convertedUser;
     } catch (error) {
       console.error('Error getting user by username:', error);
       return undefined;

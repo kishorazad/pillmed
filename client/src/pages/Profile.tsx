@@ -126,20 +126,26 @@ const Profile = () => {
     }
   };
   
-  // Handle login
+  // Handle login - Optimized for better performance
   const onLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
+    // Show loading state to indicate login is processing
+    toast({
+      title: "Logging in",
+      description: "Please wait while we authenticate you...",
+    });
+    
     try {
       // Get the temporary user ID and cart info to transfer the cart
       const { tempUserId, cart } = useStore.getState();
       const cartCount = cart.length;
       
-      console.log(`Login: Transferring cart with ${cartCount} items from guest user ${tempUserId} to authenticated user`);
-      
+      // Send login request with optimized payload
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...data,
+          username: data.username,
+          password: data.password,
           tempUserId
         }),
       });
@@ -151,92 +157,56 @@ const Profile = () => {
       
       const userData = await response.json();
       
-      // Important: Use the store's setUser function directly to handle cart transfer
+      // Update user state immediately
       useStore.getState().setUser(userData);
       
-      // Explicitly fetch cart after login to ensure it's up to date
-      setTimeout(async () => {
-        await useStore.getState().fetchCart(userData.id);
-        
-        // After fetching the cart, check if there are items and automatically create an order
-        const updatedCart = useStore.getState().cart;
-        
-        if (updatedCart.length > 0) {
-          try {
-            // Get shipping address from user profile or use a default
-            const shippingAddress = userData.address || 'Default Shipping Address';
-            
-            // Use our new endpoint to convert cart to order
-            const orderResponse = await fetch('/api/cart-to-order', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: userData.id,
-                shippingAddress,
-                paymentMethod: 'credit_card'
-              })
-            });
-            
-            if (orderResponse.ok) {
-              console.log('Order created automatically after login');
-              // Fetch updated cart (should be empty now)
-              await useStore.getState().fetchCart(userData.id);
-            }
-          } catch (orderError) {
-            console.error('Failed to create automatic order:', orderError);
-          }
-        }
-      }, 1000);
+      // Display success message right away
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${userData.name || userData.username}!`,
+      });
       
-      // Show appropriate toast message depending on if cart had items
-      if (cartCount > 0) {
-        toast({
-          title: "Login successful",
-          description: `Welcome back, ${userData.name}! Your cart items have been processed as an order.`,
-        });
-      } else {
-        toast({
-          title: "Login successful",
-          description: `Welcome back, ${userData.name}!`,
-        });
+      // Only handle cart transfer in background if needed
+      if (userData.id) {
+        setTimeout(() => {
+          // Update cart in background after login
+          useStore.getState().fetchCart(userData.id);
+        }, 500);
       }
       
-      // Redirect user to appropriate dashboard based on role
+      // Redirect based on user role
       if (userData.role) {
-        // Add a small delay to ensure the user state is fully updated
-        setTimeout(() => {
-          // Redirect based on user role
-          switch (userData.role.toLowerCase()) {
-            case 'admin':
-              window.location.href = '/admin';
-              break;
-            case 'doctor':
-              window.location.href = '/doctor';
-              break;
-            case 'chemist':
-              window.location.href = '/chemist';
-              break;
-            case 'pharmacy':
-              window.location.href = '/pharmacy';
-              break;
-            case 'hospital':
-            case 'laboratory':
-              window.location.href = '/laboratory';
-              break;
-            case 'delivery':
-              window.location.href = '/delivery';
-              break;
-            default:
-              setActiveTab('profile');
-          }
-        }, 500);
+        // Redirect based on user role
+        switch (userData.role.toLowerCase()) {
+          case 'admin':
+            window.location.href = '/admin';
+            break;
+          case 'doctor':
+            window.location.href = '/doctor';
+            break;
+          case 'chemist':
+            window.location.href = '/chemist';
+            break;
+          case 'pharmacy':
+            window.location.href = '/pharmacy';
+            break;
+          case 'hospital':
+          case 'laboratory':
+            window.location.href = '/laboratory';
+            break;
+          case 'delivery':
+            window.location.href = '/delivery';
+            break;
+          default:
+            setActiveTab('profile');
+        }
       } else {
         setActiveTab('profile');
       }
     } catch (error) {
       toast({
         title: "Login failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description: error instanceof Error ? error.message : "Invalid username or password",
         variant: "destructive",
       });
     }
@@ -272,82 +242,46 @@ const Profile = () => {
       // Important: Use the store's setUser function directly to handle cart transfer
       useStore.getState().setUser(userData);
       
-      // Explicitly fetch cart after registration to ensure it's up to date
-      setTimeout(async () => {
-        await useStore.getState().fetchCart(userData.id);
-        
-        // After fetching the cart, check if there are items and automatically create an order
-        const updatedCart = useStore.getState().cart;
-        
-        if (updatedCart.length > 0) {
-          try {
-            // Get shipping address from user profile or use a default
-            const shippingAddress = userData.address || 'Default Shipping Address';
-            
-            // Use our new endpoint to convert cart to order
-            const orderResponse = await fetch('/api/cart-to-order', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: userData.id,
-                shippingAddress,
-                paymentMethod: 'credit_card'
-              })
-            });
-            
-            if (orderResponse.ok) {
-              console.log('Order created automatically after registration');
-              // Fetch updated cart (should be empty now)
-              await useStore.getState().fetchCart(userData.id);
-            }
-          } catch (orderError) {
-            console.error('Failed to create automatic order:', orderError);
-          }
-        }
-      }, 1000);
+      // Show success message right away
+      toast({
+        title: "Registration successful",
+        description: `Welcome, ${userData.name}!`,
+      });
       
-      // Show appropriate toast message depending on if cart had items
-      if (cartCount > 0) {
-        toast({
-          title: "Registration successful",
-          description: `Welcome, ${userData.name}! Your cart items have been processed as an order.`,
-        });
-      } else {
-        toast({
-          title: "Registration successful",
-          description: `Welcome, ${userData.name}!`,
-        });
+      // Only handle cart transfer in background if needed
+      if (userData.id) {
+        setTimeout(() => {
+          // Update cart in background after registration
+          useStore.getState().fetchCart(userData.id);
+        }, 500);
       }
       
-      // Redirect user to appropriate dashboard based on role
+      // Redirect based on user role
       if (userData.role) {
-        // Add a small delay to ensure the user state is fully updated
-        setTimeout(() => {
-          // Redirect based on user role
-          switch (userData.role.toLowerCase()) {
-            case 'admin':
-              window.location.href = '/admin';
-              break;
-            case 'doctor':
-              window.location.href = '/doctor';
-              break;
-            case 'chemist':
-              window.location.href = '/chemist';
-              break;
-            case 'pharmacy':
-              window.location.href = '/pharmacy';
-              break;
-            case 'hospital':
-            case 'laboratory':
-              window.location.href = '/laboratory';
-              break;
-            case 'delivery':
-              window.location.href = '/delivery';
-              break;
-            default:
-              setActiveTab('profile');
-          }
-        }, 500);
+        // Redirect based on user role
+        switch (userData.role.toLowerCase()) {
+          case 'admin':
+            window.location.href = '/admin';
+            break;
+          case 'doctor':
+            window.location.href = '/doctor';
+            break;
+          case 'chemist':
+            window.location.href = '/chemist';
+            break;
+          case 'pharmacy':
+            window.location.href = '/pharmacy';
+            break;
+          case 'hospital':
+          case 'laboratory':
+            window.location.href = '/laboratory';
+            break;
+          case 'delivery':
+            window.location.href = '/delivery';
+            break;
+          default:
+            setActiveTab('profile');
+        }
       } else {
         setActiveTab('profile');
       }
@@ -435,10 +369,19 @@ const Profile = () => {
               <>
                 <TabsContent value="profile">
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Your Profile</CardTitle>
+                    <CardHeader className="border-b">
+                      <CardTitle className="flex items-center">
+                        {user.profileImageUrl ? (
+                          <img src={user.profileImageUrl} alt={user.name} className="w-10 h-10 rounded-full mr-3" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white mr-3">
+                            {user.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <span>{user.name}'s Profile</span>
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-6">
                       <Form {...profileForm}>
                         <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
                           <FormField
@@ -448,7 +391,7 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Full Name</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="Enter your full name" />
+                                  <Input placeholder="Your name" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -460,9 +403,9 @@ const Profile = () => {
                             name="email"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Email</FormLabel>
+                                <FormLabel>Email Address</FormLabel>
                                 <FormControl>
-                                  <Input {...field} type="email" placeholder="Enter your email" />
+                                  <Input type="email" placeholder="your-email@example.com" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -476,7 +419,7 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Phone Number</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="Enter your phone number" />
+                                  <Input placeholder="Your phone number" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -488,9 +431,9 @@ const Profile = () => {
                             name="address"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Address</FormLabel>
+                                <FormLabel>Delivery Address</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="Enter your address" />
+                                  <Input placeholder="Your delivery address" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -504,19 +447,17 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Pincode</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="Enter your pincode" />
+                                  <Input placeholder="Your area pincode" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                           
-                          <div className="flex justify-between pt-4">
-                            <Button type="submit" className="bg-[#10847e] hover:bg-[#10847e]/90">
-                              Update Profile
-                            </Button>
-                            <Button type="button" variant="outline" onClick={handleLogout}>
-                              Sign Out
+                          <div className="flex justify-between pt-2">
+                            <Button type="submit" className="mr-2">Save Changes</Button>
+                            <Button variant="destructive" type="button" onClick={handleLogout}>
+                              <i className="fas fa-sign-out-alt mr-2"></i> Logout
                             </Button>
                           </div>
                         </form>
@@ -528,174 +469,154 @@ const Profile = () => {
                 <TabsContent value="orders">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Your Orders</CardTitle>
+                      <CardTitle>Order History</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <OrderHistory userId={user?.id} />
+                      <OrderHistory userId={user.id} />
                     </CardContent>
                   </Card>
                 </TabsContent>
               </>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                {/* Login Form */}
+              <TabsContent value="login">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Sign In</CardTitle>
+                    <div className="flex h-9 items-center space-x-1 rounded-md border mb-2">
+                      <Button
+                        variant={activeTab === 'login' ? 'default' : 'ghost'}
+                        className="rounded-none flex-1"
+                        onClick={() => setActiveTab('login')}
+                      >
+                        Login
+                      </Button>
+                      <Button
+                        variant={activeTab === 'register' ? 'default' : 'ghost'}
+                        className="rounded-none flex-1"
+                        onClick={() => setActiveTab('register')}
+                      >
+                        Register
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    {/* Cart preservation message */}
-                    {useStore.getState().cart.length > 0 && (
-                      <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md text-sm">
-                        <div className="flex items-center text-blue-700 mb-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                          </svg>
-                          <span className="font-medium">Your shopping cart has {useStore.getState().cart.length} items</span>
-                        </div>
-                        <p className="text-gray-600 pl-6">Your cart items will be preserved when you sign in.</p>
-                      </div>
+                    {activeTab === 'login' ? (
+                      <Form {...loginForm}>
+                        <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                          <FormField
+                            control={loginForm.control}
+                            name="username"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Username</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Your username" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={loginForm.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Password</FormLabel>
+                                <FormControl>
+                                  <Input type="password" placeholder="Your password" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <Button type="submit" className="w-full">
+                            Login
+                          </Button>
+                        </form>
+                      </Form>
+                    ) : (
+                      <Form {...registerForm}>
+                        <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                          <FormField
+                            control={registerForm.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Your name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email Address</FormLabel>
+                                <FormControl>
+                                  <Input type="email" placeholder="your-email@example.com" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="username"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Username</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Pick a username" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Password</FormLabel>
+                                <FormControl>
+                                  <Input type="password" placeholder="Create a password" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="confirmPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Confirm Password</FormLabel>
+                                <FormControl>
+                                  <Input type="password" placeholder="Confirm your password" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <Button type="submit" className="w-full">
+                            Register
+                          </Button>
+                        </form>
+                      </Form>
                     )}
-                    <Form {...loginForm}>
-                      <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                        <FormField
-                          control={loginForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Username</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Enter your username" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={loginForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Password</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="password" placeholder="Enter your password" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <Button type="submit" className="w-full bg-[#10847e] hover:bg-[#10847e]/90">
-                          Sign In
-                        </Button>
-                      </form>
-                    </Form>
                   </CardContent>
                 </Card>
-                
-                {/* Register Form */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Register</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {/* Cart preservation message */}
-                    {useStore.getState().cart.length > 0 && (
-                      <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md text-sm">
-                        <div className="flex items-center text-blue-700 mb-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                          </svg>
-                          <span className="font-medium">Your shopping cart has {useStore.getState().cart.length} items</span>
-                        </div>
-                        <p className="text-gray-600 pl-6">Your cart items will be preserved when you register.</p>
-                      </div>
-                    )}
-                    <Form {...registerForm}>
-                      <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Full Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Enter your full name" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={registerForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="email" placeholder="Enter your email" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={registerForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Username</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Choose a username" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={registerForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Password</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="password" placeholder="Choose a password" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={registerForm.control}
-                          name="confirmPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Confirm Password</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="password" placeholder="Confirm your password" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <Button type="submit" className="w-full bg-[#ff6f61] hover:bg-[#ff6f61]/90">
-                          Register
-                        </Button>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
-              </div>
+              </TabsContent>
             )}
           </Tabs>
         </div>
