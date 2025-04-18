@@ -74,7 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const userData = await response.json();
       return userData || null;
-    }
+    },
+    staleTime: 30000 // Consider data fresh for 30 seconds
   });
   
   // Update Zustand store when user data changes

@@ -58,7 +58,9 @@ const Profile = () => {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { user } = useAuth();
+  
+  // Use auth context
+  const auth = useAuth();
   const { setUser } = useStore();
   const { toast } = useToast();
   
@@ -133,9 +135,9 @@ const Profile = () => {
     }
   };
   
-  // Handle login using the new auth provider
-  const { loginMutation } = useAuth();
+  // We already have our auth hooks from above
   
+  // Handle login
   const onLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
     try {
       // Get the temporary user ID from the store to transfer the cart later
@@ -155,9 +157,7 @@ const Profile = () => {
     }
   };
   
-  // Handle registration using the new auth provider
-  const { registerMutation } = useAuth();
-  
+  // Handle registration
   const onRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
     try {
       const { confirmPassword, ...registerData } = data;
@@ -173,9 +173,7 @@ const Profile = () => {
     }
   };
   
-  // Enhanced logout with auth provider
-  const { logoutMutation } = useAuth();
-  
+  // Enhanced logout handler
   const handleLogout = async () => {
     try {
       // Use the auth provider's logout mutation
