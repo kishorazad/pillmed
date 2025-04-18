@@ -608,7 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // User login (simple implementation without actual authentication)
+  // User login with proper password verification
   app.post("/api/login", async (req: Request, res: Response) => {
     const { username, password, tempUserId } = req.body;
     
@@ -618,7 +618,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     const user = await dbStorage.getUserByUsername(username);
     
-    if (!user || user.password !== password) {
+    if (!user) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+    
+    // For backward compatibility, handle both hashed and plain text passwords
+    let isPasswordValid = false;
+    
+    if (user.password.includes('.')) {
+      // Password is stored in hashed format (hash.salt)
+      try {
+        const [hashedPassword, salt] = user.password.split('.');
+        const hashVerify = require('crypto').scryptSync(password, salt, 64).toString('hex');
+        isPasswordValid = hashedPassword === hashVerify;
+      } catch (error) {
+        console.error('Error verifying hashed password:', error);
+      }
+    } else {
+      // Fallback for plain text passwords (temporary support)
+      isPasswordValid = user.password === password;
+      
+      // Auto-upgrade to a hashed password if it was a match
+      if (isPasswordValid) {
+        try {
+          // Import the hash function from auth-routes
+          const { hashPassword } = require('./auth-routes');
+          const hashedPassword = hashPassword(password);
+          
+          // Update the user's password to be hashed
+          await dbStorage.updateUser(user.id, { password: hashedPassword });
+          console.log(`Upgraded password for user ${username} to hashed format`);
+        } catch (error) {
+          console.error('Failed to upgrade password:', error);
+        }
+      }
+    }
+    
+    if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid username or password" });
     }
     
