@@ -123,8 +123,8 @@ const ProductDetail = () => {
   }
   
   // Filtered related products (exclude current product)
-  const filteredRelatedProducts = relatedProducts
-    ? relatedProducts.filter((p: any) => p.id !== product.id).slice(0, 4)
+  const filteredRelatedProducts = relatedProducts && Array.isArray(relatedProducts.products)
+    ? relatedProducts.products.filter((p: any) => p.id !== product.id).slice(0, 4)
     : [];
   
   // Generate SEO metadata for the product
