@@ -172,6 +172,43 @@ export class MongoDBStorage implements IStorage {
       return undefined;
     }
   }
+  
+  async getUserByEmail(email: string): Promise<UserType | undefined> {
+    try {
+      // Create an index on email for faster lookups if needed
+      await User.collection.createIndex({ email: 1 }, { background: true });
+      
+      // Optimized lean query for better performance
+      let user = await User.findOne({ email }, { lean: { virtuals: true } }).exec();
+      
+      if (!user) {
+        return undefined;
+      }
+      
+      // Convert the user document to a plain object
+      const userObj = user.toObject ? user.toObject() : user;
+      
+      // Check for numericId field and update if needed
+      const convertedUser = this.convertToUserType(userObj);
+      
+      if (!userObj.numericId && convertedUser.id) {
+        // Add the numericId field if missing - do this asynchronously without waiting
+        User.updateOne(
+          { _id: userObj._id },
+          { $set: { numericId: convertedUser.id } }
+        ).then(() => {
+          console.log(`Added numericId ${convertedUser.id} to user ${username}`);
+        }).catch(err => {
+          console.error(`Failed to add numericId to user ${username}:`, err);
+        });
+      }
+      
+      return convertedUser;
+    } catch (error) {
+      console.error('Error getting user by username:', error);
+      return undefined;
+    }
+  }
 
   async createUser(user: InsertUser): Promise<UserType> {
     try {
