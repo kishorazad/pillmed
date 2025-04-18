@@ -649,8 +649,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const hashedPassword = `${hash}.${salt}`;
           
           // Update the user's password to be hashed
-          await dbStorage.updateUser(user.id, { password: hashedPassword });
-          console.log(`Upgraded password for user ${username} to hashed format`);
+          try {
+            if (global.useMongoStorage) {
+              // For MongoDB storage
+              await mongoDBStorage.updateUser(user.id, { password: hashedPassword });
+            } else {
+              // For in-memory storage
+              await memStorage.updateUser(user.id, { password: hashedPassword });
+            }
+            console.log(`Upgraded password for user ${username} to hashed format`);
+          } catch (updateError) {
+            console.error('Error updating user password:', updateError);
+          }
         } catch (error) {
           console.error('Failed to upgrade password:', error);
         }
