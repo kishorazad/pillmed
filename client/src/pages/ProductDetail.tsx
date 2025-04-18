@@ -18,7 +18,7 @@ const ProductDetail = () => {
   const [_, navigate] = useLocation();
   const { addToCart } = useStore();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("uses");
   
@@ -101,6 +101,12 @@ const ProductDetail = () => {
       });
     }
   }, [params.id, product]);
+  
+  // Update when language changes
+  useEffect(() => {
+    // Refresh components and translations when language changes
+    console.log("Language changed to:", language);
+  }, [language]);
   
   if (isLoading) {
     return (
@@ -266,8 +272,8 @@ const ProductDetail = () => {
                   <path d="M9 5h2m0 0h2m0 0h1a2 2 0 0 1 2 2v3.764a2 2 0 0 0 1.106 1.789L18 13v4h-1"/>
                 </svg>
                 <div>
-                  <p className="font-medium">Delivery</p>
-                  <p className="text-sm text-gray-600">Typically delivered in 2-3 days</p>
+                  <p className="font-medium">{t('delivery')}</p>
+                  <p className="text-sm text-gray-600">{t('typically_delivered_in', { days: '2-3' })}</p>
                 </div>
               </div>
               <div className="flex items-start">
@@ -276,9 +282,9 @@ const ProductDetail = () => {
                   <line x1="7" y1="7" x2="7.01" y2="7"/>
                 </svg>
                 <div>
-                  <p className="font-medium">Offers</p>
+                  <p className="font-medium">{t('offers')}</p>
                   <p className="text-sm text-gray-600">
-                    Use code FIRSTORDER for an additional 10% off
+                    {t('use_code_for_discount', { code: 'FIRSTORDER', discount: '10%' })}
                   </p>
                 </div>
               </div>

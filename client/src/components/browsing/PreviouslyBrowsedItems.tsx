@@ -16,6 +16,8 @@ const PreviouslyBrowsedItems: React.FC = () => {
   const { t } = useLanguage();
   const [browsedItems, setBrowsedItems] = useState<BrowsedProduct[]>([]);
 
+  const { language } = useLanguage();
+  
   useEffect(() => {
     // Get previously browsed items from localStorage
     const getPreviouslyBrowsedItems = () => {
@@ -32,7 +34,7 @@ const PreviouslyBrowsedItems: React.FC = () => {
     };
 
     getPreviouslyBrowsedItems();
-  }, []);
+  }, [language]); // Re-run when language changes
 
   if (browsedItems.length === 0) {
     return null;
