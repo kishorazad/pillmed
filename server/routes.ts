@@ -797,8 +797,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate a deterministic cache key based on all search parameters
       const cacheKey = `search:${query}:limit=${limit}:page=${page}:category=${categoryId || ''}:price=${minPrice || ''}-${maxPrice || ''}:sort=${sortBy}:brand=${brand || ''}:inStock=${inStock || ''}`;
       
-      // Try to get from cache first
-      const cachedResults = cacheService.get(cacheKey);
+      // Try to get from cache first with LRU optimization for 10 lakh+ products
+      const cachedResults = cacheService.get(cacheKey, 'search');
       if (cachedResults) {
         console.log(`Cache HIT for search: "${query}"`);
         return res.json(cachedResults);
@@ -978,8 +978,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             searchTime: true
           };
           
-          // Save to cache with search TTL (5 minutes)
-          cacheService.set(cacheKey, response, cacheService.getTTL('search'));
+          // Save to cache with search TTL (5 minutes) and specialized type for LRU optimization
+          cacheService.set(cacheKey, response, cacheService.getTTL('search'), 'search');
           
           return res.json(response);
         }
@@ -1110,8 +1110,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         engine: 'memory'
       };
       
-      // Save to cache with search TTL (5 minutes)
-      cacheService.set(cacheKey, inMemoryResponse, cacheService.getTTL('search'));
+      // Save to cache with search TTL (5 minutes) and specialized type for LRU optimization
+      cacheService.set(cacheKey, inMemoryResponse, cacheService.getTTL('search'), 'search');
       
       return res.json(inMemoryResponse);
     } catch (error) {
