@@ -176,33 +176,69 @@ const Profile = () => {
         }, 500);
       }
       
-      // Redirect based on user role
+      // Redirect based on user role with improved logging and debugging
       if (userData.role) {
-        // Redirect based on user role
-        switch (userData.role.toLowerCase()) {
+        const role = userData.role.toLowerCase();
+        console.log(`Login successful! Redirecting user with role: ${role}`);
+        
+        // Make sure the role is correctly set - log it for verification
+        setTimeout(() => {
+          fetch('/api/session-check')
+            .then(res => res.json())
+            .then(data => {
+              console.log('Session check after login:', data);
+            })
+            .catch(err => {
+              console.error('Error checking session:', err);
+            });
+        }, 500);
+        
+        // Properly handle the redirection based on the role
+        switch (role) {
           case 'admin':
-            window.location.href = '/admin';
+            console.log('Admin login detected, redirecting to admin dashboard...');
+            // Use a short delay to ensure session is fully saved before redirect
+            setTimeout(() => {
+              window.location.href = '/admin';
+            }, 800);
             break;
           case 'doctor':
-            window.location.href = '/doctor';
+            console.log('Doctor login detected, redirecting to doctor dashboard...');
+            setTimeout(() => {
+              window.location.href = '/doctor';
+            }, 800);
             break;
           case 'chemist':
-            window.location.href = '/chemist';
+            console.log('Chemist login detected, redirecting to chemist dashboard...');
+            setTimeout(() => {
+              window.location.href = '/chemist';
+            }, 800);
             break;
           case 'pharmacy':
-            window.location.href = '/pharmacy';
+            console.log('Pharmacy login detected, redirecting to pharmacy dashboard...');
+            setTimeout(() => {
+              window.location.href = '/pharmacy';
+            }, 800);
             break;
           case 'hospital':
           case 'laboratory':
-            window.location.href = '/laboratory';
+            console.log('Hospital/Laboratory login detected, redirecting to laboratory dashboard...');
+            setTimeout(() => {
+              window.location.href = '/laboratory';
+            }, 800);
             break;
           case 'delivery':
-            window.location.href = '/delivery';
+            console.log('Delivery login detected, redirecting to delivery dashboard...');
+            setTimeout(() => {
+              window.location.href = '/delivery';
+            }, 800);
             break;
           default:
+            console.log(`User role ${role} has no special dashboard, staying on profile page`);
             setActiveTab('profile');
         }
       } else {
+        console.log('No role specified for user, staying on profile page');
         setActiveTab('profile');
       }
     } catch (error) {
@@ -258,33 +294,69 @@ const Profile = () => {
         }, 500);
       }
       
-      // Redirect based on user role
+      // Redirect based on user role with improved logging and debugging
       if (userData.role) {
-        // Redirect based on user role
-        switch (userData.role.toLowerCase()) {
+        const role = userData.role.toLowerCase();
+        console.log(`Registration successful! Redirecting user with role: ${role}`);
+        
+        // Make sure the role is correctly set - log it for verification
+        setTimeout(() => {
+          fetch('/api/session-check')
+            .then(res => res.json())
+            .then(data => {
+              console.log('Session check after registration:', data);
+            })
+            .catch(err => {
+              console.error('Error checking session:', err);
+            });
+        }, 500);
+        
+        // Properly handle the redirection based on the role
+        switch (role) {
           case 'admin':
-            window.location.href = '/admin';
+            console.log('Admin registration detected, redirecting to admin dashboard...');
+            // Use a short delay to ensure session is fully saved before redirect
+            setTimeout(() => {
+              window.location.href = '/admin';
+            }, 800);
             break;
           case 'doctor':
-            window.location.href = '/doctor';
+            console.log('Doctor registration detected, redirecting to doctor dashboard...');
+            setTimeout(() => {
+              window.location.href = '/doctor';
+            }, 800);
             break;
           case 'chemist':
-            window.location.href = '/chemist';
+            console.log('Chemist registration detected, redirecting to chemist dashboard...');
+            setTimeout(() => {
+              window.location.href = '/chemist';
+            }, 800);
             break;
           case 'pharmacy':
-            window.location.href = '/pharmacy';
+            console.log('Pharmacy registration detected, redirecting to pharmacy dashboard...');
+            setTimeout(() => {
+              window.location.href = '/pharmacy';
+            }, 800);
             break;
           case 'hospital':
           case 'laboratory':
-            window.location.href = '/laboratory';
+            console.log('Hospital/Laboratory registration detected, redirecting to laboratory dashboard...');
+            setTimeout(() => {
+              window.location.href = '/laboratory';
+            }, 800);
             break;
           case 'delivery':
-            window.location.href = '/delivery';
+            console.log('Delivery registration detected, redirecting to delivery dashboard...');
+            setTimeout(() => {
+              window.location.href = '/delivery';
+            }, 800);
             break;
           default:
+            console.log(`User role ${role} has no special dashboard, staying on profile page`);
             setActiveTab('profile');
         }
       } else {
+        console.log('No role specified for user, staying on profile page');
         setActiveTab('profile');
       }
     } catch (error) {

@@ -619,14 +619,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(200).json(null);
       }
       
+      console.log('Session user found:', { 
+        id: sessionUser.id, 
+        username: sessionUser.username,
+        role: sessionUser.role
+      });
+      
       // Get the latest user data from database (may have been updated)
       const user = await dbStorage.getUser(sessionUser.id);
       
       if (!user) {
+        console.log(`User with ID ${sessionUser.id} not found in database`);
         // Session contains invalid user, clear it
         (req.session as any).user = null;
         return res.status(200).json(null);
       }
+      
+      console.log('User retrieved from database:', { 
+        id: user.id, 
+        username: user.username,
+        role: user.role
+      });
       
       // Don't return the password
       const { password, ...userWithoutPassword } = user;
@@ -634,6 +647,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching authenticated user:', error);
       return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Add session check endpoint for debugging authentication issues
+  app.get("/api/session-check", (req: Request, res: Response) => {
+    try {
+      const session = req.session as any;
+      const sessionInfo = {
+        isAuthenticated: !!session?.user,
+        sessionId: req.sessionID,
+        sessionData: {
+          user: session?.user ? {
+            id: session.user.id,
+            username: session.user.username,
+            role: session.user.role
+          } : null
+        }
+      };
+      
+      res.status(200).json(sessionInfo);
+    } catch (error) {
+      console.error('Error checking session:', error);
+      res.status(500).json({ message: "Error checking session", error: error.message });
     }
   });
   
