@@ -69,7 +69,14 @@ export class MongoDBStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<UserType | undefined> {
     try {
-      const user = await User.findById(id).lean();
+      // Try to find by _id field first (which could be MongoDB's ObjectId)
+      let user = await User.findById(id).lean();
+      
+      // If not found, try to find a user where id field matches
+      if (!user) {
+        user = await User.findOne({ id }).lean();
+      }
+      
       return user ? this.convertToUserType(user) : undefined;
     } catch (error) {
       console.error('Error getting user:', error);
