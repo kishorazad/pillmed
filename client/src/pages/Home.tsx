@@ -44,6 +44,11 @@ import HealthServices from '@/components/home/HealthServices';
 import NearbyHospitals from '@/components/hospitals/NearbyHospitals';
 import EmergencyCallButton from '@/components/EmergencyCallButton';
 
+// New healthcare service components
+import MedicalEquipmentSection from '@/components/equipment/MedicalEquipmentSection';
+import MedicalServicesSection from '@/components/medical-services/MedicalServicesSection';
+import EmergencyServicesSection from '@/components/emergency/EmergencyServicesSection';
+
 // Mobile-optimized components
 import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
 import CategoryGrid from '@/components/home/CategoryGrid';
