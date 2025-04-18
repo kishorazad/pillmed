@@ -197,15 +197,15 @@ export class MongoDBStorage implements IStorage {
           { _id: userObj._id },
           { $set: { numericId: convertedUser.id } }
         ).then(() => {
-          console.log(`Added numericId ${convertedUser.id} to user ${username}`);
+          console.log(`Added numericId ${convertedUser.id} to user with email ${email}`);
         }).catch(err => {
-          console.error(`Failed to add numericId to user ${username}:`, err);
+          console.error(`Failed to add numericId to user with email ${email}:`, err);
         });
       }
       
       return convertedUser;
     } catch (error) {
-      console.error('Error getting user by username:', error);
+      console.error('Error getting user by email:', error);
       return undefined;
     }
   }
