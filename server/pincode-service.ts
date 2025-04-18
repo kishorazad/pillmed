@@ -66,7 +66,8 @@ const SERVICE_AREAS = [
 export async function initializePincodeService() {
   try {
     if (!mongoClient) {
-      const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+      const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017/pillnow';
+      console.log('Pincode service using MongoDB connection:', mongoUrl.replace(/mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/, 'mongodb$1://$2:****@'));
       mongoClient = new MongoClient(mongoUrl);
       await mongoClient.connect();
       mongoDb = mongoClient.db('pillnow');

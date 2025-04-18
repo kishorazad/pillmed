@@ -9,7 +9,8 @@ import {
 } from '../models';
 
 // MongoDB connection URL with additional configuration parameters
-const MONGODB_URI = 'mongodb+srv://brijkishorazad:guPu0iRBclfQFpKa@cluster0.zjekb29.mongodb.net/pillnowdb?retryWrites=true&w=majority&appName=Cluster0';
+// Use environment variable for MongoDB connection string to avoid hardcoding credentials
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pillnow';
 
 // MongoDB connection needs to have network access from all IPs (0.0.0.0/0) in the MongoDB Atlas dashboard
 // Go to: Network Access > Add IP Address > Allow Access from Anywhere (0.0.0.0/0)
