@@ -195,12 +195,19 @@ const ProductDetail = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Product image gallery */}
           <div className="lg:w-2/5">
-            <div className="border rounded-lg overflow-hidden bg-white p-4 mb-4">
+            <div className="border rounded-lg overflow-hidden bg-white p-4 mb-4 relative">
               <img 
                 src={currentImageIndex === 0 ? product.imageUrl : productImages[currentImageIndex]} 
                 alt={product.name} 
                 className="w-full h-auto object-contain max-h-80 mx-auto"
               />
+              
+              {/* Prescription Required Badge (Rx) */}
+              {(product as any).prescriptionRequired && (
+                <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded text-sm font-bold shadow-lg z-10">
+                  Rx
+                </div>
+              )}
             </div>
             
             {/* Thumbnail gallery */}
@@ -230,13 +237,33 @@ const ProductDetail = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
-              <Button onClick={handleAddToCart} className="w-full sm:flex-1 bg-[#ff6f61] hover:bg-[#ff6f61]/90">
+              <Button 
+                onClick={handleAddToCart} 
+                className="w-full sm:flex-1 bg-[#FF8F00] hover:bg-[#FF8F00]/90 text-white font-semibold py-6 rounded-lg shadow-md transition-all flex items-center justify-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
                 {t('add_to_cart')}
               </Button>
-              <Button onClick={handleDirectBooking} className="w-full sm:flex-1 bg-[#10847e] hover:bg-[#10847e]/90">
+              <Button 
+                onClick={handleDirectBooking} 
+                className="w-full sm:flex-1 bg-[#10847e] hover:bg-[#10847e]/90 text-white font-semibold py-6 rounded-lg shadow-md transition-all flex items-center justify-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
                 {t('buy_now')}
               </Button>
             </div>
+            
+            {/* Prescription badge for smaller devices */}
+            {(product as any).prescriptionRequired && (
+              <div className="mt-3 p-2 bg-red-50 border border-red-100 rounded-md flex items-center">
+                <div className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold mr-2">Rx</div>
+                <p className="text-xs text-red-700">This medicine requires a valid prescription</p>
+              </div>
+            )}
           </div>
           
           {/* Product info */}
