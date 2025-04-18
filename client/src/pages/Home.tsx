@@ -38,6 +38,10 @@ import BrandPromotions from '@/components/home/BrandPromotions';
 import FestivalOffers from '@/components/home/FestivalOffers';
 import SpecialOffers from '@/components/home/SpecialOffers';
 import TopDeals from '@/components/home/TopDeals';
+import FeaturedProductsSlider from '@/components/home/FeaturedProductsSlider';
+import OrderHistory from '@/components/orders/OrderHistory';
+import HealthServices from '@/components/home/HealthServices';
+import NearbyHospitals from '@/components/hospitals/NearbyHospitals';
 
 // Mobile-optimized components
 import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
@@ -115,11 +119,36 @@ const Home = () => {
             {/* Mobile Banner Carousel */}
             <MobileBannerCarousel />
             
-            {/* Offers for You */}
-            <div className="my-4">
-              <h2 className="text-lg font-bold mb-3">Offers for You</h2>
-              <OffersCarousel offers={offerSlides} />
+            {/* Featured Products Slider (single column with sliding functionality) */}
+            <FeaturedProductsSlider 
+              products={featuredProducts} 
+              loading={productsLoading} 
+            />
+
+            {/* Product Deals (Top Deals) */}
+            <TopDeals />
+            
+            {/* Browsing History */}
+            <PreviouslyBrowsedItems />
+            
+            {/* Order History */}
+            <OrderHistory />
+            
+            {/* Health Services */}
+            <HealthServices />
+            
+            {/* Festival Offers */}
+            <div className="my-6">
+              <FestivalOffers />
             </div>
+            
+            {/* Brand Promotions */}
+            <div className="my-6">
+              <BrandPromotions />
+            </div>
+            
+            {/* Nearby Hospitals Section */}
+            <NearbyHospitals />
             
             {/* Categories slider for Mobile */}
             {!categoriesLoading && categories?.length > 0 && (
@@ -132,51 +161,6 @@ const Home = () => {
                 }))}
               />
             )}
-            
-            {/* Featured Products Slider */}
-            {!productsLoading && featuredProducts?.length > 0 && (
-              <ProductSlider 
-                title="Featured Products"
-                viewMoreLink="/products?featured=true"
-                products={featuredProducts}
-              />
-            )}
-            
-            {/* Top Deals Section */}
-            {!productsLoading && featuredProducts?.length > 0 && (
-              <ProductSlider 
-                title="Top Deals"
-                viewMoreLink="/products?sort=discountDesc"
-                products={featuredProducts.filter((p: Product) => p.discountedPrice)}
-              />
-            )}
-            
-            {/* Mobile Brand Promotions */}
-            <div className="my-6">
-              <BrandPromotions />
-            </div>
-            
-            {/* Mobile Festival Offers */}
-            <div className="my-6">
-              <FestivalOffers />
-            </div>
-            
-            {/* Mobile Special Offers */}
-            <div className="my-6">
-              <SpecialOffers />
-            </div>
-            
-            {/* Previously Browsed Items */}
-            <PreviouslyBrowsedItems />
-            
-            {/* Health Services */}
-            <section className="my-6">
-              <h2 className="text-lg font-bold mb-4">Health Services</h2>
-              <div className="space-y-4">
-                <PrescriptionUpload />
-                <HealthTipOfTheDay />
-              </div>
-            </section>
           </>
         ) : (
           /* Desktop View */
@@ -184,19 +168,32 @@ const Home = () => {
             <HeroSection />
             <ServicesSection />
             
-            <section className="py-8">
-              <h2 className="text-2xl font-bold mb-6">Health Services</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="h-full flex">
-                  <PrescriptionUpload />
-                </div>
-                <div className="h-full flex">
-                  <HealthTipOfTheDay />
-                </div>
-              </div>
-            </section>
+            {/* Featured Products Slider (single column with sliding functionality) */}
+            <FeaturedProductsSlider 
+              products={featuredProducts} 
+              loading={productsLoading} 
+            />
             
-            <PromotionalBanner />
+            {/* Product Deals */}
+            <TopDeals />
+            
+            {/* Browsing History */}
+            <PreviouslyBrowsedItems />
+            
+            {/* Order History */}
+            <OrderHistory />
+            
+            {/* Health Services */}
+            <HealthServices />
+            
+            {/* Festival Offers */}
+            <FestivalOffers />
+            
+            {/* Brand Promotions */}
+            <BrandPromotions />
+            
+            {/* Nearby Hospitals Section */}
+            <NearbyHospitals />
             
             {/* Top Categories */}
             <section className="py-8">
@@ -221,23 +218,7 @@ const Home = () => {
               </div>
             </section>
             
-            <FeaturedProducts />
-            
-            {/* Desktop Brand Promotions */}
-            <BrandPromotions />
-            
-            {/* Desktop Festival Offers */}
-            <FestivalOffers />
-            
-            {/* Desktop Special Offers */}
-            <SpecialOffers />
-            
-            {/* Desktop Top Deals */}
-            <TopDeals />
-            
-            <PreviouslyBrowsedItems />
-            <LabTests />
-            <ConsultDoctors />
+            <PromotionalBanner />
             <HealthArticles />
             <Testimonials />
           </>

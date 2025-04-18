@@ -37,7 +37,7 @@ const HealthServices: React.FC = () => {
       id: 2,
       title: t('lab_tests'),
       description: t('book_lab_tests_home_collection'),
-      icon: <Flask size={24} />,
+      icon: <FlaskConical size={24} />,
       url: '/lab-tests',
       color: 'bg-purple-50 text-purple-600'
     },
@@ -45,7 +45,7 @@ const HealthServices: React.FC = () => {
       id: 3,
       title: t('medicine_delivery'),
       description: t('doorstep_delivery_of_medicines'),
-      icon: <Pills size={24} />,
+      icon: <Pill size={24} />,
       url: '/medicines',
       color: 'bg-green-50 text-green-600'
     },
