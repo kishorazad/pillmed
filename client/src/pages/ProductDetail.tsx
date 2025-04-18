@@ -20,7 +20,8 @@ const ProductDetail = () => {
   const { toast } = useToast();
   const { t, language } = useLanguage();
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState("uses");
+  const [activeTab, setActiveTab] = useState("introduction");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Fetch product data
   const { data: product, isLoading, isError } = useQuery({
@@ -143,6 +144,14 @@ const ProductDetail = () => {
     );
   }
   
+  // Multiple product images (in a real app, these would come from the database)
+  const productImages = [
+    product.imageUrl || '',
+    'https://cdn01.pharmeasy.in/dam/products_otc/I40046/cipcal-500mg-strip-of-15-tablets-2-1669710287.jpg',
+    'https://cdn01.pharmeasy.in/dam/products_otc/I40046/cipcal-500mg-strip-of-15-tablets-3-1669710290.jpg',
+    'https://cdn01.pharmeasy.in/dam/products_otc/I40046/cipcal-500mg-strip-of-15-tablets-4-1669710292.jpg'
+  ];
+  
   // Filtered related products (exclude current product)
   const filteredRelatedProducts = relatedProducts && 
                                   relatedProducts.products && 
@@ -184,15 +193,42 @@ const ProductDetail = () => {
         
         {/* Product details */}
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Product image */}
+          {/* Product image gallery */}
           <div className="lg:w-2/5">
             <div className="border rounded-lg overflow-hidden bg-white p-4 mb-4">
               <img 
-                src={product.imageUrl} 
+                src={currentImageIndex === 0 ? product.imageUrl : productImages[currentImageIndex]} 
                 alt={product.name} 
                 className="w-full h-auto object-contain max-h-80 mx-auto"
               />
             </div>
+            
+            {/* Thumbnail gallery */}
+            <div className="flex overflow-x-auto space-x-2 mb-4">
+              {productImages.filter(Boolean).map((img, idx) => (
+                <div 
+                  key={idx} 
+                  className={`border rounded p-1 cursor-pointer ${idx === currentImageIndex ? 'border-[#FF8F00]' : 'border-gray-200'}`}
+                  onClick={() => setCurrentImageIndex(idx)}
+                >
+                  <img 
+                    src={img} 
+                    alt={`${product.name} - view ${idx+1}`} 
+                    className="h-16 w-16 object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+            
+            {/* Safety badge */}
+            <div className="flex items-center justify-center bg-blue-50 p-2 rounded-lg mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 mr-2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+              <span className="text-xs text-blue-700">{t('all_products_packed_safely')}</span>
+            </div>
+            
             <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
               <Button onClick={handleAddToCart} className="w-full sm:flex-1 bg-[#ff6f61] hover:bg-[#ff6f61]/90">
                 {t('add_to_cart')}
@@ -293,6 +329,18 @@ const ProductDetail = () => {
             <div className="mb-6">
               <div className="flex mb-0 border-b overflow-x-auto bg-gray-50 rounded-t-md">
                 <button 
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'introduction' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
+                  onClick={() => setActiveTab('introduction')}
+                >
+                  {t('introduction')}
+                </button>
+                <button 
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'benefits' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
+                  onClick={() => setActiveTab('benefits')}
+                >
+                  {t('benefits')}
+                </button>
+                <button 
                   className={`py-3 px-4 whitespace-nowrap ${activeTab === 'uses' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
                   onClick={() => setActiveTab('uses')}
                 >
@@ -305,22 +353,22 @@ const ProductDetail = () => {
                   {t('directions_for_use')}
                 </button>
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'storage' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
-                  onClick={() => setActiveTab('storage')}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'safety' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
+                  onClick={() => setActiveTab('safety')}
                 >
-                  {t('storage_and_disposal')}
+                  {t('safety_advice')}
                 </button>
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'quicktips' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
-                  onClick={() => setActiveTab('quicktips')}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'missed_dose' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
+                  onClick={() => setActiveTab('missed_dose')}
                 >
-                  {t('quick_tips')}
+                  {t('if_you_miss_dose')}
                 </button>
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'interactions' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
-                  onClick={() => setActiveTab('interactions')}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'faq' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
+                  onClick={() => setActiveTab('faq')}
                 >
-                  {t('interactions')}
+                  {t('faq')}
                 </button>
                 <button 
                   className={`py-3 px-4 whitespace-nowrap ${activeTab === 'composition' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
@@ -328,34 +376,251 @@ const ProductDetail = () => {
                 >
                   {t('ingredients_and_benefits')}
                 </button>
-                <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'facts' ? 'text-white bg-[#FF8F00] font-medium rounded-t-md' : 'text-gray-600 hover:text-[#FF8F00]'}`}
-                  onClick={() => setActiveTab('facts')}
-                >
-                  {t('fact_box')}
-                </button>
               </div>
               
-              {activeTab === 'uses' && (
-                <div className="text-gray-700">
+              {/* Introduction section */}
+              {activeTab === 'introduction' && (
+                <div className="text-gray-700 p-4 border-l border-r border-b rounded-b-md">
                   <div className="flex items-start mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
-                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
                     </svg>
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">Uses of {product.name.toUpperCase()}</h3>
-                      {(product as any).uses ? (
-                        <div dangerouslySetInnerHTML={{ __html: (product as any).uses }} />
-                      ) : (
-                        <p>{product.description || `${product.name} is used to treat various conditions as directed by your doctor. Please consult your healthcare provider for specific information.`}</p>
-                      )}
+                      <h3 className="font-semibold text-lg mb-2">{t('about')} {product.name}</h3>
+                      <p className="mb-3">{product.description || `${product.name} is a medication prescribed by healthcare professionals.`}</p>
+                      
+                      <div className="bg-blue-50 p-3 rounded-md my-3">
+                        <h4 className="font-medium text-blue-800 mb-2">{t('key_highlights')}</h4>
+                        <ul className="list-disc pl-5 space-y-1 text-blue-700">
+                          <li>{t('effective_treatment')}</li>
+                          <li>{t('developed_by')} {product.brand || t('reputable_manufacturer')}</li>
+                          <li>{t('used_by_thousands')}</li>
+                          <li>{t('available_in_multiple_strengths')}</li>
+                        </ul>
+                      </div>
+                      
+                      <p>{t('consult_healthcare_provider')}</p>
                     </div>
                   </div>
                 </div>
               )}
               
+              {/* Benefits section */}
+              {activeTab === 'benefits' && (
+                <div className="text-gray-700 p-4 border-l border-r border-b rounded-b-md">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 mr-3 mt-1">
+                      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">{t('benefits_of')} {product.name}</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+                        <div className="bg-green-50 p-3 rounded-md">
+                          <h4 className="font-medium text-green-800 mb-1">{t('proven_effectiveness')}</h4>
+                          <p className="text-sm text-green-700">{t('clinically_proven')}</p>
+                        </div>
+                        
+                        <div className="bg-green-50 p-3 rounded-md">
+                          <h4 className="font-medium text-green-800 mb-1">{t('convenient_dosing')}</h4>
+                          <p className="text-sm text-green-700">{t('easy_to_administer')}</p>
+                        </div>
+                        
+                        <div className="bg-green-50 p-3 rounded-md">
+                          <h4 className="font-medium text-green-800 mb-1">{t('well_tolerated')}</h4>
+                          <p className="text-sm text-green-700">{t('minimal_side_effects')}</p>
+                        </div>
+                        
+                        <div className="bg-green-50 p-3 rounded-md">
+                          <h4 className="font-medium text-green-800 mb-1">{t('trusted_formula')}</h4>
+                          <p className="text-sm text-green-700">{t('years_of_research')}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <p>{t('individual_results_vary')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Uses tab */}
+              {activeTab === 'uses' && (
+                <div className="text-gray-700 p-4 border-l border-r border-b rounded-b-md">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
+                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">{t('uses_of')} {product.name.toUpperCase()}</h3>
+                      {(product as any).uses ? (
+                        <div dangerouslySetInnerHTML={{ __html: (product as any).uses }} />
+                      ) : (
+                        <p>{product.description || `${product.name} is used to treat various conditions as directed by your doctor. Please consult your healthcare provider for specific information.`}</p>
+                      )}
+                      
+                      <div className="bg-yellow-50 p-3 rounded-md mt-4">
+                        <h4 className="font-medium text-yellow-800 mb-1">{t('important_note')}</h4>
+                        <p className="text-sm text-yellow-700">{t('consult_doctor_before_use')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* How to use */}
+              {activeTab === 'directions' && (
+                <div className="text-gray-700 p-4 border-l border-r border-b rounded-b-md">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#FF8F00] mr-3 mt-1">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      <path d="M9.1 7.87a1.87 1.87 0 0 0 2.64 2.64" />
+                      <path d="M10.2 13a1.5 1.5 0 0 0 3 0v-1.5a2.5 2.5 0 1 0-5 0" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">{t('how_to_use')} {product.name}</h3>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <div className="bg-[#FF8F00] text-white rounded-full h-6 w-6 flex items-center justify-center mr-3">1</div>
+                          <p>{t('read_label_carefully')}</p>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <div className="bg-[#FF8F00] text-white rounded-full h-6 w-6 flex items-center justify-center mr-3">2</div>
+                          <p>{t('follow_prescribed_dose')}</p>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <div className="bg-[#FF8F00] text-white rounded-full h-6 w-6 flex items-center justify-center mr-3">3</div>
+                          <p>{t('take_with_water')}</p>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <div className="bg-[#FF8F00] text-white rounded-full h-6 w-6 flex items-center justify-center mr-3">4</div>
+                          <p>{t('complete_course')}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-red-50 p-3 rounded-md mt-4">
+                        <h4 className="font-medium text-red-800 mb-1">{t('warning')}</h4>
+                        <p className="text-sm text-red-700">{t('do_not_exceed_dose')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Safety Advice */}
+              {activeTab === 'safety' && (
+                <div className="text-gray-700 p-4 border-l border-r border-b rounded-b-md">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 mr-3 mt-1">
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">{t('safety_advice')}</h3>
+                      
+                      <div className="space-y-4 mt-3">
+                        <div className="border-l-4 border-yellow-400 pl-3">
+                          <h4 className="font-medium mb-1">{t('alcohol')}</h4>
+                          <p className="text-sm">{t('alcohol_interaction_warning')}</p>
+                        </div>
+                        
+                        <div className="border-l-4 border-yellow-400 pl-3">
+                          <h4 className="font-medium mb-1">{t('pregnancy')}</h4>
+                          <p className="text-sm">{t('pregnancy_warning')}</p>
+                        </div>
+                        
+                        <div className="border-l-4 border-yellow-400 pl-3">
+                          <h4 className="font-medium mb-1">{t('driving')}</h4>
+                          <p className="text-sm">{t('driving_warning')}</p>
+                        </div>
+                        
+                        <div className="border-l-4 border-yellow-400 pl-3">
+                          <h4 className="font-medium mb-1">{t('kidney')}</h4>
+                          <p className="text-sm">{t('kidney_warning')}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* If you miss a dose */}
+              {activeTab === 'missed_dose' && (
+                <div className="text-gray-700 p-4 border-l border-r border-b rounded-b-md">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 mr-3 mt-1">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">{t('if_you_miss_dose')}</h3>
+                      
+                      <p className="mb-4">{t('missed_dose_instructions')}</p>
+                      
+                      <div className="bg-blue-50 p-4 rounded-md">
+                        <h4 className="font-medium text-blue-800 mb-2">{t('what_to_do')}</h4>
+                        <ul className="list-disc pl-5 space-y-2">
+                          <li className="text-blue-700">{t('take_as_soon_as_remember')}</li>
+                          <li className="text-blue-700">{t('skip_if_next_dose_soon')}</li>
+                          <li className="text-blue-700">{t('never_double_dose')}</li>
+                          <li className="text-blue-700">{t('contact_doctor_if_unsure')}</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* FAQ section */}
+              {activeTab === 'faq' && (
+                <div className="text-gray-700 p-4 border-l border-r border-b rounded-b-md">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#FF8F00] mr-3 mt-1">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <div className="w-full">
+                      <h3 className="font-semibold text-lg mb-3">{t('frequently_asked_questions')}</h3>
+                      
+                      <div className="space-y-4">
+                        <div className="border rounded-md p-3">
+                          <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_how_long_q')}</h4>
+                          <p className="text-sm">{t('faq_how_long_a')}</p>
+                        </div>
+                        
+                        <div className="border rounded-md p-3">
+                          <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_side_effects_q')}</h4>
+                          <p className="text-sm">{t('faq_side_effects_a')}</p>
+                        </div>
+                        
+                        <div className="border rounded-md p-3">
+                          <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_with_food_q')}</h4>
+                          <p className="text-sm">{t('faq_with_food_a')}</p>
+                        </div>
+                        
+                        <div className="border rounded-md p-3">
+                          <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_storage_q')}</h4>
+                          <p className="text-sm">{t('faq_storage_a')}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Composition section */}
               {activeTab === 'composition' && (
-                <div className="text-gray-700">
+                <div className="text-gray-700 p-4 border-l border-r border-b rounded-b-md">
                   <div className="flex items-start mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
                       <circle cx="12" cy="12" r="9" />
@@ -364,30 +629,30 @@ const ProductDetail = () => {
                       <path d="m15 12-3 3-3-3" />
                     </svg>
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">Composition of {product.name.toUpperCase()}</h3>
+                      <h3 className="font-semibold text-lg mb-2">{t('composition_of')} {product.name.toUpperCase()}</h3>
                       {(product as any).composition ? (
                         <p>{(product as any).composition}</p>
                       ) : (
-                        <p>Detailed composition information not available. Please refer to the product packaging or consult with your pharmacist.</p>
+                        <p>{t('composition_not_available')}</p>
                       )}
                       
                       {(product as any).manufacturer && (
                         <div className="mt-4">
-                          <h4 className="font-medium mb-1">Manufacturer</h4>
+                          <h4 className="font-medium mb-1">{t('manufacturer')}</h4>
                           <p>{(product as any).manufacturer}</p>
                         </div>
                       )}
                       
                       {(product as any).packSize && (
                         <div className="mt-4">
-                          <h4 className="font-medium mb-1">Pack Size</h4>
+                          <h4 className="font-medium mb-1">{t('pack_size')}</h4>
                           <p>{(product as any).packSize}</p>
                         </div>
                       )}
                       
                       {(product as any).storageInstructions && (
                         <div className="mt-4">
-                          <h4 className="font-medium mb-1">Storage Instructions</h4>
+                          <h4 className="font-medium mb-1">{t('storage_instructions')}</h4>
                           <p>{(product as any).storageInstructions}</p>
                         </div>
                       )}
