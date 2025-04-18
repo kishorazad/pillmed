@@ -84,6 +84,7 @@ interface ChemistMedicine {
   createdAt: string;
   updatedAt: string;
   rejectionReason?: string;
+  equipmentType?: 'medical_device' | 'surgical_instrument' | 'diagnostic_equipment' | 'monitoring_device' | 'mobility_aid';
 }
 
 interface Customer {
@@ -523,6 +524,53 @@ const ChemistDashboard: React.FC = () => {
   // Medicine management handlers
   const handleAddMedicine = () => {
     setOpenAddMedicineDialog(true);
+  };
+  
+  // Function to add medicine to prescription
+  const handleAddExtraMedicineToPrescription = (
+    prescriptionId: number, 
+    medicine: { 
+      id: number;
+      name: string;
+      price: number;
+      quantity: number;
+      isRxOnly: boolean;
+      reason: string;
+    }
+  ) => {
+    // In a real app, this would make an API call to add the medicine to the prescription
+    console.log('Adding medicine to prescription:', prescriptionId, medicine);
+    
+    // Determine approval status based on whether it's an RX or OTC medicine
+    const status = medicine.isRxOnly ? 'pending_approval' : 'no_approval_needed';
+    
+    const extraMedicine: ExtraMedicine = {
+      id: medicine.id,
+      name: medicine.name,
+      quantity: medicine.quantity,
+      price: medicine.price,
+      isRxOnly: medicine.isRxOnly,
+      addedBy: {
+        id: 5, // Assuming current logged in chemist ID
+        name: 'Chemist User',
+        role: 'chemist'
+      },
+      status: status,
+      reason: medicine.reason
+    };
+    
+    toast({
+      title: medicine.isRxOnly ? "Medicine Added (Needs Approval)" : "Medicine Added to Order",
+      description: medicine.isRxOnly 
+        ? `${medicine.name} has been added to the prescription and is awaiting doctor approval.`
+        : `${medicine.name} has been added to the prescription and will be included in the order.`,
+    });
+    
+    // If this was a real app, we would update the prescription state after the API call
+    // For now, just log that we would add the medicine with the appropriate status
+    console.log('Extra medicine would be added with status:', status);
+    
+    return extraMedicine;
   };
 
   const handleMedicineInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -1212,6 +1260,7 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
                   <h3 className="font-medium text-gray-700 mb-2">{t('order_details')}</h3>
                   {prescription.medicines.length > 0 ? (
                     <div className="space-y-3">
+                      <h4 className="text-sm font-semibold text-gray-600">{t('prescribed_medicines')}</h4>
                       {prescription.medicines.map((medicine) => (
                         <div key={medicine.id} className="flex justify-between border-b pb-2">
                           <div>
@@ -1232,6 +1281,89 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
                           </div>
                         </div>
                       ))}
+                      
+                      {/* Extra medicines added by chemist */}
+                      {prescription.extraMedicines && prescription.extraMedicines.length > 0 && (
+                        <>
+                          <h4 className="text-sm font-semibold text-gray-600 mt-4">{t('additional_medicines')}</h4>
+                          
+                          {/* Group extra medicines by approval status */}
+                          <div className="space-y-3">
+                            {/* RX medicines needing doctor approval */}
+                            {prescription.extraMedicines.filter(med => med.isRxOnly && med.status === 'pending_approval').length > 0 && (
+                              <div className="text-xs bg-amber-50 text-amber-800 p-2 rounded mb-2">
+                                Prescription medicines require doctor approval before being included.
+                              </div>
+                            )}
+                            
+                            {/* OTC medicines not needing approval */}
+                            {prescription.extraMedicines.filter(med => !med.isRxOnly && med.status === 'no_approval_needed').length > 0 && (
+                              <div className="text-xs bg-blue-50 text-blue-800 p-2 rounded mb-2">
+                                OTC medicines added to order (no approval needed).
+                              </div>
+                            )}
+                            
+                            {prescription.extraMedicines.map((medicine) => (
+                              <div key={medicine.id} className="flex justify-between border-b pb-2">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">{medicine.name}</span>
+                                    {medicine.isRxOnly && (
+                                      <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">
+                                        RX
+                                      </Badge>
+                                    )}
+                                    {!medicine.isRxOnly && (
+                                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300 text-xs">
+                                        OTC
+                                      </Badge>
+                                    )}
+                                    {medicine.status === 'pending_approval' && (
+                                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
+                                        Awaiting Approval
+                                      </Badge>
+                                    )}
+                                    {medicine.status === 'approved' && (
+                                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">
+                                        Approved
+                                      </Badge>
+                                    )}
+                                    {medicine.status === 'rejected' && (
+                                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300 text-xs">
+                                        Rejected
+                                      </Badge>
+                                    )}
+                                    {medicine.status === 'no_approval_needed' && (
+                                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">
+                                        Added to Order
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="text-sm text-gray-500">Qty: {medicine.quantity}</div>
+                                  {medicine.reason && (
+                                    <div className="text-xs text-gray-500 mt-1 italic">
+                                      Reason: {medicine.reason}
+                                    </div>
+                                  )}
+                                  {medicine.status === 'approved' && medicine.doctorName && (
+                                    <div className="text-xs text-green-600 mt-1">
+                                      Approved by: {medicine.doctorName}
+                                    </div>
+                                  )}
+                                  {medicine.status === 'rejected' && medicine.rejectionReason && (
+                                    <div className="text-xs text-red-600 mt-1">
+                                      Rejected: {medicine.rejectionReason}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-right">
+                                  <div>₹{medicine.price}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
                       
                       <div className="flex justify-between font-medium pt-2">
                         <div>{t('total')}</div>
