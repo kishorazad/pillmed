@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { Link } from 'wouter';
 import OrderHistory from '@/components/orders/OrderHistory';
+import { Eye, EyeOff } from 'lucide-react';
 
 // Define User type for this component
 interface User {
@@ -53,6 +54,9 @@ const registerSchema = loginSchema.extend({
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('profile');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { user, setUser } = useStore();
   const { toast } = useToast();
   
