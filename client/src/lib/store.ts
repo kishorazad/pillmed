@@ -141,6 +141,7 @@ export const useStore = create<AppState>((set, get) => ({
     const { tempUserId } = get();
     const prevUser = get().user;
     
+    // Update user state
     set({ user });
     
     // If a user just logged in
@@ -172,17 +173,26 @@ export const useStore = create<AppState>((set, get) => ({
           console.error('Failed to fetch cart as fallback:', innerError);
         }
       }
-    } else if (!user) {
-      // User logged out, go back to using tempUserId for cart operations
+    } else if (!user && prevUser) {
+      // User logged out, generate a new tempUserId by setting it to current timestamp
+      // This ensures a clean slate for anonymous users after logout
+      const newTempId = Date.now();
+      console.log("User logged out, setting new tempUserId:", newTempId);
+      
+      // Update the tempUserId
+      set({ tempUserId: newTempId });
+      
+      // Clear the cart
+      set({ cart: [] });
+      
       try {
-        console.log("User logged out, fetching temp cart items for ID:", tempUserId);
-        const response = await fetch(`/api/cart/${tempUserId}`);
+        // Initialize an empty cart for the new temp user
+        console.log("Fetching temp cart items for new ID:", newTempId);
+        const response = await fetch(`/api/cart/${newTempId}`);
         const cartItems = await response.json();
         set({ cart: cartItems });
       } catch (error) {
         console.error('Failed to fetch temp cart items after logout:', error);
-        // Clear the cart as fallback
-        set({ cart: [] });
       }
     }
   },

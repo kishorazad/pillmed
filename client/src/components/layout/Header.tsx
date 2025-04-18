@@ -133,7 +133,8 @@ const Header = () => {
                     <button 
                       onClick={() => {
                         useStore.getState().setUser(null);
-                        useStore.getState().setTempUserId(Date.now());
+                        // No need to call setTempUserId as it doesn't exist in the store
+                        setIsUserMenuOpen(false);
                         navigate('/');
                       }} 
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
