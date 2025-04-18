@@ -641,7 +641,23 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Password</FormLabel>
                                 <FormControl>
-                                  <Input type="password" placeholder="Your password" {...field} />
+                                  <div className="relative">
+                                    <Input 
+                                      type={showLoginPassword ? "text" : "password"} 
+                                      placeholder="Your password" 
+                                      {...field} 
+                                    />
+                                    <div 
+                                      className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" 
+                                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                      aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                                    >
+                                      {showLoginPassword ? 
+                                        <EyeOff className="h-4 w-4 text-gray-500" /> : 
+                                        <Eye className="h-4 w-4 text-gray-500" />
+                                      }
+                                    </div>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -705,7 +721,23 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Password</FormLabel>
                                 <FormControl>
-                                  <Input type="password" placeholder="Create a password" {...field} />
+                                  <div className="relative">
+                                    <Input 
+                                      type={showRegisterPassword ? "text" : "password"} 
+                                      placeholder="Create a password" 
+                                      {...field} 
+                                    />
+                                    <div 
+                                      className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" 
+                                      onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                                      aria-label={showRegisterPassword ? "Hide password" : "Show password"}
+                                    >
+                                      {showRegisterPassword ? 
+                                        <EyeOff className="h-4 w-4 text-gray-500" /> : 
+                                        <Eye className="h-4 w-4 text-gray-500" />
+                                      }
+                                    </div>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -719,7 +751,23 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Confirm Password</FormLabel>
                                 <FormControl>
-                                  <Input type="password" placeholder="Confirm your password" {...field} />
+                                  <div className="relative">
+                                    <Input 
+                                      type={showConfirmPassword ? "text" : "password"} 
+                                      placeholder="Confirm your password" 
+                                      {...field} 
+                                    />
+                                    <div 
+                                      className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" 
+                                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                    >
+                                      {showConfirmPassword ? 
+                                        <EyeOff className="h-4 w-4 text-gray-500" /> : 
+                                        <Eye className="h-4 w-4 text-gray-500" />
+                                      }
+                                    </div>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
