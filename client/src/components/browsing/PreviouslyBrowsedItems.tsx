@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useLanguage } from '../LanguageSwitcher';
-import { ArrowRightIcon, Clock } from 'lucide-react';
+import { ArrowRightIcon, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'wouter';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface BrowsedItem {
   id: number;
@@ -13,6 +14,20 @@ interface BrowsedItem {
 
 const PreviouslyBrowsedItems: React.FC = () => {
   const { t } = useLanguage();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
+  const handleScrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+  
+  const handleScrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
   
   // Sample browsed items data
   const items: BrowsedItem[] = [
@@ -43,6 +58,20 @@ const PreviouslyBrowsedItems: React.FC = () => {
       imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/W67219/dr-morepen-bp-one-bp02-fully-automatic-blood-pressure-monitor-with-adaptor-2-1671745339.jpg',
       price: 1899,
       viewedAt: '2025-04-18T09:10:00'
+    },
+    {
+      id: 5,
+      name: 'Himalaya Baby Lotion',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/H68199/himalaya-baby-lotion-100ml-2-1671743800.jpg',
+      price: 175.50,
+      viewedAt: '2025-04-17T16:45:00'
+    },
+    {
+      id: 6,
+      name: 'Ensure Diabetes Care Powder',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/E54088/ensure-diabetes-care-powder-vanilla-flavour-400gm-jar-2-1671744557.jpg',
+      price: 845.75,
+      viewedAt: '2025-04-18T08:20:00'
     }
   ];
 
@@ -76,16 +105,48 @@ const PreviouslyBrowsedItems: React.FC = () => {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl md:text-2xl font-bold">{t('previously_browsed_items')}</h2>
-          <Link href="/browsing-history" className="text-primary flex items-center text-sm">
-            {t('view_all')} <ArrowRightIcon className="ml-1 h-4 w-4" />
-          </Link>
+          <div className="flex items-center">
+            {!isMobile && (
+              <div className="flex gap-2 mr-4">
+                <button 
+                  onClick={handleScrollLeft}
+                  className="p-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={handleScrollRight}
+                  className="p-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            <Link href="/browsing-history" className="text-primary flex items-center text-sm">
+              {t('view_all')} <ArrowRightIcon className="ml-1 h-4 w-4" />
+            </Link>
+          </div>
         </div>
         
         <p className="text-gray-600 mb-4">{t('recently_viewed_products')}</p>
         
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 gap-4">
+        <div 
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory"
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
           {items.map((item) => (
-            <Link key={item.id} href={`/products/${item.id}`}>
+            <Link 
+              key={item.id} 
+              href={`/products/${item.id}`}
+              className="snap-start min-w-[260px] max-w-[300px] flex-shrink-0"
+            >
               <div className="bg-white rounded-lg shadow-sm overflow-hidden transition duration-300 hover:shadow-md cursor-pointer h-full flex flex-col">
                 <div className="relative px-4 pt-4 flex justify-center">
                   <img 
