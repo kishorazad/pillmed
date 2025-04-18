@@ -391,6 +391,42 @@ const ProductDetail = () => {
                       <h3 className="font-semibold text-lg mb-2">{t('about')} {product.name}</h3>
                       <p className="mb-3">{product.description || `${product.name} is a medication prescribed by healthcare professionals.`}</p>
                       
+                      {/* Treatment information - dynamic based on medication type */}
+                      <div className="mt-4">
+                        <h4 className="font-medium text-[#10847e] text-lg border-b pb-1 mb-3">{t('in_treatment_of')}</h4>
+                        
+                        {product.name.includes("Teltab") ? (
+                          <>
+                            <div className="mb-4">
+                              <h5 className="font-medium mb-1">Hypertension (high blood pressure)</h5>
+                              <p className="text-sm leading-relaxed">
+                                {product.name} relaxes the blood vessels so that blood can flow more easily around your body. This effectively lowers the blood pressure. It must be taken regularly as prescribed to be effective. You do not usually feel any direct benefit from taking this medicine, but it works in the long term to keep you well.
+                              </p>
+                            </div>
+                            
+                            <div className="mb-4">
+                              <h5 className="font-medium mb-1">Prevention of heart attack and stroke</h5>
+                              <p className="text-sm leading-relaxed">
+                                If your blood pressure is controlled you are less at risk of having a heart attack or stroke. {product.name} reduces the chances of heart diseases and helps you remain healthier for longer. Take it regularly and make appropriate lifestyle changes, such as eating healthy and staying active, to maximize the effectiveness of this medicine.
+                              </p>
+                            </div>
+                            
+                            <div className="mb-4">
+                              <h5 className="font-medium mb-1">Treatment of Heart failure</h5>
+                              <p className="text-sm leading-relaxed">
+                                Heart failure means your heart is weak and cannot pump enough blood to your lungs and the rest of your body. The most common symptoms are breathlessness, tiredness, and swelling in your legs, ankles, abdomen, and other parts of your body. {product.name} is an effective treatment for heart failure. This medicine will help relieve your symptoms, making you feel better and more energetic. Take it regularly and keep taking it even if you feel better.
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="mb-4">
+                            <p className="text-sm leading-relaxed">
+                              {product.name} is used to treat various conditions as directed by your doctor. Common uses may include treating symptoms like {(product as any).uses || 'pain, inflammation, allergies, or specific health conditions'}. The medication works by {(product as any).mechanism || 'targeting specific systems in your body'} to provide relief.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      
                       <div className="bg-blue-50 p-3 rounded-md my-3">
                         <h4 className="font-medium text-blue-800 mb-2">{t('key_highlights')}</h4>
                         <ul className="list-disc pl-5 space-y-1 text-blue-700">
@@ -401,7 +437,7 @@ const ProductDetail = () => {
                         </ul>
                       </div>
                       
-                      <p>{t('consult_healthcare_provider')}</p>
+                      <p className="mt-4 text-sm text-gray-600 italic">{t('consult_healthcare_provider')}</p>
                     </div>
                   </div>
                 </div>
@@ -417,6 +453,26 @@ const ProductDetail = () => {
                     </svg>
                     <div>
                       <h3 className="font-semibold text-lg mb-2">{t('benefits_of')} {product.name}</h3>
+                      
+                      {/* Detailed dosing information for specific medications */}
+                      {product.name.includes("Teltab") ? (
+                        <div className="bg-white border border-gray-200 rounded-md p-4 mb-4">
+                          <p className="text-sm leading-relaxed mb-3">
+                            Take this medicine in the dose and duration as advised by your doctor. Swallow it as a whole. Do not chew, crush or break it. {product.name} may be taken with or without food, but it is better to take it at a fixed time.
+                          </p>
+                          
+                          <h4 className="font-medium text-[#10847e] mt-4 mb-2">How {product.name} works</h4>
+                          <p className="text-sm leading-relaxed">
+                            {product.name} is an angiotensin receptor blocker (ARB). It works by blocking the hormone angiotensin thereby relaxing blood vessels, allowing the blood to flow more smoothly and the heart to pump more efficiently.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="bg-white border border-gray-200 rounded-md p-4 mb-4">
+                          <p className="text-sm leading-relaxed mb-3">
+                            Take this medicine as directed by your doctor. Follow the dosage instructions carefully and complete the full course as prescribed. {product.name} may be taken with or without food, however it's best to take it at the same time each day.
+                          </p>
+                        </div>
+                      )}
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
                         <div className="bg-green-50 p-3 rounded-md">
@@ -440,8 +496,9 @@ const ProductDetail = () => {
                         </div>
                       </div>
                       
-                      <div className="mt-4">
-                        <p>{t('individual_results_vary')}</p>
+                      <div className="mt-4 p-3 bg-blue-50 rounded-md">
+                        <h4 className="font-medium text-blue-800 mb-1">{t('regular_use')}</h4>
+                        <p className="text-sm text-blue-700">{t('follow_doctors_advice')}</p>
                       </div>
                     </div>
                   </div>
@@ -457,10 +514,44 @@ const ProductDetail = () => {
                     </svg>
                     <div>
                       <h3 className="font-semibold text-lg mb-2">{t('uses_of')} {product.name.toUpperCase()}</h3>
-                      {(product as any).uses ? (
-                        <div dangerouslySetInnerHTML={{ __html: (product as any).uses }} />
+                      
+                      {product.name.includes("Teltab") ? (
+                        <div className="mb-4">
+                          <div className="mb-4">
+                            <h4 className="font-medium text-[#10847e] border-b pb-1 mb-2">Description</h4>
+                            <p className="text-sm leading-relaxed">
+                              Teltab 80mg Tablet is a medicine used to treat high blood pressure and heart failure. Lowering blood pressure helps to prevent future heart attacks and strokes. This medicine is also effective in preserving kidney function in patients with diabetes.
+                            </p>
+                            <p className="text-sm leading-relaxed mt-3">
+                              Teltab 80mg Tablet can be prescribed either alone or in combination with other medicines. It may be taken with or without food during the day or at night. However, try to take it at the same time each day to get the most benefit. It is important to continue taking it regularly even if you feel well or if your blood pressure is controlled. Most people with high blood pressure do not feel ill, but if you stop taking this medicine, your condition could get worse.
+                            </p>
+                            <p className="text-sm leading-relaxed mt-3">
+                              This is a widely used medicine and is considered safe for long-term use. Making some changes in your lifestyle will also help lower your blood pressure. These may include regular exercise, losing weight, smoking cessation, reducing alcohol intake, and reducing the amount of salt in your diet as advised by your doctor.
+                            </p>
+                            <p className="text-sm leading-relaxed mt-3">
+                              This medicine is tolerated well by most patients and has few side effects. However, it may cause upper respiratory tract infection, back pain, sinus infection, and diarrhea in some people. Let your doctor know if you experience any of these side effects. Before taking this medicine, let your doctor know if you have any kidney or liver problems. Pregnant or breastfeeding mothers should also consult their doctor before taking it. Your doctor may check your kidney function, blood pressure, and potassium levels in your blood at regular intervals while you are taking this medicine.
+                            </p>
+                          </div>
+                        </div>
                       ) : (
-                        <p>{product.description || `${product.name} is used to treat various conditions as directed by your doctor. Please consult your healthcare provider for specific information.`}</p>
+                        <div>
+                          {(product as any).uses ? (
+                            <div dangerouslySetInnerHTML={{ __html: (product as any).uses }} />
+                          ) : (
+                            <div>
+                              <h4 className="font-medium text-[#10847e] border-b pb-1 mb-2">Description</h4>
+                              <p className="text-sm leading-relaxed">
+                                {product.description || `${product.name} is used to treat various conditions as directed by your doctor. Please consult your healthcare provider for specific information.`}
+                              </p>
+                              <p className="text-sm leading-relaxed mt-3">
+                                This medication should be used as prescribed by your doctor. It's important to follow the dosage instructions and complete the full course of treatment even if you begin to feel better. Stopping medication early may result in incomplete treatment and potential recurrence of symptoms.
+                              </p>
+                              <p className="text-sm leading-relaxed mt-3">
+                                While using this medication, maintain a healthy lifestyle including proper diet, regular exercise, and adequate rest as advised by your healthcare provider. These lifestyle changes can enhance the effectiveness of the medication and improve overall treatment outcomes.
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       )}
                       
                       <div className="bg-yellow-50 p-3 rounded-md mt-4">
@@ -484,6 +575,27 @@ const ProductDetail = () => {
                     <div>
                       <h3 className="font-semibold text-lg mb-2">{t('how_to_use')} {product.name}</h3>
                       
+                      {product.name.includes("Teltab") ? (
+                        <div className="mb-4">
+                          <p className="text-sm leading-relaxed mb-3">
+                            Take this medicine in the dose and duration as advised by your doctor. Swallow it as a whole. Do not chew, crush or break it. {product.name} may be taken with or without food, but it is better to take it at a fixed time.
+                          </p>
+                          
+                          <div className="bg-blue-50 p-3 rounded-md my-4">
+                            <h4 className="font-medium text-blue-800 mb-2">Dosage Information</h4>
+                            <p className="text-sm text-blue-700 mb-2">
+                              <strong>For High Blood Pressure (Hypertension):</strong> The usual starting dose is 40 mg once daily. If needed, your doctor may increase your dose to 80 mg once daily.
+                            </p>
+                            <p className="text-sm text-blue-700 mb-2">
+                              <strong>For Heart Failure:</strong> The recommended starting dose is 10-20 mg once daily. Your doctor may gradually increase the dose up to 40-80 mg once daily.
+                            </p>
+                            <p className="text-sm text-blue-700">
+                              <strong>For Kidney Protection in Diabetes:</strong> The recommended dose is 80 mg once daily.
+                            </p>
+                          </div>
+                        </div>
+                      ) : null}
+                      
                       <div className="space-y-3">
                         <div className="flex items-center">
                           <div className="bg-[#FF8F00] text-white rounded-full h-6 w-6 flex items-center justify-center mr-3">1</div>
@@ -497,18 +609,25 @@ const ProductDetail = () => {
                         
                         <div className="flex items-center">
                           <div className="bg-[#FF8F00] text-white rounded-full h-6 w-6 flex items-center justify-center mr-3">3</div>
-                          <p>{t('take_with_water')}</p>
+                          <p>{product.name.includes("Teltab") ? "Take with a glass of water. Swallow the tablet whole; do not crush, chew, or break it." : t('take_with_water')}</p>
                         </div>
                         
                         <div className="flex items-center">
                           <div className="bg-[#FF8F00] text-white rounded-full h-6 w-6 flex items-center justify-center mr-3">4</div>
-                          <p>{t('complete_course')}</p>
+                          <p>{product.name.includes("Teltab") ? "Take it at the same time each day to maintain consistent blood levels." : t('complete_course')}</p>
                         </div>
+                        
+                        {product.name.includes("Teltab") && (
+                          <div className="flex items-center">
+                            <div className="bg-[#FF8F00] text-white rounded-full h-6 w-6 flex items-center justify-center mr-3">5</div>
+                            <p>Continue taking this medicine even if you feel well. High blood pressure often has no symptoms.</p>
+                          </div>
+                        )}
                       </div>
                       
                       <div className="bg-red-50 p-3 rounded-md mt-4">
                         <h4 className="font-medium text-red-800 mb-1">{t('warning')}</h4>
-                        <p className="text-sm text-red-700">{t('do_not_exceed_dose')}</p>
+                        <p className="text-sm text-red-700">{product.name.includes("Teltab") ? "Do not stop taking this medication without consulting your doctor. Stopping suddenly may worsen your condition." : t('do_not_exceed_dose')}</p>
                       </div>
                     </div>
                   </div>
@@ -527,26 +646,73 @@ const ProductDetail = () => {
                     <div>
                       <h3 className="font-semibold text-lg mb-2">{t('safety_advice')}</h3>
                       
+                      {product.name.includes("Teltab") ? (
+                        <div className="mb-4">
+                          <p className="text-sm leading-relaxed mb-4">
+                            Before taking {product.name}, tell your healthcare provider about all of your medical conditions, including if you:
+                          </p>
+                          <ul className="list-disc ml-5 mb-4 text-sm leading-relaxed space-y-1">
+                            <li>Have liver or kidney problems</li>
+                            <li>Have heart problems</li>
+                            <li>Are pregnant or plan to become pregnant</li>
+                            <li>Are breastfeeding or plan to breastfeed</li>
+                            <li>Are taking any other medications, including prescription and over-the-counter medicines, vitamins, and herbal supplements</li>
+                          </ul>
+                        </div>
+                      ) : null}
+                      
                       <div className="space-y-4 mt-3">
                         <div className="border-l-4 border-yellow-400 pl-3">
                           <h4 className="font-medium mb-1">{t('alcohol')}</h4>
-                          <p className="text-sm">{t('alcohol_interaction_warning')}</p>
+                          <p className="text-sm">
+                            {product.name.includes("Teltab") 
+                              ? "Consumption of alcohol may increase the risk of side effects such as lightheadedness, dizziness, and low blood pressure. It's advisable to avoid alcohol while taking this medication." 
+                              : t('alcohol_interaction_warning')}
+                          </p>
                         </div>
                         
                         <div className="border-l-4 border-yellow-400 pl-3">
                           <h4 className="font-medium mb-1">{t('pregnancy')}</h4>
-                          <p className="text-sm">{t('pregnancy_warning')}</p>
+                          <p className="text-sm">
+                            {product.name.includes("Teltab") 
+                              ? "This medication can cause injury and even death to the unborn baby if used during the second and third trimesters of pregnancy. If you become pregnant while taking this medicine, tell your doctor right away." 
+                              : t('pregnancy_warning')}
+                          </p>
                         </div>
                         
                         <div className="border-l-4 border-yellow-400 pl-3">
                           <h4 className="font-medium mb-1">{t('driving')}</h4>
-                          <p className="text-sm">{t('driving_warning')}</p>
+                          <p className="text-sm">
+                            {product.name.includes("Teltab") 
+                              ? "This medicine may cause dizziness or fatigue, especially at the beginning of treatment. If you experience these symptoms, it's advisable not to drive or use machinery until you know how this medicine affects you." 
+                              : t('driving_warning')}
+                          </p>
                         </div>
                         
                         <div className="border-l-4 border-yellow-400 pl-3">
                           <h4 className="font-medium mb-1">{t('kidney')}</h4>
-                          <p className="text-sm">{t('kidney_warning')}</p>
+                          <p className="text-sm">
+                            {product.name.includes("Teltab") 
+                              ? "Tell your doctor if you have kidney problems. Your doctor may need to monitor your kidney function regularly while you take this medicine." 
+                              : t('kidney_warning')}
+                          </p>
                         </div>
+                        
+                        {product.name.includes("Teltab") ? (
+                          <div className="border-l-4 border-yellow-400 pl-3">
+                            <h4 className="font-medium mb-1">Liver</h4>
+                            <p className="text-sm">
+                              Tell your doctor if you have liver problems. Your doctor may need to monitor your liver function while you take this medicine.
+                            </p>
+                          </div>
+                        ) : null}
+                      </div>
+                      
+                      <div className="bg-red-50 p-3 rounded-md mt-5">
+                        <h4 className="font-medium text-red-800 mb-1">Important Safety Notice</h4>
+                        <p className="text-sm text-red-700">
+                          The information provided here is not exhaustive. Always read the package insert and consult your healthcare provider for complete safety information.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -564,17 +730,53 @@ const ProductDetail = () => {
                     <div>
                       <h3 className="font-semibold text-lg mb-2">{t('if_you_miss_dose')}</h3>
                       
-                      <p className="mb-4">{t('missed_dose_instructions')}</p>
-                      
-                      <div className="bg-blue-50 p-4 rounded-md">
-                        <h4 className="font-medium text-blue-800 mb-2">{t('what_to_do')}</h4>
-                        <ul className="list-disc pl-5 space-y-2">
-                          <li className="text-blue-700">{t('take_as_soon_as_remember')}</li>
-                          <li className="text-blue-700">{t('skip_if_next_dose_soon')}</li>
-                          <li className="text-blue-700">{t('never_double_dose')}</li>
-                          <li className="text-blue-700">{t('contact_doctor_if_unsure')}</li>
-                        </ul>
-                      </div>
+                      {product.name.includes("Teltab") ? (
+                        <div>
+                          <p className="mb-4">
+                            With medications used to treat high blood pressure like {product.name}, maintaining consistent levels in your bloodstream is important for the medicine to work effectively. Here's what to do if you miss a dose:
+                          </p>
+                          
+                          <div className="bg-white border border-gray-200 rounded-md p-4 mb-4">
+                            <h4 className="font-medium text-[#10847e] mb-2">Missing a Single Dose</h4>
+                            <p className="text-sm mb-3">
+                              If you forget to take your dose of {product.name}, take it as soon as you remember. However, if it is already close to the time for your next dose (within 12 hours), skip the missed dose and continue with your regular dosing schedule.
+                            </p>
+                            <p className="text-sm font-medium text-red-700">
+                              Do not take a double dose to make up for a forgotten dose. This may increase the risk of side effects.
+                            </p>
+                          </div>
+                          
+                          <div className="bg-white border border-gray-200 rounded-md p-4 mb-4">
+                            <h4 className="font-medium text-[#10847e] mb-2">Frequently Missing Doses</h4>
+                            <p className="text-sm">
+                              If you often forget to take your medication, try setting a daily alarm or using a pill organizer. Consider taking your medicine at the same time as other daily activities, such as brushing your teeth or eating a meal, to help you remember.
+                            </p>
+                          </div>
+                          
+                          <div className="bg-blue-50 p-4 rounded-md">
+                            <h4 className="font-medium text-blue-800 mb-2">Important Tips</h4>
+                            <ul className="list-disc pl-5 space-y-2">
+                              <li className="text-blue-700">Do not stop taking {product.name} without consulting your doctor, even if you feel well.</li>
+                              <li className="text-blue-700">Missing doses may lead to a loss of blood pressure control, which could increase your risk of heart attack, stroke, or other complications.</li>
+                              <li className="text-blue-700">If you're having trouble remembering to take your medication, talk to your healthcare provider about possible solutions.</li>
+                            </ul>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="mb-4">{t('missed_dose_instructions')}</p>
+                          
+                          <div className="bg-blue-50 p-4 rounded-md">
+                            <h4 className="font-medium text-blue-800 mb-2">{t('what_to_do')}</h4>
+                            <ul className="list-disc pl-5 space-y-2">
+                              <li className="text-blue-700">{t('take_as_soon_as_remember')}</li>
+                              <li className="text-blue-700">{t('skip_if_next_dose_soon')}</li>
+                              <li className="text-blue-700">{t('never_double_dose')}</li>
+                              <li className="text-blue-700">{t('contact_doctor_if_unsure')}</li>
+                            </ul>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -592,26 +794,65 @@ const ProductDetail = () => {
                     <div className="w-full">
                       <h3 className="font-semibold text-lg mb-3">{t('frequently_asked_questions')}</h3>
                       
-                      <div className="space-y-4">
-                        <div className="border rounded-md p-3">
-                          <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_how_long_q')}</h4>
-                          <p className="text-sm">{t('faq_how_long_a')}</p>
+                      {product.name.includes("Teltab") ? (
+                        <div className="space-y-4">
+                          <div className="border rounded-md p-3">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">How long should I take Teltab 80mg Tablet?</h4>
+                            <p className="text-sm">You may need to take Teltab 80mg Tablet for a long time, perhaps for the rest of your life. High blood pressure usually has no symptoms, so you may not know if your blood pressure is too high. Even when you feel well, keep taking this medicine as prescribed to keep your blood pressure controlled. Only stop taking this medicine on your doctor's advice.</p>
+                          </div>
+                          
+                          <div className="border rounded-md p-3">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">What are the common side effects of Teltab 80mg Tablet?</h4>
+                            <p className="text-sm">Common side effects of Teltab 80mg Tablet include dizziness, headache, diarrhea, and upper respiratory tract infection. These effects are often mild and go away as your body adjusts to the medicine. If they persist or worry you, consult your doctor. Less common side effects include back pain, sinus inflammation, and fatigue.</p>
+                          </div>
+                          
+                          <div className="border rounded-md p-3">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">Can I take Teltab 80mg Tablet with food?</h4>
+                            <p className="text-sm">Yes, Teltab 80mg Tablet can be taken with or without food. However, it is best to take it at the same time each day to maintain consistent blood levels in your body. Many patients find it helpful to take it as part of their morning or evening routine.</p>
+                          </div>
+                          
+                          <div className="border rounded-md p-3">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">Can Teltab 80mg Tablet be used during pregnancy?</h4>
+                            <p className="text-sm">No, Teltab 80mg Tablet should not be used during pregnancy, especially during the second and third trimesters, as it can cause harm to the developing baby. If you become pregnant while taking this medicine, inform your doctor immediately. Your doctor will likely switch you to a different blood pressure medication that's safer to use during pregnancy.</p>
+                          </div>
+                          
+                          <div className="border rounded-md p-3">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">What should I do if I forget to take a dose?</h4>
+                            <p className="text-sm">If you forget to take a dose of Teltab 80mg Tablet, take it as soon as you remember. However, if it is almost time for your next dose, skip the missed dose and take your next dose at the regular time. Do not take a double dose to make up for a forgotten dose. If you regularly forget doses, consider setting an alarm or asking a family member to remind you.</p>
+                          </div>
+                          
+                          <div className="border rounded-md p-3">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">How should I store Teltab 80mg Tablet?</h4>
+                            <p className="text-sm">Store Teltab 80mg Tablet at room temperature, away from light and moisture. Keep it out of reach of children and pets. Do not store it in the bathroom or kitchen where there might be excess heat or moisture. Discard any expired medication through proper disposal methods.</p>
+                          </div>
                         </div>
-                        
-                        <div className="border rounded-md p-3">
-                          <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_side_effects_q')}</h4>
-                          <p className="text-sm">{t('faq_side_effects_a')}</p>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="border rounded-md p-3">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_how_long_q')}</h4>
+                            <p className="text-sm">{t('faq_how_long_a')}</p>
+                          </div>
+                          
+                          <div className="border rounded-md p-3">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_side_effects_q')}</h4>
+                            <p className="text-sm">{t('faq_side_effects_a')}</p>
+                          </div>
+                          
+                          <div className="border rounded-md p-3">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_with_food_q')}</h4>
+                            <p className="text-sm">{t('faq_with_food_a')}</p>
+                          </div>
+                          
+                          <div className="border rounded-md p-3">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_storage_q')}</h4>
+                            <p className="text-sm">{t('faq_storage_a')}</p>
+                          </div>
                         </div>
-                        
-                        <div className="border rounded-md p-3">
-                          <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_with_food_q')}</h4>
-                          <p className="text-sm">{t('faq_with_food_a')}</p>
-                        </div>
-                        
-                        <div className="border rounded-md p-3">
-                          <h4 className="font-medium mb-1 text-[#FF8F00]">{t('faq_storage_q')}</h4>
-                          <p className="text-sm">{t('faq_storage_a')}</p>
-                        </div>
+                      )}
+                      
+                      <div className="bg-blue-50 p-3 rounded-md mt-5">
+                        <h4 className="font-medium text-blue-800 mb-1">{t('medical_advice')}</h4>
+                        <p className="text-sm text-blue-700">{t('seek_doctor_advice')}</p>
                       </div>
                     </div>
                   </div>
@@ -630,30 +871,73 @@ const ProductDetail = () => {
                     </svg>
                     <div>
                       <h3 className="font-semibold text-lg mb-2">{t('composition_of')} {product.name.toUpperCase()}</h3>
-                      {(product as any).composition ? (
-                        <p>{(product as any).composition}</p>
+                      
+                      {product.name.includes("Teltab") ? (
+                        <div>
+                          <div className="bg-white border border-gray-200 rounded-md p-4 mb-4">
+                            <h4 className="font-medium text-[#10847e] mb-2">Active Ingredient</h4>
+                            <p className="text-sm">
+                              Each Teltab 80mg Tablet contains 80 mg of Telmisartan.
+                            </p>
+                          </div>
+                          
+                          <div className="bg-white border border-gray-200 rounded-md p-4 mb-4">
+                            <h4 className="font-medium text-[#10847e] mb-2">Inactive Ingredients</h4>
+                            <p className="text-sm">
+                              Teltab 80mg Tablet may contain the following inactive ingredients: Meglumine, Sodium Hydroxide, Povidone, Polysorbate 80, Mannitol (E421), Magnesium Stearate, and other excipients.
+                            </p>
+                          </div>
+                          
+                          <div className="mt-4">
+                            <h4 className="font-medium mb-1">Manufacturer</h4>
+                            <p className="text-sm">Manufactured by XYZ Pharmaceuticals Ltd.</p>
+                          </div>
+                          
+                          <div className="mt-4">
+                            <h4 className="font-medium mb-1">Pack Size</h4>
+                            <p className="text-sm">Available in blister packs of 10, 14, 28, 30, 56, and 90 tablets.</p>
+                          </div>
+                          
+                          <div className="mt-4">
+                            <h4 className="font-medium mb-1">Storage Instructions</h4>
+                            <p className="text-sm">Store at room temperature between 15-30°C (59-86°F). Protect from moisture and light. Keep out of reach of children.</p>
+                          </div>
+                          
+                          <div className="bg-blue-50 p-3 rounded-md mt-4">
+                            <h4 className="font-medium text-blue-800 mb-1">Important Note</h4>
+                            <p className="text-sm text-blue-700">
+                              The information provided is for general educational purposes only. Specific product formulations may vary between manufacturers. Always refer to the package insert or consult your healthcare provider for complete information.
+                            </p>
+                          </div>
+                        </div>
                       ) : (
-                        <p>{t('composition_not_available')}</p>
-                      )}
-                      
-                      {(product as any).manufacturer && (
-                        <div className="mt-4">
-                          <h4 className="font-medium mb-1">{t('manufacturer')}</h4>
-                          <p>{(product as any).manufacturer}</p>
-                        </div>
-                      )}
-                      
-                      {(product as any).packSize && (
-                        <div className="mt-4">
-                          <h4 className="font-medium mb-1">{t('pack_size')}</h4>
-                          <p>{(product as any).packSize}</p>
-                        </div>
-                      )}
-                      
-                      {(product as any).storageInstructions && (
-                        <div className="mt-4">
-                          <h4 className="font-medium mb-1">{t('storage_instructions')}</h4>
-                          <p>{(product as any).storageInstructions}</p>
+                        <div>
+                          {(product as any).composition ? (
+                            <p>{(product as any).composition}</p>
+                          ) : (
+                            <p>{t('composition_not_available')}</p>
+                          )}
+                          
+                          {(product as any).manufacturer && (
+                            <div className="mt-4">
+                              <h4 className="font-medium mb-1">{t('manufacturer')}</h4>
+                              <p>{(product as any).manufacturer}</p>
+                            </div>
+                          )}
+                          
+                          {(product as any).packSize && (
+                            <div className="mt-4">
+                              <h4 className="font-medium mb-1">{t('pack_size')}</h4>
+                              <p>{(product as any).packSize}</p>
+                            </div>
+                          )}
+                          
+                          {(product as any).storageInstructions && (
+                            <div className="mt-4">
+                              <h4 className="font-medium mb-1">{t('storage_instructions')}</h4>
+                              <p>{(product as any).storageInstructions}</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
