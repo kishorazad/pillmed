@@ -48,6 +48,11 @@ interface ChemistMedicine {
   genericName: string;
   category: string;
   composition: string;
+  uploadedBy: {
+    id: number;
+    name: string;
+    role: 'admin' | 'subadmin' | 'chemist' | 'hospital_staff';
+  };
   description: string;
   price: number;
   discountedPrice: number;
@@ -106,6 +111,11 @@ const ChemistDashboard: React.FC = () => {
       genericName: 'Telmisartan/Hydrochlorothiazide',
       category: 'Cardiac Care',
       composition: 'Telmisartan (40mg) + Hydrochlorothiazide (12.5mg)',
+      uploadedBy: {
+        id: 1,
+        name: 'Admin User',
+        role: 'admin'
+      },
       description: 'Used for hypertension and reduces risk of cardiovascular events',
       price: 120,
       discountedPrice: 108,
@@ -122,6 +132,11 @@ const ChemistDashboard: React.FC = () => {
       genericName: 'Metformin/Glimepiride',
       category: 'Diabetes Care',
       composition: 'Metformin (500mg) + Glimepiride (1mg)',
+      uploadedBy: {
+        id: 3,
+        name: 'Hospital Staff User',
+        role: 'hospital_staff'
+      },
       description: 'Used to control high blood sugar in type 2 diabetes',
       price: 145,
       discountedPrice: 130,
@@ -138,6 +153,11 @@ const ChemistDashboard: React.FC = () => {
       genericName: 'Pantoprazole/Domperidone',
       category: 'Gastro Care',
       composition: 'Pantoprazole (40mg) + Domperidone (30mg)',
+      uploadedBy: {
+        id: 4,
+        name: 'Hospital Staff Member',
+        role: 'hospital_staff'
+      },
       description: 'Used for treatment of acid reflux and indigestion',
       price: 95,
       discountedPrice: 85,
@@ -155,6 +175,11 @@ const ChemistDashboard: React.FC = () => {
       genericName: 'Levocetirizine/Montelukast',
       category: 'Respiratory Care',
       composition: 'Levocetirizine (5mg) + Montelukast (10mg)',
+      uploadedBy: {
+        id: 2,
+        name: 'Subadmin User',
+        role: 'subadmin'
+      },
       description: 'Used for allergic rhinitis and asthma symptoms',
       price: 110,
       discountedPrice: 99,
@@ -171,6 +196,11 @@ const ChemistDashboard: React.FC = () => {
       genericName: 'Paracetamol',
       category: 'Pain Relief',
       composition: 'Paracetamol (650mg)',
+      uploadedBy: {
+        id: 5,
+        name: 'Chemist User',
+        role: 'chemist'
+      },
       description: 'Used for fever and mild to moderate pain relief',
       price: 30,
       discountedPrice: 30,
@@ -735,7 +765,10 @@ const ChemistDashboard: React.FC = () => {
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
-              {/* Add medicine button removed - chemists can only edit existing medicines */}
+              <Button onClick={handleAddMedicine}>
+                <PlusCircle className="h-4 w-4 mr-2" />
+                {t('add_medicine')}
+              </Button>
             </div>
           </div>
 
@@ -822,7 +855,7 @@ const ChemistDashboard: React.FC = () => {
           <DialogHeader>
             <DialogTitle>{t('add_new_medicine')}</DialogTitle>
             <DialogDescription>
-              {t('add_medicine_description')}
+              All medicines uploaded by hospital staff and chemists require admin or subadmin approval. Only price and dosage can be directly edited for existing medicines.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmitMedicine} className="space-y-4 mt-4">
@@ -1190,7 +1223,10 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
   );
 };
 
-const MedicineCard: React.FC<{ medicine: ChemistMedicine }> = ({ medicine }) => {
+const MedicineCard: React.FC<{ 
+  medicine: ChemistMedicine;
+  onUpdatePrice: (medicineId: number, updatedData: { price: number; discountedPrice: number; packSize: string; }) => Promise<boolean>;
+}> = ({ medicine, onUpdatePrice }) => {
   const { t } = useLanguage();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
