@@ -160,6 +160,15 @@ const Home = () => {
             {/* Health Services with smaller grid & sliding */}
             <HealthServices />
             
+            {/* Medical Equipment Section */}
+            <MedicalEquipmentSection />
+            
+            {/* Medical Services Section */}
+            <MedicalServicesSection />
+            
+            {/* Emergency Services Section */}
+            <EmergencyServicesSection />
+            
             {/* Festival Offers */}
             <div className="my-6">
               <FestivalOffers />
@@ -227,6 +236,15 @@ const Home = () => {
             
             {/* Health Services with smaller grid & sliding */}
             <HealthServices />
+            
+            {/* Medical Equipment Section */}
+            <MedicalEquipmentSection />
+            
+            {/* Medical Services Section */}
+            <MedicalServicesSection />
+            
+            {/* Emergency Services Section */}
+            <EmergencyServicesSection />
             
             {/* Festival Offers */}
             <FestivalOffers />

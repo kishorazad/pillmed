@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import { 
   Stethoscope, 
   ActivitySquare as Wheelchair, 
-  Lungs as LungIcon, 
+  Heart as LungIcon, 
   Thermometer, 
   Bed,
   ArrowRight as ArrowRightIcon,
