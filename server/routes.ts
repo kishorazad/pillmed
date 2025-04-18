@@ -12,6 +12,8 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import { setupSeoRoutes } from './sitemap-generator';
+import mongoose from 'mongoose';
+import { Product } from './models'; // Import Product model directly
 
 // Choose the appropriate storage implementation
 declare global {
@@ -1160,10 +1162,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Try to search in MongoDB first for better performance with large datasets
       try {
-        // Import mongoose but use the existing connection
-        const mongoose = require('mongoose');
-        const { Product } = require('./models');
-        
         // Check if we're connected to MongoDB 
         if (global.useMongoStorage === true && mongoose.connection.readyState === 1) {  // Connected to MongoDB
           console.log('Using MongoDB for optimized medicine search');
