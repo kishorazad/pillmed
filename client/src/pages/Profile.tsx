@@ -368,21 +368,60 @@ const Profile = () => {
     }
   };
   
-  // Handle logout
-  const handleLogout = () => {
-    // Use the store's setUser function directly
-    useStore.getState().setUser(null);
-    
-    // Explicitly fetch cart for guest user after logout
-    setTimeout(() => {
-      useStore.getState().fetchCart();
-    }, 500);
-    
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
-    });
-    setActiveTab('login');
+  // Enhanced logout with proper server-side session cleanup
+  const handleLogout = async () => {
+    try {
+      console.log('Initiating logout process');
+      
+      // Call the server to destroy the session
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Logout failed on server');
+      }
+      
+      console.log('Server-side logout successful');
+      
+      // Use the store's setUser function to clear local state
+      useStore.getState().setUser(null);
+      
+      // Query client invalidation to force refetch of user data
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      queryClient.setQueryData(['/api/user'], null);
+      
+      // Explicitly fetch cart for guest user after logout
+      setTimeout(() => {
+        console.log('Fetching guest cart after logout');
+        useStore.getState().fetchCart();
+      }, 500);
+      
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+      });
+      
+      // Force reload the page to clear any lingering state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
+    } catch (error) {
+      console.error('Logout error:', error);
+      
+      // Fallback: Even if server logout fails, clear client state
+      useStore.getState().setUser(null);
+      queryClient.setQueryData(['/api/user'], null);
+      
+      toast({
+        title: "Logout issue",
+        description: "Logged out with some issues. Please refresh the page.",
+        variant: "destructive",
+      });
+      
+      setActiveTab('login');
+    }
   };
   
   // Fetch current user data from API

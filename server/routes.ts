@@ -608,6 +608,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // User logout endpoint
+  app.post("/api/logout", (req: Request, res: Response) => {
+    console.log("Logout request received");
+    
+    if (req.session) {
+      const sessionID = req.sessionID;
+      console.log(`Clearing session: ${sessionID}`);
+      
+      // Clear user data from session first
+      (req.session as any).user = null;
+      
+      // Destroy the session completely
+      req.session.destroy(err => {
+        if (err) {
+          console.error("Error destroying session:", err);
+          return res.status(500).json({ message: "Error logging out" });
+        }
+        
+        console.log(`Session ${sessionID} successfully destroyed`);
+        
+        // Clear any session cookie as well
+        res.clearCookie('connect.sid');
+        
+        // Ensure the browser receives a 200 OK status
+        res.status(200).json({ success: true, message: "Logged out successfully" });
+      });
+    } else {
+      console.log("No active session to clear");
+      res.status(200).json({ success: true, message: "No active session" });
+    }
+  });
+
   // User login with proper password verification - Optimized for performance
   // Get the current authenticated user (if any)
   app.get("/api/user", async (req: Request, res: Response) => {
