@@ -302,6 +302,18 @@ const Profile = () => {
     setActiveTab('login');
   };
   
+  // Fetch current user data from API
+  const { data: userData, isLoading: userLoading } = useQuery({
+    queryKey: ['/api/user'],
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    onSuccess: (data) => {
+      if (data && !user) {
+        // Update the store with user data if not already set
+        setUser(data);
+      }
+    },
+  });
+
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
