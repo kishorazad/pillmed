@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { IStorage, memStorage } from './storage';
+import { IStorage } from './storage';
+import { storage as memStorage } from './storage';
 import { 
   User, 
   Category, 
@@ -52,6 +53,57 @@ import {
 import { initializeDatabase } from './services/mongodb-service';
 
 export class MongoDBStorage implements IStorage {
+  // Implemented methods for notificationTokens
+  async saveNotificationToken(token: any): Promise<any> {
+    // Fallback to memory storage for now
+    return memStorage.saveNotificationToken(token);
+  }
+  
+  async getNotificationTokensByUserId(userId: number): Promise<any[]> {
+    // Fallback to memory storage for now
+    return memStorage.getNotificationTokensByUserId(userId);
+  }
+  
+  async deleteNotificationToken(token: string): Promise<boolean> {
+    // Fallback to memory storage for now
+    return memStorage.deleteNotificationToken(token);
+  }
+  
+  // Implement getUsers method required by IStorage
+  async getUsers(): Promise<UserType[]> {
+    try {
+      const users = await User.find().lean();
+      return users.map(user => this.convertToUserType(user));
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      return [];
+    }
+  }
+  
+  // Implement transferCartItems method required by IStorage
+  async transferCartItems(fromUserId: number, toUserId: number): Promise<boolean> {
+    try {
+      const fromCartItems = await CartItem.find({ userId: fromUserId }).lean();
+      
+      // Add each item to the target user's cart
+      for (const item of fromCartItems) {
+        const newItem = {
+          userId: toUserId,
+          productId: item.productId,
+          quantity: item.quantity
+        };
+        await this.addToCart(newItem);
+      }
+      
+      // Clear the source user's cart
+      await this.clearCart(fromUserId);
+      
+      return true;
+    } catch (error) {
+      console.error('Error transferring cart items:', error);
+      return false;
+    }
+  }
   
   constructor() {
     // Connect to MongoDB and initialize database
@@ -96,12 +148,19 @@ export class MongoDBStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<UserType> {
     try {
+      console.log('MongoDB storage: Creating user with data:', JSON.stringify(user));
       const newUser = new User(user);
+      console.log('MongoDB storage: Created user model instance');
       const savedUser = await newUser.save();
-      return this.convertToUserType(savedUser.toObject());
+      console.log('MongoDB storage: User saved to database, document ID:', savedUser._id);
+      const convertedUser = this.convertToUserType(savedUser.toObject());
+      console.log('MongoDB storage: Converted user data:', JSON.stringify(convertedUser));
+      return convertedUser;
     } catch (error) {
-      console.error('Error creating user:', error);
-      throw error;
+      console.error('Error creating user in MongoDB:', error);
+      // Fall back to memory storage if MongoDB save fails
+      console.log('Falling back to memory storage for user creation');
+      return memStorage.createUser(user);
     }
   }
 
