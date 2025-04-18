@@ -224,18 +224,22 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
                   <div className="p-4">
                     <h3 className="font-medium text-sm mb-1 line-clamp-2 h-10">{product.name}</h3>
                     
-                    <div className="flex items-center mb-2">
-                      <div className="flex items-center bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">
-                        <Star className="h-3 w-3 mr-1 fill-current" />
-                        <span>{product.rating}</span>
+                    {product.rating && (
+                      <div className="flex items-center mb-2">
+                        <div className="flex items-center bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">
+                          <Star className="h-3 w-3 mr-1 fill-current" />
+                          <span>{product.rating}</span>
+                        </div>
+                        {product.ratingCount && (
+                          <span className="text-xs text-gray-500 ml-2">{product.ratingCount} {t('ratings')}</span>
+                        )}
                       </div>
-                      <span className="text-xs text-gray-500 ml-2">{product.ratingCount} {t('ratings')}</span>
-                    </div>
+                    )}
                     
                     <div className="flex items-baseline">
                       {product.discountedPrice ? (
                         <>
-                          <span className="text-lg font-semibold">₹{product.discountedPrice.toFixed(2)}</span>
+                          <span className="text-lg font-semibold">₹{(product.discountedPrice as number).toFixed(2)}</span>
                           <span className="text-gray-500 text-sm line-through ml-2">₹{product.price.toFixed(2)}</span>
                         </>
                       ) : (
