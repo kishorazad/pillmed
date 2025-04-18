@@ -63,7 +63,7 @@ interface User {
   username: string;
   email: string;
   phone: string;
-  role: 'admin' | 'doctor' | 'pharmacy' | 'laboratory' | 'user';
+  role: 'admin' | 'doctor' | 'pharmacy' | 'laboratory' | 'user' | 'chemist' | 'hospital';
   status: 'active' | 'pending' | 'suspended';
   joinDate: string;
   lastActive: string;
@@ -165,6 +165,30 @@ const UserManagement = () => {
       joinDate: '2023-06-14',
       lastActive: '2025-03-20',
       avatar: 'https://randomuser.me/api/portraits/men/7.jpg'
+    },
+    {
+      id: 8,
+      name: 'Anand Kumar',
+      username: 'chemist1',
+      email: 'anand.kumar@example.com',
+      phone: '+91 98765 12345',
+      role: 'chemist',
+      status: 'active',
+      joinDate: '2023-05-10',
+      lastActive: '2025-04-12',
+      avatar: 'https://randomuser.me/api/portraits/men/8.jpg'
+    },
+    {
+      id: 9,
+      name: 'Apollo Hospital',
+      username: 'hospital1',
+      email: 'apollo.hospital@example.com',
+      phone: '+91 76543 09876',
+      role: 'hospital',
+      status: 'active',
+      joinDate: '2023-01-12',
+      lastActive: '2025-04-11',
+      avatar: 'https://randomuser.me/api/portraits/men/9.jpg'
     }
   ]);
   
@@ -249,8 +273,12 @@ const UserManagement = () => {
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'pharmacy':
         return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'chemist':
+        return 'bg-pink-100 text-pink-800 border-pink-200';
       case 'laboratory':
         return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'hospital':
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'user':
         return 'bg-gray-100 text-gray-800 border-gray-200';
       default:
@@ -267,8 +295,12 @@ const UserManagement = () => {
         return <Stethoscope className="h-4 w-4" />;
       case 'pharmacy':
         return <Building2 className="h-4 w-4" />;
+      case 'chemist':
+        return <Pill className="h-4 w-4" />;
       case 'laboratory':
         return <Beaker className="h-4 w-4" />;
+      case 'hospital':
+        return <Building2 className="h-4 w-4" />;
       case 'user':
         return <User className="h-4 w-4" />;
       default:
@@ -348,7 +380,9 @@ const UserManagement = () => {
                       <SelectItem value="admin">Admin</SelectItem>
                       <SelectItem value="doctor">Doctor</SelectItem>
                       <SelectItem value="pharmacy">Pharmacy</SelectItem>
+                      <SelectItem value="chemist">Chemist</SelectItem>
                       <SelectItem value="laboratory">Laboratory</SelectItem>
+                      <SelectItem value="hospital">Hospital</SelectItem>
                       <SelectItem value="user">User</SelectItem>
                     </SelectContent>
                   </Select>
