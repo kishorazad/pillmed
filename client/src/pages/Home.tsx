@@ -34,6 +34,10 @@ import AppPromotion from '@/components/home/AppPromotion';
 import HealthTipOfTheDay from '@/components/home/HealthTipOfTheDay';
 import PrescriptionUpload from '@/components/home/PrescriptionUpload';
 import PreviouslyBrowsedItems from '@/components/browsing/PreviouslyBrowsedItems';
+import BrandPromotions from '@/components/home/BrandPromotions';
+import FestivalOffers from '@/components/home/FestivalOffers';
+import SpecialOffers from '@/components/home/SpecialOffers';
+import TopDeals from '@/components/home/TopDeals';
 
 // Mobile-optimized components
 import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
@@ -147,6 +151,21 @@ const Home = () => {
               />
             )}
             
+            {/* Mobile Brand Promotions */}
+            <div className="my-6">
+              <BrandPromotions />
+            </div>
+            
+            {/* Mobile Festival Offers */}
+            <div className="my-6">
+              <FestivalOffers />
+            </div>
+            
+            {/* Mobile Special Offers */}
+            <div className="my-6">
+              <SpecialOffers />
+            </div>
+            
             {/* Previously Browsed Items */}
             <PreviouslyBrowsedItems />
             
@@ -203,6 +222,19 @@ const Home = () => {
             </section>
             
             <FeaturedProducts />
+            
+            {/* Desktop Brand Promotions */}
+            <BrandPromotions />
+            
+            {/* Desktop Festival Offers */}
+            <FestivalOffers />
+            
+            {/* Desktop Special Offers */}
+            <SpecialOffers />
+            
+            {/* Desktop Top Deals */}
+            <TopDeals />
+            
             <PreviouslyBrowsedItems />
             <LabTests />
             <ConsultDoctors />

@@ -1,77 +1,88 @@
 import React from 'react';
-import CategoryPromotions from './CategoryPromotions';
-import { useLanguage } from '@/components/LanguageSwitcher';
+import { useLanguage } from '../LanguageSwitcher';
+import { ArrowRightIcon } from 'lucide-react';
+import { Link } from 'wouter';
+
+interface Brand {
+  id: number;
+  name: string;
+  imageUrl: string;
+  description?: string;
+}
 
 const BrandPromotions: React.FC = () => {
   const { t } = useLanguage();
   
-  // Brand promotion data
-  const brandPromotions = [
+  // Sample brands data
+  const brands: Brand[] = [
     {
       id: 1,
-      title: 'Himalaya',
-      description: 'Herbal Healthcare Products',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/6d462f424a43372ea8b7b6f8ca13e052.png',
-      link: '/brands/himalaya',
+      name: 'Himalaya',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/6d462f424a43372ea8b7b6f8ee455ae5.png',
+      description: 'Natural healthcare products'
     },
     {
       id: 2,
-      title: 'Dettol',
-      description: 'Antiseptic Products',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/9cf0c849851a3e1dbf7934dc2de719cb.png',
-      link: '/brands/dettol',
+      name: 'Dabur',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/335dae76832d370c94f0440f5ba89e1f.png',
+      description: 'Ayurvedic healthcare'
     },
     {
       id: 3,
-      title: 'Dabur',
-      description: 'Ayurvedic Healthcare',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/f692f7243b8036ed97d99a7973dd42b3.png',
-      link: '/brands/dabur',
+      name: 'Baidyanath',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/2f85888a0a4f3d22a65931aef6355a77.png',
+      description: 'Traditional remedies'
     },
     {
       id: 4,
-      title: 'Baidyanath',
-      description: 'Traditional Medicines',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/8a76e2f3b4583858a1a0c51b5ad4013a.png',
-      link: '/brands/baidyanath',
+      name: 'Dr. Morepen',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/ecad9a974a273b658f32c2ac65d736f9.png',
+      description: 'Healthcare devices'
     },
     {
       id: 5,
-      title: 'Zandu',
-      description: 'Ayurvedic Products',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/1e622b0308ec3ab48887512eaa3488a5.png',
-      link: '/brands/zandu',
+      name: 'Zandu',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/105ceca515ee30509f93309ae75306aa.png',
+      description: 'Ayurvedic healthcare'
     },
     {
       id: 6,
-      title: 'Horlicks',
-      description: 'Nutritional Supplements',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/0e3bad8d2bfd3ee3b02d1ecc1a30c493.png',
-      link: '/brands/horlicks',
-    },
-    {
-      id: 7,
-      title: 'Ensure',
-      description: 'Complete Nutrition',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/8c985f80de9c3e6db42c0e47b3abd468.png',
-      link: '/brands/ensure',
-    },
-    {
-      id: 8,
-      title: 'Protinex',
-      description: 'Protein Supplements',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/c8a4724446563038afe9c71aaece1cfb.png',
-      link: '/brands/protinex',
-    },
+      name: 'Patanjali',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/c9cfac89b6f63dd1a151c7fb23a8d830.png',
+      description: 'Ayurvedic products'
+    }
   ];
-  
+
   return (
-    <CategoryPromotions
-      title={t('featured_brands')}
-      description={t('shop_by_your_trusted_brands')}
-      promotions={brandPromotions}
-      variant="brand"
-    />
+    <section className="py-6">
+      <div className="container mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl md:text-2xl font-bold">{t('featured_brands')}</h2>
+          <Link href="/brands" className="text-primary flex items-center text-sm">
+            {t('view_all')} <ArrowRightIcon className="ml-1 h-4 w-4" />
+          </Link>
+        </div>
+        
+        <p className="text-gray-600 mb-4">{t('shop_by_your_trusted_brands')}</p>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          {brands.map((brand) => (
+            <Link key={brand.id} href={`/brands/${brand.id}`}>
+              <div className="bg-white rounded-lg shadow-sm p-4 transition duration-300 hover:shadow-md flex flex-col items-center text-center cursor-pointer">
+                <div className="w-20 h-20 mb-3 flex items-center justify-center">
+                  <img 
+                    src={brand.imageUrl} 
+                    alt={brand.name} 
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+                <h3 className="font-medium text-sm">{brand.name}</h3>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 };
 

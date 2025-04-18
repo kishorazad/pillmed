@@ -1,53 +1,105 @@
 import React from 'react';
-import CategoryPromotions from './CategoryPromotions';
-import { useLanguage } from '@/components/LanguageSwitcher';
+import { useLanguage } from '../LanguageSwitcher';
+import { ArrowRightIcon } from 'lucide-react';
+import { Link } from 'wouter';
+
+interface FestivalOffer {
+  id: number;
+  name: string;
+  imageUrl: string;
+  discount: number;
+  offerCode: string;
+  expiryDate: string;
+}
 
 const FestivalOffers: React.FC = () => {
   const { t } = useLanguage();
   
-  // Festival offers data
-  const festivalOffers = [
+  // Sample offers data
+  const offers: FestivalOffer[] = [
     {
       id: 1,
-      title: 'Summer Sale',
-      description: 'Up to 30% off on summer essentials',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/1f6c578a-89e5-4814-8bc4-1d9e2bdc3df4.jpg',
-      link: '/offers/summer-sale',
-      backgroundColor: '#FFF4E5',
+      name: 'Diwali Special',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/80d465aa6e6-GRAND.jpg',
+      discount: 30,
+      offerCode: 'DIWALI30',
+      expiryDate: '2025-04-28'
     },
     {
       id: 2,
-      title: 'Monsoon Care',
-      description: 'Big discounts on immunity boosters',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/8fe374c3-fd48-4234-a827-e5e590bdbb6f.jpg',
-      link: '/offers/monsoon-care',
-      backgroundColor: '#E6F7FF',
+      name: 'Summer Health',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/a9ad640ce86-DIABETES.jpg',
+      discount: 25,
+      offerCode: 'SUMMER25',
+      expiryDate: '2025-05-10'
     },
     {
       id: 3,
-      title: 'Diabetes Day',
-      description: 'Special deals on diabetes care',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/9da8ae67-0c2e-4273-b688-c6fc669bf761.jpg',
-      link: '/offers/diabetes-day',
-      backgroundColor: '#F5E6FF',
-    },
-    {
-      id: 4,
-      title: 'Women\'s Health',
-      description: 'Health essentials for women',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/c3f9ab30-1837-4866-aea3-3407e14d8b9d.jpg',
-      link: '/offers/womens-health',
-      backgroundColor: '#FFE6EA',
+      name: 'Weekend Special',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/fcbf95577c7-MEGA.jpg',
+      discount: 20,
+      offerCode: 'WEEKEND20',
+      expiryDate: '2025-04-25'
     }
   ];
-  
+
+  // Function to calculate days remaining until expiry
+  const getDaysRemaining = (expiryDate: string): number => {
+    const currentDate = new Date();
+    const expiry = new Date(expiryDate);
+    const diffTime = expiry.getTime() - currentDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
   return (
-    <CategoryPromotions
-      title={t('festival_offers')}
-      description={t('limited_time_offers_and_deals')}
-      promotions={festivalOffers}
-      variant="festival"
-    />
+    <section className="py-6 bg-gray-50">
+      <div className="container mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl md:text-2xl font-bold">{t('festival_offers')}</h2>
+          <Link href="/offers/festival" className="text-primary flex items-center text-sm">
+            {t('view_all')} <ArrowRightIcon className="ml-1 h-4 w-4" />
+          </Link>
+        </div>
+        
+        <p className="text-gray-600 mb-4">{t('limited_time_offers_and_deals')}</p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {offers.map((offer) => (
+            <Link key={offer.id} href={`/offers/${offer.id}`}>
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden transition duration-300 hover:shadow-md cursor-pointer">
+                <div className="h-40 overflow-hidden relative">
+                  <img 
+                    src={offer.imageUrl} 
+                    alt={offer.name} 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-0 right-0 bg-primary text-white px-3 py-1 m-2 rounded-full text-sm font-medium">
+                    {offer.discount}% {t('off')}
+                  </div>
+                </div>
+                
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg mb-1">{offer.name}</h3>
+                  <div className="flex justify-between items-center">
+                    <div className="bg-gray-100 px-2 py-1 rounded-md text-sm">
+                      <span className="font-medium">{offer.offerCode}</span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {getDaysRemaining(offer.expiryDate) > 0 ? (
+                        <span>{getDaysRemaining(offer.expiryDate)} days left</span>
+                      ) : (
+                        <span className="text-red-500">Expired</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 };
 

@@ -170,6 +170,16 @@ export const translations: Record<string, Record<string, string>> = {
     'get_percent_off': 'Get {percent}% OFF',
     'strip_of_tablets': 'Strip Of {count} Tablets',
     'order_on_whatsapp': 'ORDER ON WHATSAPP',
+    
+    // Promotion sections
+    'featured_brands': 'Featured Brands',
+    'shop_by_your_trusted_brands': 'Shop by your trusted brands',
+    'festival_offers': 'Festival Offers',
+    'limited_time_offers_and_deals': 'Limited time offers and deals',
+    'special_offers': 'Special Offers',
+    'exclusive_discounts_for_you': 'Exclusive discounts just for you',
+    'top_deals': 'Top Deals',
+    'best_deals_and_savings': 'Best deals and savings',
   },
   hi: {
     // Navigation & Basic UI
@@ -305,6 +315,16 @@ export const translations: Record<string, Record<string, string>> = {
     'get_percent_off': '{percent}% की छूट पाएं',
     'strip_of_tablets': '{count} टैबलेट की पट्टी',
     'order_on_whatsapp': 'व्हाट्सऐप पर ऑर्डर करें',
+    
+    // Promotion sections
+    'featured_brands': 'प्रमुख ब्रांड',
+    'shop_by_your_trusted_brands': 'अपने विश्वसनीय ब्रांड्स से खरीदारी करें',
+    'festival_offers': 'त्योहार ऑफर',
+    'limited_time_offers_and_deals': 'सीमित समय के ऑफर और डील्स',
+    'special_offers': 'विशेष ऑफर',
+    'exclusive_discounts_for_you': 'सिर्फ आपके लिए विशेष छूट',
+    'top_deals': 'टॉप डील्स',
+    'best_deals_and_savings': 'सर्वोत्तम डील्स और बचत',
   },
   ta: {
     'home': 'முகப்பு',
