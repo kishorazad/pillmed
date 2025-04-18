@@ -645,48 +645,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      console.log(`Login attempt initiated for: ${username}`);
+      
       // Support login with either username or email
       let user;
       
-      // Check if input contains @ symbol, treat it as email
-      if (username.includes('@')) {
-        console.log(`Login attempt with email: ${username}`);
+      // First try as username
+      user = await dbStorage.getUserByUsername(username);
+      if (user) {
+        console.log(`Found user by username: ${username}, user ID: ${user.id}`);
+      }
+      
+      // If not found, try as email
+      if (!user && username.includes('@')) {
+        console.log(`Username not found, trying as email: ${username}`);
         user = await dbStorage.getUserByEmail(username);
-      } else {
-        console.log(`Login attempt with username: ${username}`);
-        user = await dbStorage.getUserByUsername(username);
+        if (user) {
+          console.log(`Found user by email: ${username}, user ID: ${user.id}`);
+        }
       }
       
       if (!user) {
+        console.log(`Login failed: No user found for ${username}`);
         return res.status(401).json({ message: "Invalid username or password" });
       }
+      
+      // Log user details for debugging (except password)
+      console.log(`User found for login:`, {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        passwordType: user.password?.includes('.') ? 'hashed' : 'plain'
+      });
       
       // For backward compatibility, handle both hashed and plain text passwords
       let isPasswordValid = false;
       let needsUpgrade = false;
       
       // Check if password is already in hashed format (contains a dot separator)
-      if (user.password.includes('.')) {
+      if (user.password && user.password.includes('.')) {
         // Password is stored in hashed format (hash.salt)
         try {
+          console.log(`Verifying hashed password for user ${user.username}`);
           const [hashedPassword, salt] = user.password.split('.');
+          
+          // Log the first few characters of the stored hash for debugging
+          console.log(`Stored hashed password: ${hashedPassword.substring(0, 10)}... (length: ${hashedPassword.length})`);
+          
+          // Method 1: Using crypto.scryptSync (new method)
           const crypto = await import('crypto');
-          const hashVerify = crypto.scryptSync(password, salt, 64).toString('hex');
-          isPasswordValid = hashedPassword === hashVerify;
+          const hashVerify1 = crypto.scryptSync(password, salt, 64).toString('hex');
+          const isValid1 = hashedPassword === hashVerify1;
+          console.log(`Verification method 1 (scrypt): ${isValid1 ? 'success' : 'failed'}`);
+          
+          // Method 2: Using createHash (old method)
+          const hashVerify2 = crypto.createHash('sha256')
+            .update(password + salt)
+            .digest('hex');
+          const isValid2 = hashedPassword === hashVerify2;
+          console.log(`Verification method 2 (sha256): ${isValid2 ? 'success' : 'failed'}`);
+          
+          // Accept either method for backward compatibility
+          isPasswordValid = isValid1 || isValid2;
+          console.log(`Final password verification: ${isPasswordValid ? 'successful' : 'failed'}`);
         } catch (error) {
           console.error('Error verifying hashed password:', error);
         }
-      } else {
+      } else if (user.password) {
         // Fallback for plain text passwords (temporary support)
+        console.log(`Verifying plain text password for user ${user.username}`);
         isPasswordValid = user.password === password;
         needsUpgrade = isPasswordValid;
+        console.log(`Plain text password verification ${isPasswordValid ? 'successful' : 'failed'}`);
+      } else {
+        console.error(`User ${user.username} has no password set!`);
       }
       
       if (!isPasswordValid) {
+        console.log(`Login failed: Invalid password for user ${user.username}`);
         return res.status(401).json({ message: "Invalid username or password" });
       }
       
       // Set user in session immediately to speed up response
+      console.log(`Login successful for user ${user.username}, setting session`);
       (req.session as any).user = user;
       
       // Don't return the password
@@ -701,21 +743,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (needsUpgrade) {
         try {
           const crypto = await import('crypto');
+          console.log(`Upgrading password for user ${user.username} to hashed format`);
+          
+          // Use scrypt algorithm for better security
           const salt = crypto.randomBytes(16).toString('hex');
+          
+          // Using scrypt for better security
           const hash = crypto.scryptSync(password, salt, 64).toString('hex');
           const hashedPassword = `${hash}.${salt}`;
+          
+          console.log(`Generated new secure hash for user ${user.username}, salt length: ${salt.length}`);
           
           // Update the user's password to be hashed
           if (global.useMongoStorage) {
             // For MongoDB storage
+            console.log(`Updating user password in MongoDB for user ID: ${user.id}`);
             await mongoDBStorage.updateUser(user.id, { password: hashedPassword });
           } else {
             // For in-memory storage
+            console.log(`Updating user password in memory storage for user ID: ${user.id}`);
             await memStorage.updateUser(user.id, { password: hashedPassword });
           }
-          console.log(`Upgraded password for user ${username} to hashed format`);
+          console.log(`Successfully upgraded password for user ${username} to hashed format`);
         } catch (error) {
           console.error('Failed to upgrade password:', error);
+          console.error(error.stack);
         }
       }
       
