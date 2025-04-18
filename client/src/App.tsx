@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { useStore } from "./lib/store";
+import { LanguageProvider } from "./components/LanguageSwitcher";
 
 // Layout
 import Header from "./components/layout/Header";
@@ -75,24 +76,26 @@ function App() {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex flex-col min-h-screen pb-16 md:pb-0">
-        <Header />
-        <main className="flex-grow">
-          <Router />
-        </main>
-        <Footer />
-        <CartSidebar />
-        <MobileNavigation />
-        
-        {/* WhatsApp and Call Buttons */}
-        <FloatingContactButtons 
-          phoneNumber="8770762307"
-          whatsappNumber="918770762307"
-          message="Hello! I'm interested in ordering medicines from PillNow."
-        />
-      </div>
-      <NotificationHandler />
-      <Toaster />
+      <LanguageProvider>
+        <div className="flex flex-col min-h-screen pb-16 md:pb-0">
+          <Header />
+          <main className="flex-grow">
+            <Router />
+          </main>
+          <Footer />
+          <CartSidebar />
+          <MobileNavigation />
+          
+          {/* WhatsApp and Call Buttons */}
+          <FloatingContactButtons 
+            phoneNumber="8770762307"
+            whatsappNumber="918770762307"
+            message="Hello! I'm interested in ordering medicines from PillNow."
+          />
+        </div>
+        <NotificationHandler />
+        <Toaster />
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

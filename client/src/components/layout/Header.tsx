@@ -4,11 +4,13 @@ import { useStore } from '@/lib/store';
 import Logo from './Logo';
 import MedicineSearch from '@/components/search/MedicineSearch';
 import NotificationHandler from '@/components/notifications/NotificationHandler';
+import LanguageSwitcher, { useLanguage } from '@/components/LanguageSwitcher';
 
 const Header = () => {
   const [location, navigate] = useLocation();
   const { cart, openCart, user } = useStore();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const { t } = useLanguage();
   
   return (
     <header className="shadow-sm sticky top-0 z-50 bg-white">
@@ -50,6 +52,9 @@ const Header = () => {
           
           {/* Navigation - Sign In and Cart buttons removed from mobile view */}
           <div className="hidden md:flex items-center gap-5 text-sm mt-2 md:mt-0">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+            
             {/* Notification Bell */}
             <NotificationHandler />
             

@@ -270,45 +270,45 @@ const ProductDetail = () => {
             </div>
             
             <div className="mb-6">
-              <div className="flex mb-4 border-b overflow-x-auto">
+              <div className="flex mb-0 border-b overflow-x-auto bg-gray-50 rounded-t-md">
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'uses' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'uses' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
                   onClick={() => setActiveTab('uses')}
                 >
                   Uses
                 </button>
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'composition' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
-                  onClick={() => setActiveTab('composition')}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'directions' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
+                  onClick={() => setActiveTab('directions')}
                 >
-                  Composition
+                  Directions for Use
                 </button>
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'how-to-use' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
-                  onClick={() => setActiveTab('how-to-use')}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'storage' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
+                  onClick={() => setActiveTab('storage')}
                 >
-                  How to Use
+                  Storage and Disposal
                 </button>
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'side-effects' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
-                  onClick={() => setActiveTab('side-effects')}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'quicktips' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
+                  onClick={() => setActiveTab('quicktips')}
                 >
-                  Side Effects
+                  Quick Tips
                 </button>
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'safety' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
-                  onClick={() => setActiveTab('safety')}
-                >
-                  Safety Advice
-                </button>
-                <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'interactions' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'interactions' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
                   onClick={() => setActiveTab('interactions')}
                 >
                   Interactions
                 </button>
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'facts' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'composition' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
+                  onClick={() => setActiveTab('composition')}
+                >
+                  Ingredients and Benefits
+                </button>
+                <button 
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'facts' ? 'text-[#10847e] border-b-2 border-[#10847e] bg-white' : 'text-gray-600 hover:text-[#10847e]'}`}
                   onClick={() => setActiveTab('facts')}
                 >
                   Fact Box
@@ -435,10 +435,10 @@ const ProductDetail = () => {
                 </div>
               )}
               
-              {activeTab === 'how-to-use' && (
-                <div className="text-gray-700">
+              {activeTab === 'directions' && (
+                <div className="bg-white p-4 text-gray-700">
                   <div className="flex items-start mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
                       <path d="M19 15V9c0-1.2-1-2-2-2h-8" />
                       <rect x="3" y="7" width="5" height="5" rx="1" />
                       <path d="M9 12h2.7" />
@@ -447,12 +447,19 @@ const ProductDetail = () => {
                       <path d="M16 19h.01" />
                     </svg>
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">How to Use {product.name.toUpperCase()}</h3>
-                      {(product as any).how_to_use ? (
-                        <div dangerouslySetInnerHTML={{ __html: (product as any).how_to_use }} />
-                      ) : (
-                        <p>Take this medication as directed by your doctor. Do not increase your dose or use this drug more often or for longer than prescribed. Use the lowest effective dose for the shortest duration possible to minimize side effects.</p>
-                      )}
+                      <h3 className="font-semibold text-lg mb-3">Directions for Use of {product.name.toUpperCase()}</h3>
+                      <ul className="list-disc pl-6 space-y-2">
+                        {(product as any).how_to_use ? (
+                          <div dangerouslySetInnerHTML={{ __html: (product as any).how_to_use }} />
+                        ) : (
+                          <>
+                            <li>Take this medication as directed by your doctor.</li>
+                            <li>Do not increase your dose or use this drug more often or for longer than prescribed.</li>
+                            <li>Use the lowest effective dose for the shortest duration possible to minimize side effects.</li>
+                            <li>Take with or without food as directed by your physician.</li>
+                          </>
+                        )}
+                      </ul>
                       
                       {(product as any).if_miss && (
                         <div className="mt-4">
@@ -465,6 +472,62 @@ const ProductDetail = () => {
                         <p className="text-amber-800 text-sm font-medium">Important Note</p>
                         <p className="text-amber-700 text-sm mt-1">This medication information is provided for informational purposes only. Always consult your healthcare provider for proper dosage instructions tailored to your specific health condition.</p>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'storage' && (
+                <div className="bg-white p-4 text-gray-700">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
+                      <path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3" />
+                      <path d="M21 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3" />
+                      <path d="M4 12h16" />
+                      <path d="M9 12v4" />
+                      <path d="M15 12v4" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-3">Storage and Disposal for {product.name.toUpperCase()}</h3>
+                      <ul className="list-disc pl-6 space-y-2">
+                        {((product as any).storageInstructions || (product as any).storage) ? (
+                          <div dangerouslySetInnerHTML={{ __html: (product as any).storageInstructions || (product as any).storage }} />
+                        ) : (
+                          <>
+                            <li>Store at room temperature away from light and moisture.</li>
+                            <li>Keep all medications away from children and pets.</li>
+                            <li>Do not flush medications down the toilet or pour them into a drain unless instructed to do so.</li>
+                            <li>Properly discard this product when it is expired or no longer needed.</li>
+                          </>
+                        )}
+                      </ul>
+                      
+                      <div className="mt-4 p-3 bg-blue-50 rounded-md">
+                        <p className="text-blue-800 text-sm font-medium">Temperature Advice</p>
+                        <p className="text-blue-700 text-sm mt-1">Unless specifically mentioned, store between 15-30°C (59-86°F). Keep away from heat, direct light, and humid places.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'quicktips' && (
+                <div className="bg-white p-4 text-gray-700">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-3">Quick Tips for {product.name.toUpperCase()}</h3>
+                      <ul className="list-disc pl-6 space-y-2">
+                        <li>Take this medication regularly to get the most benefit from it.</li>
+                        <li>If you experience stomach upset, consider taking it with food.</li>
+                        <li>Inform your doctor if you experience any unusual side effects.</li>
+                        <li>Do not share your medication with others even if they have the same symptoms.</li>
+                        <li>Keep a list of all the products you use and share it with your doctor.</li>
+                      </ul>
                     </div>
                   </div>
                 </div>
