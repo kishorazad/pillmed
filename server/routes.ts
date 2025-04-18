@@ -1694,8 +1694,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return product;
       });
       
-      // Cache the results for future requests
-      cacheService.set(cacheKey, simplifiedSubstitutes, cacheService.getTTL('search'));
+      // Cache the results for future requests with LRU optimization for product-type cache
+      cacheService.set(cacheKey, simplifiedSubstitutes, cacheService.getTTL('search'), 'product');
       
       res.json(simplifiedSubstitutes);
     } catch (error) {
@@ -2058,6 +2058,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup SEO routes for sitemap.xml and robots.txt
   setupSeoRoutes(app);
+  
+  // Cache monitoring endpoint (admin only) for 10 lakh+ product analysis
+  app.get("/api/admin/cache-stats", async (req: Request, res: Response) => {
+    try {
+      // Check if user is authenticated and is an admin
+      const userSession = req.session as any;
+      if (!userSession || !userSession.user || userSession.user.role !== 'admin') {
+        return res.status(403).json({ error: "Unauthorized. Admin access required." });
+      }
+      
+      const cacheStats = cacheService.getCacheStats();
+      res.json(cacheStats);
+    } catch (error) {
+      console.error("Error fetching cache stats:", error);
+      res.status(500).json({ error: "Failed to fetch cache statistics" });
+    }
+  });
   
   const httpServer = createServer(app);
 

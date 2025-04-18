@@ -46,37 +46,55 @@ class CacheService {
    * @param type Optional type indicator for specialized cache management
    */
   set<T>(key: string, value: T, ttl: number = this.defaultTTL, type?: 'search' | 'product' | 'category' | 'cart'): void {
-    // Memory protection for large datasets (10 lakh+ products)
-    const memoryUsage = process.memoryUsage().heapUsed / 1024 / 1024;
-    if (memoryUsage > this.MAX_MEMORY_USAGE) {
-      // Clear 30% of cache when memory usage is too high
-      this.evictCachePercentage(30);
-    }
-    
-    // Handle LRU cache limits for specialized cache types
-    if (type === 'search') {
-      // LRU implementation for search queries
-      this.searchCacheKeys.push(key);
-      if (this.searchCacheKeys.length > this.SEARCH_CACHE_LIMIT) {
-        const oldestKey = this.searchCacheKeys.shift();
-        if (oldestKey) delete this.cache[oldestKey];
-      }
-    } else if (type === 'product') {
-      // LRU implementation for product details
-      this.productCacheKeys.push(key);
-      if (this.productCacheKeys.length > this.PRODUCT_CACHE_LIMIT) {
-        const oldestKey = this.productCacheKeys.shift();
-        if (oldestKey) delete this.cache[oldestKey];
-      }
-    }
-    
-    // Store in cache with expiry
+    // Set expiry time based on current time + TTL
     const expiry = Date.now() + ttl;
+    
+    // Save the data in cache
     this.cache[key] = { data: value, expiry };
     
-    // Log cache operations in development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Cache SET: ${key} (expires in ${ttl/1000}s)`);
+    // For specialized types, update LRU tracking
+    if (type === 'search') {
+      // Remove key if it exists to avoid duplicates
+      const index = this.searchCacheKeys.indexOf(key);
+      if (index > -1) {
+        this.searchCacheKeys.splice(index, 1);
+      }
+      // Add key to end of array (most recently used)
+      this.searchCacheKeys.push(key);
+      
+      // If exceeding limit, remove oldest keys (LRU eviction)
+      if (this.searchCacheKeys.length > this.SEARCH_CACHE_LIMIT) {
+        const oldestKey = this.searchCacheKeys.shift();
+        if (oldestKey) {
+          delete this.cache[oldestKey];
+        }
+      }
+    } else if (type === 'product') {
+      // Same LRU implementation for products
+      const index = this.productCacheKeys.indexOf(key);
+      if (index > -1) {
+        this.productCacheKeys.splice(index, 1);
+      }
+      this.productCacheKeys.push(key);
+      
+      if (this.productCacheKeys.length > this.PRODUCT_CACHE_LIMIT) {
+        const oldestKey = this.productCacheKeys.shift();
+        if (oldestKey) {
+          delete this.cache[oldestKey];
+        }
+      }
+    }
+    
+    // Check memory usage if we have a lot of items
+    const totalItems = Object.keys(this.cache).length;
+    if (totalItems > 1000) {
+      const memoryUsage = process.memoryUsage().heapUsed / 1024 / 1024; // In MB
+      
+      // If approaching memory limit, evict a percentage of the cache
+      if (memoryUsage > this.MAX_MEMORY_USAGE * 0.9) {
+        this.evictCachePercentage(30);
+        console.log(`Memory pressure detected (${memoryUsage.toFixed(2)}MB), evicted 30% of cache`);
+      }
     }
   }
   
@@ -86,23 +104,40 @@ class CacheService {
    * @param percentage Percentage of cache to evict (0-100)
    */
   private evictCachePercentage(percentage: number): void {
-    if (percentage <= 0 || percentage > 100) return;
-    
     const keys = Object.keys(this.cache);
-    const evictCount = Math.floor(keys.length * (percentage / 100));
+    const removeCount = Math.floor(keys.length * (percentage / 100));
     
-    // Sort keys by expiry (remove items closest to expiry first)
-    const keysToEvict = keys
-      .map(key => ({ key, expiry: this.cache[key].expiry }))
-      .sort((a, b) => a.expiry - b.expiry)
-      .slice(0, evictCount)
-      .map(item => item.key);
+    // Start removing from beginning (oldest) of specialized caches
+    if (this.searchCacheKeys.length > 0) {
+      const searchRemoveCount = Math.min(
+        Math.floor(this.searchCacheKeys.length * (percentage / 100)),
+        this.searchCacheKeys.length
+      );
+      const searchKeysToRemove = this.searchCacheKeys.splice(0, searchRemoveCount);
+      searchKeysToRemove.forEach(key => delete this.cache[key]);
+    }
     
-    // Remove the selected items
-    keysToEvict.forEach(key => delete this.cache[key]);
+    if (this.productCacheKeys.length > 0) {
+      const productRemoveCount = Math.min(
+        Math.floor(this.productCacheKeys.length * (percentage / 100)),
+        this.productCacheKeys.length
+      );
+      const productKeysToRemove = this.productCacheKeys.splice(0, productRemoveCount);
+      productKeysToRemove.forEach(key => delete this.cache[key]);
+    }
     
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Cache EVICTED: ${evictCount}/${keys.length} items (${percentage}%)`);
+    // Then remove random entries from the general cache if needed
+    const remainingKeys = Object.keys(this.cache);
+    const stillNeedToRemove = removeCount - 
+      (this.searchCacheKeys.length + this.productCacheKeys.length);
+    
+    if (stillNeedToRemove > 0 && remainingKeys.length > 0) {
+      // Get random keys to remove
+      const randomKeysToRemove = remainingKeys
+        .sort(() => 0.5 - Math.random())
+        .slice(0, Math.min(stillNeedToRemove, remainingKeys.length));
+      
+      randomKeysToRemove.forEach(key => delete this.cache[key]);
     }
   }
   
@@ -115,48 +150,45 @@ class CacheService {
    */
   get<T>(key: string, type?: 'search' | 'product' | 'category' | 'cart'): T | null {
     const item = this.cache[key];
+    const now = Date.now();
     
-    // Not in cache
-    if (!item) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`Cache MISS: ${key}`);
-      }
-      return null;
-    }
-    
-    // Expired
-    if (Date.now() > item.expiry) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`Cache EXPIRED: ${key}`);
+    // Check if item exists and is not expired
+    if (item && now < item.expiry) {
+      // For specialized types, update LRU tracking (move to end as most recently used)
+      if (type === 'search' && this.searchCacheKeys.includes(key)) {
+        // Remove and add to end (most recently used position)
+        const index = this.searchCacheKeys.indexOf(key);
+        this.searchCacheKeys.splice(index, 1);
+        this.searchCacheKeys.push(key);
+      } else if (type === 'product' && this.productCacheKeys.includes(key)) {
+        // Remove and add to end (most recently used position)
+        const index = this.productCacheKeys.indexOf(key);
+        this.productCacheKeys.splice(index, 1);
+        this.productCacheKeys.push(key);
       }
       
-      // Remove from tracking arrays if needed
+      return item.data as T;
+    }
+    
+    // If item exists but is expired, delete it
+    if (item && now >= item.expiry) {
+      this.delete(key);
+      
+      // Also remove from tracking arrays if needed
       if (type === 'search') {
-        this.searchCacheKeys = this.searchCacheKeys.filter(k => k !== key);
+        const index = this.searchCacheKeys.indexOf(key);
+        if (index > -1) {
+          this.searchCacheKeys.splice(index, 1);
+        }
       } else if (type === 'product') {
-        this.productCacheKeys = this.productCacheKeys.filter(k => k !== key);
+        const index = this.productCacheKeys.indexOf(key);
+        if (index > -1) {
+          this.productCacheKeys.splice(index, 1);
+        }
       }
-      
-      delete this.cache[key];
-      return null;
     }
     
-    // Cache hit - update LRU ordering for specialized cache types
-    if (type === 'search') {
-      // Move this key to the end of the array (most recently used)
-      this.searchCacheKeys = this.searchCacheKeys.filter(k => k !== key);
-      this.searchCacheKeys.push(key);
-    } else if (type === 'product') {
-      // Move this key to the end of the array (most recently used)
-      this.productCacheKeys = this.productCacheKeys.filter(k => k !== key);
-      this.productCacheKeys.push(key);
-    }
-    
-    // Cache hit
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Cache HIT: ${key}`);
-    }
-    return item.data as T;
+    return null;
   }
   
   /**
@@ -165,8 +197,16 @@ class CacheService {
    */
   delete(key: string): void {
     delete this.cache[key];
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Cache DELETE: ${key}`);
+    
+    // Also remove from tracking arrays if needed
+    const searchIndex = this.searchCacheKeys.indexOf(key);
+    if (searchIndex > -1) {
+      this.searchCacheKeys.splice(searchIndex, 1);
+    }
+    
+    const productIndex = this.productCacheKeys.indexOf(key);
+    if (productIndex > -1) {
+      this.productCacheKeys.splice(productIndex, 1);
     }
   }
   
@@ -175,16 +215,12 @@ class CacheService {
    * @param pattern String pattern to match keys against
    */
   deletePattern(pattern: string): void {
-    const regex = new RegExp(pattern);
-    const keysToDelete = Object.keys(this.cache).filter(key => regex.test(key));
+    const keys = Object.keys(this.cache);
+    const matchingKeys = keys.filter(key => key.includes(pattern));
     
-    keysToDelete.forEach(key => {
-      delete this.cache[key];
+    matchingKeys.forEach(key => {
+      this.delete(key);
     });
-    
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Cache DELETE PATTERN: ${pattern} (deleted ${keysToDelete.length} keys)`);
-    }
   }
   
   /**
@@ -192,25 +228,51 @@ class CacheService {
    */
   clear(): void {
     this.cache = {};
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Cache CLEARED`);
-    }
+    this.searchCacheKeys = [];
+    this.productCacheKeys = [];
   }
   
   /**
-   * Get info about the current state of the cache
+   * Get info about the current state of the cache with details for 10 lakh+ dataset monitoring
    */
   getCacheStats(): any {
     const now = Date.now();
-    const totalItems = Object.keys(this.cache).length;
+    const keys = Object.keys(this.cache);
+    const totalItems = keys.length;
     const expiredItems = Object.values(this.cache).filter(item => now > item.expiry).length;
     const validItems = totalItems - expiredItems;
+    
+    // Count items by type based on key prefixes (for 10 lakh+ dataset analysis)
+    const searchItems = keys.filter(key => key.startsWith('search:') || key.startsWith('medicine:search:')).length;
+    const productItems = keys.filter(key => key.startsWith('products:') || key.startsWith('product:')).length;
+    const categoryItems = keys.filter(key => key.startsWith('categories:')).length;
+    const cartItems = keys.filter(key => key.startsWith('cart:')).length;
+    
+    // Calculate memory usage per key type (approximation)
+    const memoryUsage = process.memoryUsage().heapUsed / 1024 / 1024; // Total in MB
+    const estimatedItemSize = memoryUsage / (totalItems || 1); // MB per item (avoid division by zero)
     
     return {
       totalItems,
       expiredItems,
       validItems,
-      memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024, // In MB
+      memoryUsage, // In MB
+      estimatedItemSize, // In MB
+      typeBreakdown: {
+        search: searchItems,
+        product: productItems,
+        category: categoryItems,
+        cart: cartItems,
+        other: totalItems - searchItems - productItems - categoryItems - cartItems
+      },
+      trackedKeys: {
+        search: this.searchCacheKeys.length,
+        product: this.productCacheKeys.length
+      },
+      limits: {
+        search: this.SEARCH_CACHE_LIMIT,
+        product: this.PRODUCT_CACHE_LIMIT
+      }
     };
   }
   
@@ -226,9 +288,84 @@ class CacheService {
       default: return this.defaultTTL;
     }
   }
+  
+  /**
+   * Perform automated cache optimization for 10 lakh+ products
+   * This analyzes current cache usage and applies heuristics to optimize memory usage
+   * @returns Information about the optimization performed
+   */
+  optimizeCacheForLargeDatasets(): any {
+    const beforeStats = this.getCacheStats();
+    const memoryUsage = process.memoryUsage().heapUsed / 1024 / 1024; // In MB
+    
+    let optimizationActions: string[] = [];
+    
+    // Apply different strategies based on memory pressure
+    if (memoryUsage > this.MAX_MEMORY_USAGE * 0.9) { // >90% of limit
+      // Aggressive optimization - reduce cache size significantly
+      this.evictCachePercentage(50); 
+      optimizationActions.push("Reduced cache size by 50% due to high memory pressure");
+    } else if (memoryUsage > this.MAX_MEMORY_USAGE * 0.7) { // >70% of limit
+      // Moderate optimization - target less frequently accessed items
+      this.evictCachePercentage(30);
+      optimizationActions.push("Reduced cache size by 30% due to moderate memory pressure");
+    } else if (memoryUsage > this.MAX_MEMORY_USAGE * 0.5) { // >50% of limit
+      // Light optimization - just trim oldest items
+      this.evictCachePercentage(15);
+      optimizationActions.push("Reduced cache size by 15% due to mild memory pressure");
+    }
+    
+    // Next, check each specialized cache type (search/product) if approaching limits
+    if (this.searchCacheKeys.length > this.SEARCH_CACHE_LIMIT * 0.9) {
+      // Remove older 20% of search cache if approaching limit
+      const removeCount = Math.floor(this.searchCacheKeys.length * 0.2);
+      const keysToRemove = this.searchCacheKeys.slice(0, removeCount);
+      keysToRemove.forEach(key => delete this.cache[key]);
+      this.searchCacheKeys = this.searchCacheKeys.slice(removeCount);
+      optimizationActions.push(`Pruned ${removeCount} oldest search cache entries`);
+    }
+    
+    if (this.productCacheKeys.length > this.PRODUCT_CACHE_LIMIT * 0.9) {
+      // Remove older 20% of product cache if approaching limit
+      const removeCount = Math.floor(this.productCacheKeys.length * 0.2);
+      const keysToRemove = this.productCacheKeys.slice(0, removeCount);
+      keysToRemove.forEach(key => delete this.cache[key]);
+      this.productCacheKeys = this.productCacheKeys.slice(removeCount);
+      optimizationActions.push(`Pruned ${removeCount} oldest product cache entries`);
+    }
+    
+    // Provide analysis of effectiveness
+    const afterStats = this.getCacheStats();
+    const memorySaved = beforeStats.memoryUsage - afterStats.memoryUsage;
+    const itemsRemoved = beforeStats.totalItems - afterStats.totalItems;
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Cache optimization performed: saved ${memorySaved.toFixed(2)} MB by removing ${itemsRemoved} items`);
+    }
+    
+    return {
+      before: beforeStats,
+      after: afterStats,
+      memoryReduced: memorySaved,
+      itemsRemoved,
+      optimizationActions
+    };
+  }
 }
 
 // Create a singleton instance
 const cacheService = new CacheService();
+
+// Set up periodic optimization for 10 lakh+ product scenarios
+// Schedule periodic optimization (250MB threshold instead of accessing private property)
+if (process.env.NODE_ENV === 'production') {
+  // In production, optimize every 5 minutes
+  setInterval(() => {
+    const memoryUsage = process.memoryUsage().heapUsed / 1024 / 1024;
+    if (memoryUsage > 250) { // Only optimize if using >250MB memory
+      cacheService.optimizeCacheForLargeDatasets();
+    }
+  }, 5 * 60 * 1000); // 5 minutes
+}
 
 export default cacheService;
