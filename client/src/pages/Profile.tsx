@@ -14,6 +14,19 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import OrderHistory from '@/components/orders/OrderHistory';
 
+// Define User type for this component
+interface User {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  pincode?: string;
+  role?: string;
+  profileImageUrl?: string;
+}
+
 // Form validation schema
 const profileSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -372,17 +385,18 @@ const Profile = () => {
   
   // Update user data in store when it changes
   useEffect(() => {
-    if (userData && (!user || JSON.stringify(userData) !== JSON.stringify(user))) {
-      setUser(userData);
+    // Check if userData exists and has an id property before trying to update the store
+    if (userData && typeof userData === 'object' && 'id' in userData && (!user || JSON.stringify(userData) !== JSON.stringify(user))) {
+      setUser(userData as User);
     }
     
-    // If user data is loaded and user is logged in, ensure we're on the profile tab
-    if (userData && activeTab === 'login') {
+    // If user is logged in and tries to navigate to the login tab, redirect to profile tab
+    if (user && activeTab === 'login') {
       setActiveTab('profile');
     }
     
-    // If user data is loaded and user is logged out, ensure we're on the login tab
-    if (!userData && activeTab !== 'login') {
+    // If user is logged out but tries to view profile or orders tab, redirect to login tab
+    if (!user && activeTab !== 'login') {
       setActiveTab('login');
     }
   }, [userData, user, setUser, activeTab]);
@@ -416,6 +430,7 @@ const Profile = () => {
               </TabsTrigger>
             </TabsList>
             
+            {/* Only show profile and orders tabs if user is logged in */}
             {user ? (
               <>
                 <TabsContent value="profile">

@@ -39,7 +39,7 @@ export const connectToDatabase = async (retries = 5) => {
       });
       console.log('Connected to MongoDB successfully');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`MongoDB connection attempt ${attempt} failed: ${error.message}`);
       
       // Check for specific error types and log more details
@@ -47,7 +47,7 @@ export const connectToDatabase = async (retries = 5) => {
         console.error('Server selection error - check if MongoDB server is running');
       } else if (error.name === 'MongoNetworkError') {
         console.error('Network error - check connectivity and MongoDB URI');
-      } else if (error.message.includes('bad auth')) {
+      } else if (error.message && error.message.includes('bad auth')) {
         console.error('Authentication failed - check username, password and authentication database');
       }
       
@@ -146,8 +146,8 @@ export const seedData = async () => {
     }
     
     return true;
-  } catch (error) {
-    console.error('Error seeding data:', error);
+  } catch (error: any) {
+    console.error('Error seeding data:', error.message || error);
     return false;
   }
 };
