@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -929,22 +929,26 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
   }, []); // Empty dependency array - only run on mount
 
+  // Get RTL status
+  const isRTL = useMemo(() => {
+    // RTL languages list
+    const rtlLanguages: string[] = ['ar'];
+    return rtlLanguages.includes(language);
+  }, [language]);
+
   // Apply language direction for RTL languages
   useEffect(() => {
-    // Add RTL languages here if needed
-    const rtlLanguages: string[] = ['ar'];
-    
-    if (rtlLanguages.includes(language)) {
+    if (isRTL) {
       document.documentElement.dir = 'rtl';
       document.documentElement.lang = language;
     } else {
       document.documentElement.dir = 'ltr';
       document.documentElement.lang = language;
     }
-  }, [language]);
+  }, [language, isRTL]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, isRTL }}>
       {children}
     </LanguageContext.Provider>
   );
