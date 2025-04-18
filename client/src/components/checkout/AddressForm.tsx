@@ -1,80 +1,73 @@
-import React, { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useLanguage } from '@/components/LanguageSwitcher';
-import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import PincodeChecker from './PincodeChecker';
+import { useState } from 'react';
+import { PincodeData } from '@/services/location-service';
+
+// Form validation schema
+const addressFormSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+  phone: z.string().min(10, { message: 'Phone number must be at least 10 digits' }),
+  address: z.string().min(5, { message: 'Address must be at least 5 characters' }),
+  city: z.string().min(2, { message: 'City must be at least 2 characters' }),
+  state: z.string().min(2, { message: 'State must be at least 2 characters' }),
+  pincode: z.string().min(6, { message: 'Pincode must be at least 6 characters' }),
+});
+
+type AddressFormValues = z.infer<typeof addressFormSchema>;
 
 interface AddressFormProps {
-  form: any;
+  defaultValues?: Partial<AddressFormValues>;
+  onSubmit: (values: AddressFormValues) => void;
 }
 
-const AddressForm: React.FC<AddressFormProps> = ({ form }) => {
+const AddressForm = ({ defaultValues, onSubmit }: AddressFormProps) => {
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const [lookupInProgress, setLookupInProgress] = useState(false);
-  const [pincodeLookupResult, setPincodeLookupResult] = useState<any>(null);
+  const [pincodeData, setPincodeData] = useState<PincodeData | null>(null);
+  const [deliveryAvailable, setDeliveryAvailable] = useState(false);
 
-  // When pincode changes, look up city and state
-  const handlePincodeChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const pincode = event.target.value;
+  const form = useForm<AddressFormValues>({
+    resolver: zodResolver(addressFormSchema),
+    defaultValues: {
+      name: defaultValues?.name || '',
+      email: defaultValues?.email || '',
+      phone: defaultValues?.phone || '',
+      address: defaultValues?.address || '',
+      city: defaultValues?.city || '',
+      state: defaultValues?.state || '',
+      pincode: defaultValues?.pincode || '',
+    },
+  });
+
+  const handlePincodeData = (data: PincodeData) => {
+    setPincodeData(data);
     
-    // Only proceed if it's a 6-digit number
-    if (pincode && pincode.length === 6 && /^\d+$/.test(pincode)) {
-      setLookupInProgress(true);
-      
-      try {
-        const response = await fetch(`/api/pincode/${pincode}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          setPincodeLookupResult(data);
-          
-          // Auto-fill city and state fields
-          form.setValue('city', data.city);
-          form.setValue('state', data.state);
-          
-          // Show delivery availability message
-          if (data.deliveryAvailable) {
-            toast({
-              title: t('delivery_available_title'),
-              description: t('delivery_available_desc'),
-              variant: 'default',
-            });
-          } else {
-            toast({
-              title: t('delivery_unavailable_title'),
-              description: t('delivery_unavailable_desc'),
-              variant: 'destructive',
-            });
-          }
-        } else {
-          // Pin code not found or error
-          const errorData = await response.json();
-          toast({
-            title: t('pincode_error_title'),
-            description: errorData.error || t('pincode_error_desc'),
-            variant: 'destructive',
-          });
-          setPincodeLookupResult(null);
-        }
-      } catch (error) {
-        console.error('Error looking up pincode:', error);
-        toast({
-          title: t('pincode_error_title'),
-          description: t('pincode_error_desc'),
-          variant: 'destructive',
-        });
-      } finally {
-        setLookupInProgress(false);
-      }
+    // Auto-fill city and state if pincode data is available
+    if (data) {
+      form.setValue('city', data.city);
+      form.setValue('state', data.state);
     }
   };
 
+  const handleDeliveryAvailability = (available: boolean) => {
+    setDeliveryAvailable(available);
+  };
+
+  // Handle form submission
+  const handleSubmitForm = (values: AddressFormValues) => {
+    onSubmit(values);
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmitForm)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
@@ -82,135 +75,118 @@ const AddressForm: React.FC<AddressFormProps> = ({ form }) => {
             <FormItem>
               <FormLabel>{t('full_name')}</FormLabel>
               <FormControl>
-                <Input {...field} placeholder={t('enter_full_name')} />
+                <Input placeholder={t('enter_full_name')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('email')}</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder={t('enter_email')} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('phone_number')}</FormLabel>
+                <FormControl>
+                  <Input type="tel" placeholder={t('enter_phone')} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
         <FormField
           control={form.control}
-          name="email"
+          name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('email')}</FormLabel>
+              <FormLabel>{t('address_line1')}</FormLabel>
               <FormControl>
-                <Input {...field} placeholder={t('enter_email')} type="email" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-      
-      <FormField
-        control={form.control}
-        name="phone"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t('phone')}</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder={t('enter_phone')} type="tel" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <FormField
-        control={form.control}
-        name="address"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t('address')}</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder={t('enter_address')} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <div className="grid grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="pincode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('pincode')}</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input 
-                    {...field} 
-                    placeholder={t('enter_pincode')} 
-                    maxLength={6}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      handlePincodeChange(e);
-                    }}
-                  />
-                  {lookupInProgress && (
-                    <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-3 text-gray-400" />
-                  )}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="city"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('city')}</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder={t('enter_city')} />
+                <Textarea placeholder={t('enter_address')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="state"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('state')}</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder={t('enter_state')} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-      
-      {pincodeLookupResult && pincodeLookupResult.deliveryAvailable && (
-        <div className="p-3 bg-green-50 text-green-700 text-sm rounded-md flex items-start">
-          <span className="mr-2">✓</span>
-          <div>
-            <p className="font-medium">{t('delivery_available_title')}</p>
-            <p>{t('delivery_time_message')}</p>
-          </div>
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="pincode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('pincode')}</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    <Input placeholder={t('enter_pincode')} {...field} />
+                    <PincodeChecker 
+                      onPincodeData={handlePincodeData} 
+                      onDeliveryAvailability={handleDeliveryAvailability}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-      )}
-      
-      {pincodeLookupResult && !pincodeLookupResult.deliveryAvailable && (
-        <div className="p-3 bg-yellow-50 text-yellow-700 text-sm rounded-md flex items-start">
-          <span className="mr-2">!</span>
-          <div>
-            <p className="font-medium">{t('delivery_unavailable_title')}</p>
-            <p>{t('delivery_unavailable_message')}</p>
-          </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('city')}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t('enter_city')} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="state"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('state')}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t('enter_state')} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-      )}
-    </div>
+        
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={!deliveryAvailable && form.getValues('pincode').length >= 6}
+        >
+          {t('continue')}
+        </Button>
+      </form>
+    </Form>
   );
 };
 
