@@ -486,6 +486,35 @@ const ChemistDashboard: React.FC = () => {
     });
   };
   
+  // Function to handle price/dosage edits only (for chemist restricted permissions)
+  const handlePriceUpdate = async (medicineId: number, updatedData: {
+    price: number;
+    discountedPrice: number;
+    packSize: string;
+  }) => {
+    try {
+      // In a real app, this would make an API call to update only the price and dosage
+      console.log('Updating medicine price/dosage:', medicineId, updatedData);
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      toast({
+        title: "Price Updated",
+        description: "The medicine price and information has been updated successfully.",
+      });
+      
+      return true;
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update medicine price. Please try again.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+  
   // Filter medicines based on search query and filters
   const filteredMedicines = medicines.filter(medicine => {
     // Apply search filter
@@ -706,17 +735,18 @@ const ChemistDashboard: React.FC = () => {
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleAddMedicine}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                {t('add_medicine')}
-              </Button>
+              {/* Add medicine button removed - chemists can only edit existing medicines */}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredMedicines.length > 0 ? (
               filteredMedicines.map(medicine => (
-                <MedicineCard key={medicine.id} medicine={medicine} />
+                <MedicineCard 
+                  key={medicine.id} 
+                  medicine={medicine} 
+                  onUpdatePrice={handlePriceUpdate} 
+                />
               ))
             ) : (
               <div className="col-span-full">
