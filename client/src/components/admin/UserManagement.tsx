@@ -44,7 +44,9 @@ import {
   MoreHorizontal,
   Stethoscope,
   Beaker,
-  Building2
+  Building2,
+  Pill, // Added missing Pill icon
+  Flask
 } from 'lucide-react';
 import {
   DropdownMenu,
