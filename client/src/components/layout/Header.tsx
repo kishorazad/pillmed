@@ -129,6 +129,9 @@ const Header = () => {
             <li><Link href="/hospitals" className="text-orange-500 font-semibold flex items-center">
               <i className="fas fa-hospital mr-1"></i> Hospitals
             </Link></li>
+            <li><Link href="/services" className="text-orange-500 font-semibold flex items-center">
+              <i className="fas fa-heartbeat mr-1"></i> Health Services
+            </Link></li>
             <li><Link href="/ai-healthcare" className="text-orange-500 font-semibold flex items-center">
               <i className="fas fa-robot mr-1"></i> AI Health Assistant
             </Link></li>

@@ -40,6 +40,12 @@ import NearbyHospitalsPage from "./pages/Hospitals/NearbyHospitalsPage";
 import HospitalsList from "./pages/hospitals/HospitalsList";
 import HospitalDetail from "./pages/hospitals/HospitalDetail";
 
+// Services
+import ServicesPage from "./pages/services";
+import MedicalEquipment from "./pages/services/MedicalEquipment";
+import MedicalServices from "./pages/services/MedicalServices";
+import AmbulanceRequest from "./pages/services/AmbulanceRequest";
+
 function Router() {
   return (
     <Switch>
@@ -57,6 +63,12 @@ function Router() {
       <Route path="/achievements" component={Achievements} />
       <Route path="/medication-tracking" component={MedicationTracking} />
       <Route path="/orders" component={OrderHistory} />
+      
+      {/* Services Routes */}
+      <Route path="/services" component={ServicesPage} />
+      <Route path="/services/medical-equipment" component={MedicalEquipment} />
+      <Route path="/services/medical-services" component={MedicalServices} />
+      <Route path="/services/ambulance-request" component={AmbulanceRequest} />
       
       {/* Admin and Professional Dashboard Routes */}
       <Route path="/admin" component={AdminDashboard} />
