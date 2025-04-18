@@ -33,6 +33,7 @@ import Testimonials from '@/components/home/Testimonials';
 import AppPromotion from '@/components/home/AppPromotion';
 import HealthTipOfTheDay from '@/components/home/HealthTipOfTheDay';
 import PrescriptionUpload from '@/components/home/PrescriptionUpload';
+import PreviouslyBrowsedItems from '@/components/browsing/PreviouslyBrowsedItems';
 
 // Mobile-optimized components
 import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
@@ -146,6 +147,9 @@ const Home = () => {
               />
             )}
             
+            {/* Previously Browsed Items */}
+            <PreviouslyBrowsedItems />
+            
             {/* Health Services */}
             <section className="my-6">
               <h2 className="text-lg font-bold mb-4">Health Services</h2>
@@ -199,6 +203,7 @@ const Home = () => {
             </section>
             
             <FeaturedProducts />
+            <PreviouslyBrowsedItems />
             <LabTests />
             <ConsultDoctors />
             <HealthArticles />

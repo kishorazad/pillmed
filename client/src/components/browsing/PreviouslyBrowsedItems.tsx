@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'wouter';
-import { useTranslation } from '@/components/LanguageSwitcher';
+import { useLanguage } from '@/components/LanguageSwitcher';
 import { ArrowRight } from 'lucide-react';
 
 interface BrowsedProduct {
@@ -13,7 +13,7 @@ interface BrowsedProduct {
 }
 
 const PreviouslyBrowsedItems: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [browsedItems, setBrowsedItems] = useState<BrowsedProduct[]>([]);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ const PreviouslyBrowsedItems: React.FC = () => {
               </div>
               <div className="p-3">
                 <h3 className="text-sm font-medium line-clamp-2 h-10 mb-1">{item.name}</h3>
-                <div className="text-xs text-gray-500 mb-1">{t('strip_of_tablets', { count: 15 })}</div>
+                <div className="text-xs text-gray-500 mb-1">{t('strip_of_tablets', { count: '15' })}</div>
                 
                 <div className="flex items-center">
                   <div className="text-xs text-gray-500">{t('mrp')} ₹{item.price.toFixed(2)}</div>
