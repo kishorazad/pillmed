@@ -200,25 +200,25 @@ const Checkout = () => {
                     <div className="mx-auto mb-4 flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
                       <i className="fas fa-check text-2xl text-green-600"></i>
                     </div>
-                    Order Confirmed!
+                    {t('order_confirmed')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-center">
                   <p className="mb-4">
-                    Thank you for your order. Your order has been placed successfully!
+                    {t('thank_you_order')}
                   </p>
                   <div className="bg-gray-50 p-4 rounded-lg mb-6 inline-block">
-                    <p><span className="font-medium">Order ID:</span> {orderId}</p>
+                    <p><span className="font-medium">{t('order_id')}:</span> {orderId}</p>
                   </div>
                   <p className="mb-6">
-                    You will receive an email confirmation shortly with the details of your order.
+                    {t('email_confirmation')}
                   </p>
                   <div className="flex justify-center space-x-4">
                     <Button asChild className="bg-[#10847e] hover:bg-[#10847e]/90">
-                      <Link href="/">Return to Home</Link>
+                      <Link href="/">{t('return_home')}</Link>
                     </Button>
                     <Button asChild variant="outline">
-                      <Link href="/products">Continue Shopping</Link>
+                      <Link href="/products">{t('continue_shopping')}</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -227,7 +227,7 @@ const Checkout = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    {currentStep === 'address' ? 'Shipping Address' : 'Payment Method'}
+                    {currentStep === 'address' ? t('shipping_address') : t('payment_method')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -241,9 +241,9 @@ const Checkout = () => {
                               name="name"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Full Name</FormLabel>
+                                  <FormLabel>{t('full_name')}</FormLabel>
                                   <FormControl>
-                                    <Input {...field} placeholder="Enter your full name" />
+                                    <Input {...field} placeholder={t('enter_full_name')} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -255,9 +255,9 @@ const Checkout = () => {
                               name="email"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Email</FormLabel>
+                                  <FormLabel>{t('email')}</FormLabel>
                                   <FormControl>
-                                    <Input {...field} type="email" placeholder="Enter your email" />
+                                    <Input {...field} type="email" placeholder={t('enter_email')} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -270,9 +270,9 @@ const Checkout = () => {
                             name="phone"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Phone Number</FormLabel>
+                                <FormLabel>{t('phone')}</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="Enter your phone number" />
+                                  <Input {...field} placeholder={t('enter_phone')} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -284,9 +284,9 @@ const Checkout = () => {
                             name="address"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Address</FormLabel>
+                                <FormLabel>{t('address')}</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="Enter your address" />
+                                  <Input {...field} placeholder={t('enter_address')} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -299,9 +299,9 @@ const Checkout = () => {
                               name="city"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>City</FormLabel>
+                                  <FormLabel>{t('city')}</FormLabel>
                                   <FormControl>
-                                    <Input {...field} placeholder="Enter your city" />
+                                    <Input {...field} placeholder={t('enter_city')} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -313,9 +313,9 @@ const Checkout = () => {
                               name="state"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>State</FormLabel>
+                                  <FormLabel>{t('state')}</FormLabel>
                                   <FormControl>
-                                    <Input {...field} placeholder="Enter your state" />
+                                    <Input {...field} placeholder={t('enter_state')} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -327,9 +327,9 @@ const Checkout = () => {
                               name="pincode"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Pincode</FormLabel>
+                                  <FormLabel>{t('pincode')}</FormLabel>
                                   <FormControl>
-                                    <Input {...field} placeholder="Enter your pincode" />
+                                    <Input {...field} placeholder={t('enter_pincode')} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -346,7 +346,7 @@ const Checkout = () => {
                             name="paymentMethod"
                             render={({ field }) => (
                               <FormItem className="space-y-4">
-                                <FormLabel>Select a Payment Method</FormLabel>
+                                <FormLabel>{t('select_payment_method')}</FormLabel>
                                 <FormControl>
                                   <RadioGroup
                                     onValueChange={field.onChange}
@@ -357,28 +357,28 @@ const Checkout = () => {
                                       <RadioGroupItem value="creditCard" id="creditCard" />
                                       <label htmlFor="creditCard" className="flex items-center cursor-pointer">
                                         <i className="fas fa-credit-card text-blue-500 mr-3"></i>
-                                        Credit Card
+                                        {t('credit_card')}
                                       </label>
                                     </div>
                                     <div className="flex items-center space-x-2 border p-3 rounded-md">
                                       <RadioGroupItem value="debitCard" id="debitCard" />
                                       <label htmlFor="debitCard" className="flex items-center cursor-pointer">
                                         <i className="fas fa-credit-card text-green-500 mr-3"></i>
-                                        Debit Card
+                                        {t('debit_card')}
                                       </label>
                                     </div>
                                     <div className="flex items-center space-x-2 border p-3 rounded-md">
                                       <RadioGroupItem value="upi" id="upi" />
                                       <label htmlFor="upi" className="flex items-center cursor-pointer">
                                         <i className="fas fa-mobile-alt text-purple-500 mr-3"></i>
-                                        UPI / Mobile Payment
+                                        {t('upi_payment')}
                                       </label>
                                     </div>
                                     <div className="flex items-center space-x-2 border p-3 rounded-md">
                                       <RadioGroupItem value="cod" id="cod" />
                                       <label htmlFor="cod" className="flex items-center cursor-pointer">
                                         <i className="fas fa-money-bill-wave text-green-600 mr-3"></i>
-                                        Cash on Delivery
+                                        {t('cash_on_delivery')}
                                       </label>
                                     </div>
                                   </RadioGroup>
@@ -391,7 +391,7 @@ const Checkout = () => {
                           <div className="p-4 bg-yellow-50 rounded-md text-sm text-yellow-800">
                             <p className="flex items-start">
                               <i className="fas fa-info-circle mt-1 mr-2"></i>
-                              <span>This is a demo checkout. No actual payment will be processed.</span>
+                              <span>{t('demo_checkout_notice')}</span>
                             </p>
                           </div>
                         </>
@@ -399,10 +399,10 @@ const Checkout = () => {
                       
                       <div className="pt-4 flex justify-between">
                         <Button type="button" variant="outline" onClick={goBack}>
-                          {currentStep === 'address' ? 'Back to Cart' : 'Back to Address'}
+                          {currentStep === 'address' ? t('view_cart') : t('address')}
                         </Button>
                         <Button type="submit" className="bg-[#ff6f61] hover:bg-[#ff6f61]/90">
-                          {currentStep === 'address' ? 'Continue to Payment' : 'Place Order'}
+                          {currentStep === 'address' ? t('payment') : t('checkout')}
                         </Button>
                       </div>
                     </form>
@@ -417,7 +417,7 @@ const Checkout = () => {
             {!orderComplete && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
+                  <CardTitle>{t('order_summary')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="divide-y">
@@ -434,7 +434,7 @@ const Checkout = () => {
                           <h3 className="text-sm font-medium line-clamp-1">{item.product?.name}</h3>
                           <div className="flex justify-between items-center mt-1">
                             <span className="text-xs text-gray-500">
-                              Qty: {item.quantity}
+                              {t('quantity')}: {item.quantity}
                             </span>
                             <span className="text-sm font-medium">
                               ₹{((item.product?.discountedPrice || item.product?.price || 0) * item.quantity).toFixed(2)}
@@ -447,19 +447,19 @@ const Checkout = () => {
                   
                   <div className="mt-4 space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Subtotal</span>
+                      <span className="text-gray-600">{t('subtotal')}</span>
                       <span>₹{cartSubtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-green-600">
-                      <span>Discount</span>
+                      <span>{t('discount')}</span>
                       <span>- ₹{discount.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Delivery Charges</span>
-                      <span>{deliveryCharge > 0 ? `₹${deliveryCharge.toFixed(2)}` : 'FREE'}</span>
+                      <span className="text-gray-600">{t('delivery_charges')}</span>
+                      <span>{deliveryCharge > 0 ? `₹${deliveryCharge.toFixed(2)}` : t('free')}</span>
                     </div>
                     <div className="flex justify-between font-bold text-lg pt-3 border-t">
-                      <span>Total</span>
+                      <span>{t('total')}</span>
                       <span>₹{cartTotal.toFixed(2)}</span>
                     </div>
                   </div>

@@ -56,6 +56,12 @@ export const translations: Record<string, Record<string, string>> = {
     'please_add_items_to_proceed': 'Please add item(s) to proceed',
     'quick_links': 'Quick links',
     'quantity': 'Quantity',
+    'order_summary': 'Order Summary',
+    'subtotal': 'Subtotal',
+    'discount': 'Discount',
+    'delivery_charges': 'Delivery Charges',
+    'total': 'Total',
+    'free': 'FREE',
     
     // Product Information Fields
     'description': 'Description',
@@ -165,6 +171,12 @@ export const translations: Record<string, Record<string, string>> = {
     'please_add_items_to_proceed': 'आगे बढ़ने के लिए कृपया आइटम जोड़ें',
     'quick_links': 'त्वरित लिंक',
     'quantity': 'मात्रा',
+    'order_summary': 'आदेश सारांश',
+    'subtotal': 'उप-योग',
+    'discount': 'छूट',
+    'delivery_charges': 'डिलीवरी शुल्क',
+    'total': 'कुल',
+    'free': 'मुफ्त',
     
     // Product Information Fields
     'description': 'विवरण',
@@ -303,6 +315,12 @@ export const translations: Record<string, Record<string, string>> = {
     'please_add_items_to_proceed': 'Veuillez ajouter des articles pour continuer',
     'quick_links': 'Liens rapides',
     'quantity': 'Quantité',
+    'order_summary': 'Récapitulatif de la commande',
+    'subtotal': 'Sous-total',
+    'discount': 'Réduction',
+    'delivery_charges': 'Frais de livraison',
+    'total': 'Total',
+    'free': 'GRATUIT',
     
     // Product Information Fields
     'description': 'Description',
@@ -412,6 +430,12 @@ export const translations: Record<string, Record<string, string>> = {
     'please_add_items_to_proceed': 'Por favor añada artículos para continuar',
     'quick_links': 'Enlaces rápidos',
     'quantity': 'Cantidad',
+    'order_summary': 'Resumen del pedido',
+    'subtotal': 'Subtotal',
+    'discount': 'Descuento',
+    'delivery_charges': 'Gastos de envío',
+    'total': 'Total',
+    'free': 'GRATIS',
     
     // Product Information Fields
     'description': 'Descripción',
