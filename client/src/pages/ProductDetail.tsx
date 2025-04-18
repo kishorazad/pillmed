@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import SubstituteMedicines from '@/components/products/SubstituteMedicines';
 import { useLanguage } from '@/components/LanguageSwitcher';
+import { addToBrowsingHistory } from '@/services/browsing-history-service';
 
 const ProductDetail = () => {
   const params = useParams();
@@ -84,10 +85,22 @@ const ProductDetail = () => {
   const increaseQuantity = () => setQuantity(prev => prev + 1);
   const decreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
   
-  // Scroll to top on page load
+  // Scroll to top on page load and track viewed product
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [params.id]);
+    
+    // Add to browsing history when product data is loaded
+    if (product) {
+      addToBrowsingHistory({
+        id: product.id,
+        name: product.name,
+        imageUrl: product.imageUrl || '',
+        price: product.price,
+        discountedPrice: product.discountedPrice,
+        quantity: product.quantity
+      });
+    }
+  }, [params.id, product]);
   
   if (isLoading) {
     return (
