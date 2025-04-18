@@ -132,6 +132,11 @@ const Home = () => {
               />
             )}
             
+            {/* Prescription Upload Feature */}
+            <div className="my-6">
+              <PrescriptionUpload />
+            </div>
+            
             {/* Featured Products Slider (single column with sliding functionality) */}
             <FeaturedProductsSlider 
               products={featuredProducts} 
@@ -194,6 +199,11 @@ const Home = () => {
                 )}
               </div>
             </section>
+            
+            {/* Prescription Upload Feature */}
+            <div className="my-6">
+              <PrescriptionUpload />
+            </div>
             
             {/* Featured Products Slider (single column with sliding functionality) */}
             <FeaturedProductsSlider 

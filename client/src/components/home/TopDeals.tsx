@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useLanguage } from '../LanguageSwitcher';
-import { ArrowRightIcon, Star, ShoppingCart } from 'lucide-react';
+import { ArrowRightIcon, Star, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'wouter';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface Product {
   id: number;
@@ -16,6 +17,20 @@ interface Product {
 
 const TopDeals: React.FC = () => {
   const { t } = useLanguage();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
+  const handleScrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+  
+  const handleScrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
   
   // Sample products data with top deals
   const products: Product[] = [
@@ -58,6 +73,26 @@ const TopDeals: React.FC = () => {
       discountPercentage: 40,
       rating: 4.2,
       ratingCount: 872
+    },
+    {
+      id: 5,
+      name: 'Everherb Ashwagandha Tablets',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/G67946/everherb-ashwagandha-immunity-booster-tablets-natural-stress-reliever-bottle-of-60-2-1654233767.jpg',
+      originalPrice: 599,
+      discountedPrice: 329.45,
+      discountPercentage: 45,
+      rating: 4.4,
+      ratingCount: 642
+    },
+    {
+      id: 6,
+      name: 'OneTouch Select Plus Test Strips',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/Q83701/onetouch-select-plus-simple-blood-glucose-monitoring-system-free-10-strips-2-1671745264.jpg',
+      originalPrice: 1199,
+      discountedPrice: 959.2,
+      discountPercentage: 20,
+      rating: 4.6,
+      ratingCount: 1875
     }
   ];
 
@@ -66,22 +101,54 @@ const TopDeals: React.FC = () => {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl md:text-2xl font-bold">{t('top_deals')}</h2>
-          <Link href="/deals" className="text-primary flex items-center text-sm">
-            {t('view_all')} <ArrowRightIcon className="ml-1 h-4 w-4" />
-          </Link>
+          <div className="flex items-center">
+            {!isMobile && (
+              <div className="flex gap-2 mr-4">
+                <button 
+                  onClick={handleScrollLeft}
+                  className="p-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={handleScrollRight}
+                  className="p-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            <Link href="/deals" className="text-primary flex items-center text-sm">
+              {t('view_all')} <ArrowRightIcon className="ml-1 h-4 w-4" />
+            </Link>
+          </div>
         </div>
         
         <p className="text-gray-600 mb-4">{t('best_deals_and_savings')}</p>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div 
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory"
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
           {products.map((product) => (
-            <Link key={product.id} href={`/products/${product.id}`}>
+            <Link 
+              key={product.id} 
+              href={`/products/${product.id}`} 
+              className="snap-start min-w-[260px] max-w-[300px] flex-shrink-0"
+            >
               <div className="bg-white rounded-lg shadow-sm overflow-hidden transition duration-300 hover:shadow-md cursor-pointer h-full flex flex-col">
                 <div className="relative px-4 pt-4 flex justify-center">
                   <img 
                     src={product.imageUrl} 
                     alt={product.name} 
-                    className="h-40 object-contain"
+                    className="h-36 object-contain"
                   />
                   <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-1 m-2 rounded-sm text-xs font-medium">
                     {product.discountPercentage}% {t('off')}
