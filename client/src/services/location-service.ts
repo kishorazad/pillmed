@@ -16,7 +16,8 @@ export interface PincodeData {
   district: string;
   state: string;
   country: string;
-  serviceAvailable: boolean;
+  serviceAvailable?: boolean;  // From delivery endpoint
+  deliveryAvailable?: boolean; // From pincode endpoint
   deliveryDays: number;
 }
 

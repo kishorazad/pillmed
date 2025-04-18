@@ -46,9 +46,16 @@ const PincodeChecker = ({
       const response = await axios.get(`/api/pincode/${code}`);
       
       if (response.data) {
-        setPincodeData(response.data);
-        onPincodeData && onPincodeData(response.data);
-        onDeliveryAvailability && onDeliveryAvailability(response.data.serviceAvailable);
+        // Handle potential API field name mismatch - our API returns deliveryAvailable
+        // but our component expects serviceAvailable
+        const dataWithCorrectFields = {
+          ...response.data,
+          serviceAvailable: response.data.serviceAvailable || response.data.deliveryAvailable || false
+        };
+        
+        setPincodeData(dataWithCorrectFields);
+        onPincodeData && onPincodeData(dataWithCorrectFields);
+        onDeliveryAvailability && onDeliveryAvailability(dataWithCorrectFields.serviceAvailable);
       } else {
         setPincodeData(null);
         onPincodeData && onPincodeData(null);
@@ -104,7 +111,7 @@ const PincodeChecker = ({
               {pincodeData.serviceAvailable && (
                 <span className="flex items-center mt-0.5">
                   <Clock className="h-3 w-3 mr-1" />
-                  {t('delivery_estimate', { days: pincodeData.deliveryDays })}
+                  {t('delivery_estimate', { days: pincodeData.deliveryDays.toString() })}
                 </span>
               )}
             </div>

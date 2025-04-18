@@ -32,7 +32,8 @@ export const LANGUAGES = {
 type LanguageContextType = {
   language: string;
   setLanguage: (lang: string) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string>) => string;
+  isRTL: boolean;
 };
 
 // Create translations
