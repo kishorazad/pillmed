@@ -27,6 +27,7 @@ import ServicesSection from '@/components/home/ServicesSection';
 import QuickLinks from '@/components/home/QuickLinks';
 import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
 import MedicineCategorySlider from '@/components/home/MedicineCategorySlider';
+import MedicineSpecialtyCategories from '@/components/home/MedicineSpecialtyCategories';
 import PrescriptionUpload from '@/components/home/PrescriptionUpload';
 import FeaturedProductsSlider from '@/components/home/FeaturedProductsSlider';
 import CategoryCard from '@/components/categories/CategoryCard';
@@ -151,6 +152,9 @@ const Home = () => {
               <PrescriptionUpload />
             </div>
             
+            {/* Medicine Specialty Categories - Mobile */}
+            <MedicineSpecialtyCategories title="Medicines by Specialty" />
+            
             {/* Featured Products Slider (single column with sliding functionality) */}
             <FeaturedProductsSlider 
               products={featuredProducts} 
@@ -250,6 +254,9 @@ const Home = () => {
               <PrescriptionUpload />
             </div>
             
+            {/* Medicine Specialty Categories - Desktop */}
+            <MedicineSpecialtyCategories title="Medicines by Specialty" />
+            
             {/* Featured Products Slider (single column with sliding functionality) */}
             <FeaturedProductsSlider 
               products={featuredProducts} 
@@ -291,31 +298,34 @@ const Home = () => {
               <EmergencyServicesSection />
             </Suspense>
             
-            {/* Festival Offers */}
+            {/* Offers Carousel */}
             <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <FestivalOffers />
+              <OffersCarousel slides={offerSlides} />
             </Suspense>
             
-            {/* Brand Promotions */}
+            {/* Health Articles */}
             <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <BrandPromotions />
+              <HealthArticles />
+            </Suspense>
+            
+            {/* Promotional Offers */}
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <PromotionalBanner />
+            </Suspense>
+            
+            {/* Testimonials Section */}
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <Testimonials />
+            </Suspense>
+            
+            {/* App Download Section */}
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <AppPromotion />
             </Suspense>
             
             {/* Nearby Hospitals Section with Google Maps integration */}
             <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
               <NearbyHospitals />
-            </Suspense>
-            
-            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <PromotionalBanner />
-            </Suspense>
-            
-            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <HealthArticles />
-            </Suspense>
-            
-            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <Testimonials />
             </Suspense>
             
             {/* Emergency Call Button */}
@@ -324,11 +334,6 @@ const Home = () => {
             </Suspense>
           </>
         )}
-
-        {/* App Promotion (both mobile and desktop) */}
-        <Suspense fallback={<div className="my-6 h-24 bg-gray-100 animate-pulse rounded-lg"></div>}>
-          <AppPromotion />
-        </Suspense>
       </div>
     </>
   );

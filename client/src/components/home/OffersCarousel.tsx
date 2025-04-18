@@ -10,10 +10,11 @@ interface Offer {
 }
 
 interface OffersCarouselProps {
-  offers: Offer[];
+  slides?: Offer[];
 }
 
-const OffersCarousel: React.FC<OffersCarouselProps> = ({ offers }) => {
+const OffersCarousel: React.FC<OffersCarouselProps> = ({ slides = [] }) => {
+  const offers = slides; // For backward compatibility
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftScroll, setShowLeftScroll] = useState(false);
   const [showRightScroll, setShowRightScroll] = useState(true);
