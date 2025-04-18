@@ -166,6 +166,9 @@ const ChemistDashboard: React.FC = () => {
   
   // Medicine management state
   const [openAddMedicineDialog, setOpenAddMedicineDialog] = useState(false);
+  const [openAddEquipmentDialog, setOpenAddEquipmentDialog] = useState(false);
+  const [openAddServiceDialog, setOpenAddServiceDialog] = useState(false);
+  const [openEmergencyServiceDialog, setOpenEmergencyServiceDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [medicineSearchQuery, setMedicineSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
@@ -1410,8 +1413,27 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
   const { t } = useLanguage();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   
-  // Calculate order total
-  const orderTotal = prescription.medicines.reduce((total, med) => total + (med.currentPrice * med.quantity), 0);
+  // Calculate order total (including medicines, equipment, and services)
+  let orderTotal = prescription.medicines.reduce((total, med) => total + (med.currentPrice * med.quantity), 0);
+  
+  // Add medical equipment costs if present
+  if (prescription.medicalEquipment && prescription.medicalEquipment.length > 0) {
+    orderTotal += prescription.medicalEquipment.reduce((total, equip) => {
+      return total + (equip.isRental ? (equip.rentalPrice || 0) : equip.price) * equip.quantity;
+    }, 0);
+  }
+  
+  // Add medical service costs if present
+  if (prescription.medicalServices && prescription.medicalServices.length > 0) {
+    orderTotal += prescription.medicalServices.reduce((total, service) => {
+      return total + service.price;
+    }, 0);
+  }
+  
+  // Add emergency service cost if present
+  if (prescription.emergencyServices) {
+    orderTotal += prescription.emergencyServices.price;
+  }
   
   // Format date
   const formatDate = (dateString: string) => {
@@ -1621,6 +1643,205 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
                                 </div>
                               </div>
                             ))}
+                          </div>
+                        </>
+                      )}
+
+                      {/* Medical Equipment Section */}
+                      {prescription.medicalEquipment && prescription.medicalEquipment.length > 0 && (
+                        <>
+                          <h4 className="text-sm font-semibold text-gray-600 mt-4">Medical Equipment</h4>
+                          <div className="space-y-3">
+                            {prescription.medicalEquipment.map((equipment) => (
+                              <div key={equipment.id} className="flex justify-between border-b pb-2">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">{equipment.name}</span>
+                                    <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300 text-xs">
+                                      {equipment.type.replace('_', ' ')}
+                                    </Badge>
+                                    <Badge variant="outline" className={`text-xs ${
+                                      equipment.status === 'pending_approval' ? 'bg-amber-50 text-amber-700 border-amber-300' :
+                                      equipment.status === 'approved' ? 'bg-green-50 text-green-700 border-green-300' :
+                                      equipment.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-300' :
+                                      equipment.status === 'delivered' ? 'bg-blue-50 text-blue-700 border-blue-300' :
+                                      equipment.status === 'returned' ? 'bg-purple-50 text-purple-700 border-purple-300' :
+                                      'bg-gray-50 text-gray-700 border-gray-300'
+                                    }`}>
+                                      {equipment.status.replace('_', ' ')}
+                                    </Badge>
+                                    {equipment.isRental && (
+                                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300 text-xs">
+                                        Rental
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="text-sm text-gray-500">{equipment.description}</div>
+                                  <div className="text-sm text-gray-500">Qty: {equipment.quantity}</div>
+                                  {equipment.isRental && equipment.rentalDuration && (
+                                    <div className="text-sm text-gray-500">Duration: {equipment.rentalDuration}</div>
+                                  )}
+                                  {equipment.requestNotes && (
+                                    <div className="text-xs text-gray-500 mt-1 italic">
+                                      Note: {equipment.requestNotes}
+                                    </div>
+                                  )}
+                                  {equipment.approvedBy && (
+                                    <div className="text-xs text-green-600 mt-1">
+                                      Approved by: {equipment.approvedBy.name} ({equipment.approvedBy.role})
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-right">
+                                  {equipment.isRental ? (
+                                    <div>
+                                      <div className="text-sm text-gray-500">Rental fee:</div>
+                                      <div>₹{equipment.rentalPrice} {equipment.rentalDuration}</div>
+                                    </div>
+                                  ) : (
+                                    <div>₹{equipment.price}</div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      {/* Medical Services Section */}
+                      {prescription.medicalServices && prescription.medicalServices.length > 0 && (
+                        <>
+                          <h4 className="text-sm font-semibold text-gray-600 mt-4">Medical Services</h4>
+                          <div className="space-y-3">
+                            {prescription.medicalServices.map((service) => (
+                              <div key={service.id} className="flex justify-between border-b pb-2">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">{service.serviceType.replace('_', ' ')}</span>
+                                    <Badge variant="outline" className={`text-xs ${
+                                      service.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-300' :
+                                      service.status === 'approved' ? 'bg-green-50 text-green-700 border-green-300' :
+                                      service.status === 'assigned' ? 'bg-blue-50 text-blue-700 border-blue-300' :
+                                      service.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' :
+                                      service.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-300' :
+                                      'bg-gray-50 text-gray-700 border-gray-300'
+                                    }`}>
+                                      {service.status}
+                                    </Badge>
+                                  </div>
+                                  <div className="text-sm text-gray-500">{service.description}</div>
+                                  <div className="text-sm text-gray-500">
+                                    Requested for: {new Date(service.requestedFor).toLocaleString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </div>
+                                  <div className="text-sm text-gray-500">Duration: {service.duration}</div>
+                                  <div className="text-sm text-gray-500">Patient condition: {service.patientCondition}</div>
+                                  {service.specialInstructions && (
+                                    <div className="text-xs text-gray-500 mt-1 italic">
+                                      Special instructions: {service.specialInstructions}
+                                    </div>
+                                  )}
+                                  {service.assignedTo && (
+                                    <div className="text-xs text-blue-600 mt-1">
+                                      Assigned to: {service.assignedTo.name} ({service.assignedTo.role})
+                                      {service.assignedTo.specialization && ` - ${service.assignedTo.specialization}`}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-right">
+                                  <div>₹{service.price}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      {/* Emergency Services Section */}
+                      {prescription.emergencyServices && (
+                        <>
+                          <h4 className="text-sm font-semibold text-gray-600 mt-4">Emergency Services</h4>
+                          <div className="space-y-3">
+                            <div className="flex justify-between border-b pb-2">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{prescription.emergencyServices.serviceType.replace('_', ' ')}</span>
+                                  <Badge variant={prescription.emergencyServices.serviceType === 'air_ambulance' ? 'default' : 'outline'} 
+                                    className={`text-xs ${
+                                    prescription.emergencyServices.status === 'requested' ? 'bg-red-50 text-red-700 border-red-300' :
+                                    prescription.emergencyServices.status === 'dispatched' ? 'bg-amber-50 text-amber-700 border-amber-300' :
+                                    prescription.emergencyServices.status === 'in_transit' ? 'bg-blue-50 text-blue-700 border-blue-300' :
+                                    prescription.emergencyServices.status === 'completed' ? 'bg-green-50 text-green-700 border-green-300' :
+                                    prescription.emergencyServices.status === 'cancelled' ? 'bg-gray-100 text-gray-700 border-gray-300' :
+                                    'bg-gray-50 text-gray-700 border-gray-300'
+                                  }`}>
+                                    {prescription.emergencyServices.status}
+                                  </Badge>
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  Requested at: {new Date(prescription.emergencyServices.requestedAt).toLocaleString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </div>
+                                <div className="text-sm text-gray-500">From: {prescription.emergencyServices.pickupLocation}</div>
+                                <div className="text-sm text-gray-500">To: {prescription.emergencyServices.destinationLocation}</div>
+                                <div className="text-sm text-gray-500">Patient condition: {prescription.emergencyServices.patientCondition}</div>
+                                
+                                {prescription.emergencyServices.specialInstructions && (
+                                  <div className="text-xs text-gray-500 mt-1 italic">
+                                    Special instructions: {prescription.emergencyServices.specialInstructions}
+                                  </div>
+                                )}
+                                
+                                {prescription.emergencyServices.medicalEquipmentNeeded && 
+                                prescription.emergencyServices.medicalEquipmentNeeded.length > 0 && (
+                                  <div className="mt-1">
+                                    <div className="text-xs text-gray-600 font-medium">Equipment needed:</div>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {prescription.emergencyServices.medicalEquipmentNeeded.map((item, index) => (
+                                        <Badge key={index} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-300">
+                                          {item}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {prescription.emergencyServices.dispatchedAt && (
+                                  <div className="text-xs text-blue-600 mt-1">
+                                    Dispatched at: {new Date(prescription.emergencyServices.dispatchedAt).toLocaleString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </div>
+                                )}
+                                
+                                {prescription.emergencyServices.arrivalEstimate && (
+                                  <div className="text-xs text-green-600 mt-1">
+                                    Estimated arrival: {new Date(prescription.emergencyServices.arrivalEstimate).toLocaleString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <div>₹{prescription.emergencyServices.price}</div>
+                              </div>
+                            </div>
                           </div>
                         </>
                       )}
