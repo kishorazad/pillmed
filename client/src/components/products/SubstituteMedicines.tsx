@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 interface SubstituteMedicinesProps {
   medicineId: number;
   medicineName: string;
-  composition?: string | null;
+  composition?: string | null | any; // Handle any type to accommodate differences in API response
 }
 
 interface SubstituteMedicine {
@@ -18,6 +18,13 @@ interface SubstituteMedicine {
   discountedPrice?: number | null;
   manufacturer?: string | null;
   brand?: string | null;
+  composition?: string | null; 
+  packSize?: string | null;
+  quantity?: string;
+  uses?: string | null;
+  dosage?: string | null;
+  sideEffects?: string | null;
+  contraindications?: string | null;
 }
 
 const SubstituteMedicines: React.FC<SubstituteMedicinesProps> = ({ 
@@ -25,8 +32,18 @@ const SubstituteMedicines: React.FC<SubstituteMedicinesProps> = ({
   medicineName,
   composition 
 }) => {
+  // Clean composition value if it exists
+  const actualComposition = typeof composition === 'string' ? composition : 
+                            composition && typeof composition === 'object' ? JSON.stringify(composition) : null;
+  
+  // Create the API query string
+  const queryString = actualComposition 
+    ? `composition=${encodeURIComponent(actualComposition)}` 
+    : `name=${encodeURIComponent(medicineName)}`;
+  
+  // Fetch substitutes
   const { data: substitutes = [], isLoading, error } = useQuery<SubstituteMedicine[]>({
-    queryKey: [`/api/medicine/substitutes?${composition ? `composition=${encodeURIComponent(composition || '')}` : `name=${encodeURIComponent(medicineName)}`}&excludeId=${medicineId}`],
+    queryKey: [`/api/medicine/substitutes?${queryString}&excludeId=${medicineId}`],
     staleTime: 60 * 60 * 1000, // Cache for 1 hour
   });
 
@@ -73,10 +90,28 @@ const SubstituteMedicines: React.FC<SubstituteMedicinesProps> = ({
                       />
                     </div>
                     <h3 className="text-sm font-medium line-clamp-2 h-10">{medicine.name}</h3>
+                    
+                    {/* Manufacturer/Brand */}
                     <p className="text-xs text-gray-500 mb-1 line-clamp-1">
                       {medicine.manufacturer || medicine.brand || ''}
                     </p>
-                    <div className="flex items-center justify-between">
+                    
+                    {/* Display composition if available */}
+                    {medicine.composition && (
+                      <p className="text-xs text-gray-600 mb-1 line-clamp-1">
+                        <span className="font-medium">Composition:</span> {medicine.composition}
+                      </p>
+                    )}
+                    
+                    {/* Pack size if available */}
+                    {medicine.packSize && (
+                      <p className="text-xs text-gray-600 mb-1">
+                        {medicine.packSize}
+                      </p>
+                    )}
+                    
+                    {/* Price and discount */}
+                    <div className="flex items-center justify-between mt-1">
                       <span className="font-bold text-sm">
                         ₹{medicine.discountedPrice || medicine.price}
                       </span>

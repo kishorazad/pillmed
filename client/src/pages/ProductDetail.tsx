@@ -270,24 +270,36 @@ const ProductDetail = () => {
             </div>
             
             <div className="mb-6">
-              <div className="flex mb-4 border-b">
+              <div className="flex mb-4 border-b overflow-x-auto">
                 <button 
-                  className={`py-3 px-4 ${activeTab === 'uses' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'uses' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
                   onClick={() => setActiveTab('uses')}
                 >
                   Uses
                 </button>
                 <button 
-                  className={`py-3 px-4 ${activeTab === 'contraindications' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'composition' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  onClick={() => setActiveTab('composition')}
+                >
+                  Composition
+                </button>
+                <button 
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'contraindications' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
                   onClick={() => setActiveTab('contraindications')}
                 >
                   Contraindications
                 </button>
                 <button 
-                  className={`py-3 px-4 ${activeTab === 'side-effects' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'side-effects' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
                   onClick={() => setActiveTab('side-effects')}
                 >
                   Side Effects
+                </button>
+                <button 
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'dosage' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  onClick={() => setActiveTab('dosage')}
+                >
+                  Dosage
                 </button>
               </div>
               
@@ -299,7 +311,53 @@ const ProductDetail = () => {
                     </svg>
                     <div>
                       <h3 className="font-semibold text-lg mb-2">Uses of {product.name.toUpperCase()}</h3>
-                      <p>{product.description || `${product.name} is used to treat various conditions as directed by your doctor. Please consult your healthcare provider for specific information.`}</p>
+                      {(product as any).uses ? (
+                        <div dangerouslySetInnerHTML={{ __html: (product as any).uses }} />
+                      ) : (
+                        <p>{product.description || `${product.name} is used to treat various conditions as directed by your doctor. Please consult your healthcare provider for specific information.`}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'composition' && (
+                <div className="text-gray-700">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M12 3v6" />
+                      <path d="M9 9h6" />
+                      <path d="m15 12-3 3-3-3" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Composition of {product.name.toUpperCase()}</h3>
+                      {(product as any).composition ? (
+                        <p>{(product as any).composition}</p>
+                      ) : (
+                        <p>Detailed composition information not available. Please refer to the product packaging or consult with your pharmacist.</p>
+                      )}
+                      
+                      {(product as any).manufacturer && (
+                        <div className="mt-4">
+                          <h4 className="font-medium mb-1">Manufacturer</h4>
+                          <p>{(product as any).manufacturer}</p>
+                        </div>
+                      )}
+                      
+                      {(product as any).packSize && (
+                        <div className="mt-4">
+                          <h4 className="font-medium mb-1">Pack Size</h4>
+                          <p>{(product as any).packSize}</p>
+                        </div>
+                      )}
+                      
+                      {(product as any).storageInstructions && (
+                        <div className="mt-4">
+                          <h4 className="font-medium mb-1">Storage Instructions</h4>
+                          <p>{(product as any).storageInstructions}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -315,11 +373,22 @@ const ProductDetail = () => {
                     </svg>
                     <div>
                       <h3 className="font-semibold text-lg mb-2">Contraindications of {product.name.toUpperCase()}</h3>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li>If you are allergic to any of the components in the medication.</li>
-                        <li>If you have a history of an allergic reaction to similar medications.</li>
-                        <li>If you have certain medical conditions that may interact with this medicine.</li>
-                      </ul>
+                      {(product as any).contraindications ? (
+                        <div dangerouslySetInnerHTML={{ __html: (product as any).contraindications }} />
+                      ) : (
+                        <ul className="list-disc pl-5 space-y-2">
+                          <li>If you are allergic to any of the components in the medication.</li>
+                          <li>If you have a history of an allergic reaction to similar medications.</li>
+                          <li>If you have certain medical conditions that may interact with this medicine.</li>
+                        </ul>
+                      )}
+                      
+                      {(product as any).warnings && (
+                        <div className="mt-4">
+                          <h4 className="font-medium mb-1">Warnings</h4>
+                          <div dangerouslySetInnerHTML={{ __html: (product as any).warnings }} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -335,14 +404,48 @@ const ProductDetail = () => {
                     </svg>
                     <div>
                       <h3 className="font-semibold text-lg mb-2">Side Effects of {product.name.toUpperCase()}</h3>
-                      <p className="mb-2">Common side effects may include:</p>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li>Headache</li>
-                        <li>Dizziness</li>
-                        <li>Nausea</li>
-                        <li>Gastrointestinal discomfort</li>
-                      </ul>
+                      {(product as any).sideEffects ? (
+                        <div dangerouslySetInnerHTML={{ __html: (product as any).sideEffects }} />
+                      ) : (
+                        <>
+                          <p className="mb-2">Common side effects may include:</p>
+                          <ul className="list-disc pl-5 space-y-2">
+                            <li>Headache</li>
+                            <li>Dizziness</li>
+                            <li>Nausea</li>
+                            <li>Gastrointestinal discomfort</li>
+                          </ul>
+                        </>
+                      )}
                       <p className="mt-3 text-sm">If you experience any severe side effects, please contact your healthcare provider immediately.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'dosage' && (
+                <div className="text-gray-700">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
+                      <path d="M19 15V9c0-1.2-1-2-2-2h-8" />
+                      <rect x="3" y="7" width="5" height="5" rx="1" />
+                      <path d="M9 12h2.7" />
+                      <circle cx="16" cy="19" r="2" />
+                      <circle cx="7" cy="19" r="2" />
+                      <path d="M16 19h.01" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Dosage Information for {product.name.toUpperCase()}</h3>
+                      {(product as any).dosage ? (
+                        <div dangerouslySetInnerHTML={{ __html: (product as any).dosage }} />
+                      ) : (
+                        <p>Take this medication as directed by your doctor. Do not increase your dose or use this drug more often or for longer than prescribed. Use the lowest effective dose for the shortest duration possible to minimize side effects.</p>
+                      )}
+                      
+                      <div className="mt-4 p-3 bg-amber-50 rounded-md">
+                        <p className="text-amber-800 text-sm font-medium">Important Note</p>
+                        <p className="text-amber-700 text-sm mt-1">This medication information is provided for informational purposes only. Always consult your healthcare provider for proper dosage instructions tailored to your specific health condition.</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -356,6 +459,7 @@ const ProductDetail = () => {
                   <AccordionTrigger className="text-left font-medium">Product Summary</AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2">
+                      {/* Basic details */}
                       <div className="grid grid-cols-3 border-b pb-2">
                         <div className="text-gray-500">Offer Price</div>
                         <div className="col-span-2 font-medium">₹{product.discountedPrice || product.price}</div>
@@ -368,13 +472,64 @@ const ProductDetail = () => {
                             "No discount available"}
                         </div>
                       </div>
+                      
+                      {/* Composition information */}
+                      {(product as any).composition && (
+                        <div className="grid grid-cols-3 border-b pb-2">
+                          <div className="text-gray-500">Composition</div>
+                          <div className="col-span-2">{(product as any).composition}</div>
+                        </div>
+                      )}
+                      
+                      {/* Package size */}
+                      {(product as any).packSize && (
+                        <div className="grid grid-cols-3 border-b pb-2">
+                          <div className="text-gray-500">Pack Size</div>
+                          <div className="col-span-2">{(product as any).packSize}</div>
+                        </div>
+                      )}
+                      
+                      {/* Manufacturer */}
+                      {(product as any).manufacturer && (
+                        <div className="grid grid-cols-3 border-b pb-2">
+                          <div className="text-gray-500">Manufacturer</div>
+                          <div className="col-span-2">{(product as any).manufacturer}</div>
+                        </div>
+                      )}
+                      
+                      {/* Salt/Generic name */}
                       <div className="grid grid-cols-3 border-b pb-2">
                         <div className="text-gray-500">Contains</div>
-                        <div className="col-span-2">{product.description ? product.description.split(' ').slice(0, 3).join(' ') : product.name}</div>
+                        <div className="col-span-2">
+                          {(product as any).composition || 
+                           (product.description ? product.description.split(' ').slice(0, 3).join(' ') : product.name)}
+                        </div>
                       </div>
+                      
+                      {/* Brand */}
                       <div className="grid grid-cols-3 border-b pb-2">
-                        <div className="text-gray-500">Therapy</div>
+                        <div className="text-gray-500">Brand</div>
                         <div className="col-span-2">{product.brand || "Generic"}</div>
+                      </div>
+                      
+                      {/* Storage instructions */}
+                      {(product as any).storageInstructions && (
+                        <div className="grid grid-cols-3 border-b pb-2">
+                          <div className="text-gray-500">Storage</div>
+                          <div className="col-span-2">{(product as any).storageInstructions}</div>
+                        </div>
+                      )}
+                      
+                      {/* In stock status */}
+                      <div className="grid grid-cols-3 border-b pb-2">
+                        <div className="text-gray-500">Availability</div>
+                        <div className="col-span-2 font-medium">
+                          {product.inStock ? (
+                            <span className="text-green-600">In Stock</span>
+                          ) : (
+                            <span className="text-red-600">Out of Stock</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </AccordionContent>
@@ -395,24 +550,38 @@ const ProductDetail = () => {
             <div className="mb-6">
               <h3 className="font-medium mb-3">Quick links</h3>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">
-                  <Link href="#uses">Uses</Link>
+                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => setActiveTab('uses')}>
+                  Uses
                 </Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">
-                  <Link href="#contraindications">Contraindications</Link>
+                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => setActiveTab('composition')}>
+                  Composition
                 </Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">
-                  <Link href="#sideeffects">Side effects</Link>
+                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => setActiveTab('contraindications')}>
+                  Contraindications
                 </Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">
-                  <Link href="#warnings">Precautions and Warnings</Link>
+                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => setActiveTab('side-effects')}>
+                  Side Effects
                 </Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">
-                  <Link href="#directions">Directions for Use</Link>
+                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => setActiveTab('dosage')}>
+                  Dosage
                 </Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">
-                  <Link href="#storage">Storage and disposal</Link>
-                </Badge>
+                {(product as any).storageInstructions && (
+                  <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
+                    onClick={() => setActiveTab('composition')}>
+                    Storage
+                  </Badge>
+                )}
+                {(product as any).warnings && (
+                  <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
+                    onClick={() => setActiveTab('contraindications')}>
+                    Warnings
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
