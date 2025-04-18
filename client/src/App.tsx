@@ -46,6 +46,14 @@ import MedicalEquipment from "./pages/services/MedicalEquipment";
 import MedicalServices from "./pages/services/MedicalServices";
 import AmbulanceRequest from "./pages/services/AmbulanceRequest";
 
+// Doctors
+import DoctorSearch from "./pages/doctors/DoctorSearch";
+import DoctorDetail from "./pages/doctors/DoctorDetail";
+import AppointmentConfirmation from "./pages/doctors/AppointmentConfirmation";
+import AppointmentSuccess from "./pages/doctors/AppointmentSuccess";
+import VideoConsultation from "./pages/doctors/VideoConsultation";
+import EPrescription from "./pages/doctors/EPrescription";
+
 function Router() {
   return (
     <Switch>
@@ -69,6 +77,14 @@ function Router() {
       <Route path="/services/medical-equipment" component={MedicalEquipment} />
       <Route path="/services/medical-services" component={MedicalServices} />
       <Route path="/services/ambulance-request" component={AmbulanceRequest} />
+      
+      {/* Doctor Routes */}
+      <Route path="/doctors" component={DoctorSearch} />
+      <Route path="/doctors/:id" component={DoctorDetail} />
+      <Route path="/doctors/:id/book" component={AppointmentConfirmation} />
+      <Route path="/doctors/:id/success" component={AppointmentSuccess} />
+      <Route path="/doctors/:id/video" component={VideoConsultation} />
+      <Route path="/doctors/:id/prescription" component={EPrescription} />
       
       {/* Admin and Professional Dashboard Routes */}
       <Route path="/admin" component={AdminDashboard} />
