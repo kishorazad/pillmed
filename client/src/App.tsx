@@ -5,6 +5,7 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { useStore } from "./lib/store";
 import { LanguageProvider } from "./components/LanguageSwitcher";
+import { AuthProvider, useAuth } from "./lib/auth-provider";
 import { Loader2 } from "lucide-react";
 
 // Layout
@@ -64,10 +65,18 @@ interface RoleBasedRouteProps {
 
 function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedRouteProps) {
   const [, setLocation] = useLocation();
-  const { user } = useStore();
+  const { user, isLoading } = useAuth();
   
-  // Check user state immediately without artificial delay
-  // This will make the login process much faster
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <Route path={path}>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Route>
+    );
+  }
   
   // Check if user is authenticated
   if (!user) {
@@ -155,7 +164,7 @@ function Router() {
   );
 }
 
-function App() {
+function AppContent() {
   const { fetchCart, user, tempUserId } = useStore();
   
   // Fetch cart data whenever user changes or on initial load
@@ -165,28 +174,36 @@ function App() {
   }, [user, tempUserId, fetchCart]);
   
   return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      {/* Add padding at the bottom on mobile to account for the navigation bar */}
+      <main className="flex-grow pb-16 md:pb-0">
+        <Router />
+      </main>
+      <Footer />
+      <CartSidebar />
+      <MobileNavigation />
+      
+      {/* WhatsApp and Call Buttons */}
+      <FloatingContactButtons 
+        phoneNumber="8770762307"
+        whatsappNumber="918770762307"
+        message="Hello! I'm interested in ordering medicines from PillNow."
+      />
+    </div>
+  );
+}
+
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          {/* Add padding at the bottom on mobile to account for the navigation bar */}
-          <main className="flex-grow pb-16 md:pb-0">
-            <Router />
-          </main>
-          <Footer />
-          <CartSidebar />
-          <MobileNavigation />
-          
-          {/* WhatsApp and Call Buttons */}
-          <FloatingContactButtons 
-            phoneNumber="8770762307"
-            whatsappNumber="918770762307"
-            message="Hello! I'm interested in ordering medicines from PillNow."
-          />
-        </div>
-        <NotificationHandler />
-        <Toaster />
-      </LanguageProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <AppContent />
+          <NotificationHandler />
+          <Toaster />
+        </LanguageProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

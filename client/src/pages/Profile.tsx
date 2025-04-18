@@ -57,7 +57,8 @@ const Profile = () => {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { user, setUser } = useStore();
+  const { user } = useAuth();
+  const { setUser } = useStore();
   const { toast } = useToast();
   
   // Profile form
@@ -131,127 +132,25 @@ const Profile = () => {
     }
   };
   
-  // Handle login - Optimized for better performance
+  // Handle login using the new auth provider
+  const { loginMutation } = useAuth();
+  
   const onLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
-    // Show loading state to indicate login is processing
-    toast({
-      title: "Logging in",
-      description: "Please wait while we authenticate you...",
-    });
-    
     try {
-      // Get the temporary user ID and cart info to transfer the cart
-      const { tempUserId, cart } = useStore.getState();
-      const cartCount = cart.length;
+      // Get the temporary user ID from the store to transfer the cart later
+      const { tempUserId } = useStore.getState();
       
-      console.log('Login attempt:', { username: data.username, tempUserId });
-      
-      // Send login request with optimized payload
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: data.username,
-          password: data.password,
-          tempUserId
-        }),
+      // Submit login credentials through the auth provider's mutation
+      await loginMutation.mutateAsync({
+        username: data.username,
+        password: data.password
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
-      }
+      // Note: Redirection is handled by the auth provider
       
-      const userData = await response.json();
-      
-      // Update user state immediately
-      useStore.getState().setUser(userData);
-      
-      // Display success message right away
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${userData.name || userData.username}!`,
-      });
-      
-      // Only handle cart transfer in background if needed
-      if (userData.id) {
-        setTimeout(() => {
-          // Update cart in background after login
-          useStore.getState().fetchCart(userData.id);
-        }, 500);
-      }
-      
-      // Redirect based on user role with improved logging and debugging
-      if (userData.role) {
-        const role = userData.role.toLowerCase();
-        console.log(`Login successful! Redirecting user with role: ${role}`);
-        
-        // Make sure the role is correctly set - log it for verification
-        setTimeout(() => {
-          fetch('/api/session-check')
-            .then(res => res.json())
-            .then(data => {
-              console.log('Session check after login:', data);
-            })
-            .catch(err => {
-              console.error('Error checking session:', err);
-            });
-        }, 500);
-        
-        // Properly handle the redirection based on the role
-        switch (role) {
-          case 'admin':
-            console.log('Admin login detected, redirecting to admin dashboard...');
-            // Use a short delay to ensure session is fully saved before redirect
-            setTimeout(() => {
-              window.location.href = '/admin';
-            }, 800);
-            break;
-          case 'doctor':
-            console.log('Doctor login detected, redirecting to doctor dashboard...');
-            setTimeout(() => {
-              window.location.href = '/doctor';
-            }, 800);
-            break;
-          case 'chemist':
-            console.log('Chemist login detected, redirecting to chemist dashboard...');
-            setTimeout(() => {
-              window.location.href = '/chemist';
-            }, 800);
-            break;
-          case 'pharmacy':
-            console.log('Pharmacy login detected, redirecting to pharmacy dashboard...');
-            setTimeout(() => {
-              window.location.href = '/pharmacy';
-            }, 800);
-            break;
-          case 'hospital':
-          case 'laboratory':
-            console.log('Hospital/Laboratory login detected, redirecting to laboratory dashboard...');
-            setTimeout(() => {
-              window.location.href = '/laboratory';
-            }, 800);
-            break;
-          case 'delivery':
-            console.log('Delivery login detected, redirecting to delivery dashboard...');
-            setTimeout(() => {
-              window.location.href = '/delivery';
-            }, 800);
-            break;
-          default:
-            console.log(`User role ${role} has no special dashboard, staying on profile page`);
-            setActiveTab('profile');
-        }
-      } else {
-        console.log('No role specified for user, staying on profile page');
-        setActiveTab('profile');
-      }
     } catch (error) {
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Invalid username or password",
-        variant: "destructive",
-      });
+      // Error handling is managed by the auth provider
+      console.error("Login error:", error);
     }
   };
   
