@@ -188,7 +188,38 @@ const Profile = () => {
         });
       }
       
-      setActiveTab('profile');
+      // Redirect user to appropriate dashboard based on role
+      if (userData.role) {
+        // Add a small delay to ensure the user state is fully updated
+        setTimeout(() => {
+          // Redirect based on user role
+          switch (userData.role.toLowerCase()) {
+            case 'admin':
+              window.location.href = '/admin';
+              break;
+            case 'doctor':
+              window.location.href = '/doctor';
+              break;
+            case 'chemist':
+              window.location.href = '/chemist';
+              break;
+            case 'pharmacy':
+              window.location.href = '/pharmacy';
+              break;
+            case 'hospital':
+            case 'laboratory':
+              window.location.href = '/laboratory';
+              break;
+            case 'delivery':
+              window.location.href = '/delivery';
+              break;
+            default:
+              setActiveTab('profile');
+          }
+        }, 500);
+      } else {
+        setActiveTab('profile');
+      }
     } catch (error) {
       toast({
         title: "Login failed",
@@ -275,7 +306,38 @@ const Profile = () => {
         });
       }
       
-      setActiveTab('profile');
+      // Redirect user to appropriate dashboard based on role
+      if (userData.role) {
+        // Add a small delay to ensure the user state is fully updated
+        setTimeout(() => {
+          // Redirect based on user role
+          switch (userData.role.toLowerCase()) {
+            case 'admin':
+              window.location.href = '/admin';
+              break;
+            case 'doctor':
+              window.location.href = '/doctor';
+              break;
+            case 'chemist':
+              window.location.href = '/chemist';
+              break;
+            case 'pharmacy':
+              window.location.href = '/pharmacy';
+              break;
+            case 'hospital':
+            case 'laboratory':
+              window.location.href = '/laboratory';
+              break;
+            case 'delivery':
+              window.location.href = '/delivery';
+              break;
+            default:
+              setActiveTab('profile');
+          }
+        }, 500);
+      } else {
+        setActiveTab('profile');
+      }
     } catch (error) {
       toast({
         title: "Registration failed",

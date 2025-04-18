@@ -1,10 +1,11 @@
-import { useEffect } from "react";
-import { Switch, Route } from "wouter";
+import { useEffect, useState } from "react";
+import { Switch, Route, Redirect, useLocation } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { useStore } from "./lib/store";
 import { LanguageProvider } from "./components/LanguageSwitcher";
+import { Loader2 } from "lucide-react";
 
 // Layout
 import Header from "./components/layout/Header";
@@ -54,6 +55,68 @@ import AppointmentSuccess from "./pages/doctors/AppointmentSuccess";
 import VideoConsultation from "./pages/doctors/VideoConsultation";
 import EPrescription from "./pages/doctors/EPrescription";
 
+// Role-based route protection
+interface RoleBasedRouteProps {
+  path: string;
+  component: React.ComponentType;
+  allowedRoles: string[];
+}
+
+function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedRouteProps) {
+  const [, setLocation] = useLocation();
+  const { user } = useStore();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    // Short delay to ensure store is loaded
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  if (isLoading) {
+    return (
+      <Route path={path}>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Route>
+    );
+  }
+  
+  // Check if user is authenticated
+  if (!user) {
+    return (
+      <Route path={path}>
+        <Redirect to="/profile" />
+      </Route>
+    );
+  }
+  
+  // Check if user has the required role
+  const userRole = user.role?.toLowerCase();
+  if (!userRole || !allowedRoles.includes(userRole)) {
+    return (
+      <Route path={path}>
+        <div className="container mx-auto px-4 py-12 text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="mb-6">You don't have permission to access this page.</p>
+          <button 
+            onClick={() => setLocation("/")}
+            className="px-4 py-2 bg-primary text-white rounded"
+          >
+            Return to Home
+          </button>
+        </div>
+      </Route>
+    );
+  }
+  
+  return <Route path={path} component={Component} />;
+}
+
 function Router() {
   return (
     <Switch>
@@ -86,13 +149,13 @@ function Router() {
       <Route path="/doctors/:id/video" component={VideoConsultation} />
       <Route path="/doctors/:id/prescription" component={EPrescription} />
       
-      {/* Admin and Professional Dashboard Routes */}
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/pharmacy" component={PharmacyDashboard} />
-      <Route path="/doctor" component={DoctorDashboard} />
-      <Route path="/laboratory" component={LaboratoryDashboard} />
-      <Route path="/delivery" component={DeliveryDashboard} />
-      <Route path="/chemist" component={ChemistDashboard} />
+      {/* Admin and Professional Dashboard Routes with Role Protection */}
+      <RoleBasedRoute path="/admin" component={AdminDashboard} allowedRoles={['admin']} />
+      <RoleBasedRoute path="/pharmacy" component={PharmacyDashboard} allowedRoles={['pharmacy']} />
+      <RoleBasedRoute path="/doctor" component={DoctorDashboard} allowedRoles={['doctor']} />
+      <RoleBasedRoute path="/laboratory" component={LaboratoryDashboard} allowedRoles={['laboratory', 'hospital']} />
+      <RoleBasedRoute path="/delivery" component={DeliveryDashboard} allowedRoles={['delivery']} />
+      <RoleBasedRoute path="/chemist" component={ChemistDashboard} allowedRoles={['chemist', 'pharmacy']} />
       
       <Route component={NotFound} />
     </Switch>
