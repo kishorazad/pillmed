@@ -225,7 +225,7 @@ const ProductDetail = () => {
             <div className="mb-6">
               <p className="font-medium mb-2">{product.quantity}</p>
               <div className="flex items-center">
-                <span className="mr-4">Quantity:</span>
+                <span className="mr-4">{t('quantity')}:</span>
                 <div className="flex items-center border rounded">
                   <button 
                     className="px-3 py-1 text-gray-500"
