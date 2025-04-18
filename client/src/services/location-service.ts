@@ -9,6 +9,7 @@
 
 import axios from 'axios';
 
+// Define pincode data interface matching server response
 export interface PincodeData {
   pincode: string;
   city: string;
@@ -19,6 +20,7 @@ export interface PincodeData {
   deliveryDays: number;
 }
 
+// Define IP location data interface
 interface IPLocationData {
   country_code: string;
   country_name: string;
@@ -31,60 +33,24 @@ interface IPLocationData {
   longitude: number;
 }
 
-// Map country codes to language codes for automatic language detection
-const COUNTRY_TO_LANGUAGE: Record<string, string> = {
+// Map countries to languages for automatic language selection
+const COUNTRY_LANGUAGE_MAP: Record<string, string> = {
   'IN': 'hi', // India -> Hindi
-  'US': 'en', // United States -> English
-  'GB': 'en', // United Kingdom -> English
-  'FR': 'fr', // France -> French
-  'ES': 'es', // Spain -> Spanish
-  'AE': 'ar', // UAE -> Arabic
+  'AE': 'ar', // UAE -> Arabic  
   'SA': 'ar', // Saudi Arabia -> Arabic
-  'CN': 'zh', // China -> Chinese
-  'TW': 'zh', // Taiwan -> Chinese
-  'JP': 'ja', // Japan -> Japanese
-  'DE': 'de', // Germany -> German
-  'RU': 'ru', // Russia -> Russian
-  'IT': 'it', // Italy -> Italian
-  'PT': 'pt', // Portugal -> Portuguese
-  'BR': 'pt-BR', // Brazil -> Portuguese (Brazil)
-  'TH': 'th', // Thailand -> Thai
-  'KR': 'ko', // South Korea -> Korean
-  'TR': 'tr', // Turkey -> Turkish
-  'VN': 'vi', // Vietnam -> Vietnamese
-  'NL': 'nl', // Netherlands -> Dutch
-  'SE': 'sv', // Sweden -> Swedish
-  'NO': 'no', // Norway -> Norwegian
-  'DK': 'da', // Denmark -> Danish
-  'FI': 'fi', // Finland -> Finnish
-  'PL': 'pl', // Poland -> Polish
-  'GR': 'el', // Greece -> Greek
-  'IL': 'he', // Israel -> Hebrew
-  'ID': 'id', // Indonesia -> Indonesian
-  'MY': 'ms', // Malaysia -> Malay
-  'PH': 'fil', // Philippines -> Filipino
-  'TN': 'ar', // Tunisia -> Arabic
-  'DZ': 'ar', // Algeria -> Arabic
-  'MA': 'ar', // Morocco -> Arabic
   'EG': 'ar', // Egypt -> Arabic
-  'IR': 'fa', // Iran -> Persian
   'PK': 'ur', // Pakistan -> Urdu
   'BD': 'bn', // Bangladesh -> Bengali
-  'LK': 'si', // Sri Lanka -> Sinhala
-  'NP': 'ne', // Nepal -> Nepali
-  'ZA': 'en', // South Africa -> English
-  'NG': 'en', // Nigeria -> English
-  'KE': 'sw', // Kenya -> Swahili
-  'TZ': 'sw', // Tanzania -> Swahili
-  'MX': 'es', // Mexico -> Spanish
-  'AR': 'es', // Argentina -> Spanish
-  'CL': 'es', // Chile -> Spanish
-  'CO': 'es', // Colombia -> Spanish
-  'PE': 'es', // Peru -> Spanish
-  'VE': 'es', // Venezuela -> Spanish
-  'CA': 'en', // Canada -> English (default, could be fr in Quebec)
-  'AU': 'en', // Australia -> English
-  'NZ': 'en', // New Zealand -> English
+  'CN': 'zh', // China -> Chinese
+  'JP': 'ja', // Japan -> Japanese
+  'KR': 'ko', // South Korea -> Korean
+  'RU': 'ru', // Russia -> Russian
+  'ES': 'es', // Spain -> Spanish
+  'FR': 'fr', // France -> French
+  'DE': 'de', // Germany -> German
+  'IT': 'it', // Italy -> Italian
+  'BR': 'pt', // Brazil -> Portuguese
+  'PT': 'pt', // Portugal -> Portuguese
 };
 
 /**
@@ -98,7 +64,7 @@ export async function getPincodeData(pincode: string): Promise<PincodeData> {
     return response.data;
   } catch (error) {
     console.error('Error fetching pincode data:', error);
-    throw new Error('Failed to fetch pincode data');
+    throw new Error('Unable to fetch pincode data');
   }
 }
 
@@ -109,11 +75,12 @@ export async function getPincodeData(pincode: string): Promise<PincodeData> {
  */
 export async function detectLocationByIP(): Promise<IPLocationData | null> {
   try {
-    // Free IP Geolocation API
+    // Use ipapi.co for IP-based geolocation (free tier, 1000 requests/day)
+    // Non-commercial usage falls within free tier limits
     const response = await axios.get('https://ipapi.co/json/');
     return response.data;
   } catch (error) {
-    console.error('Error detecting location by IP:', error);
+    console.error('Error detecting location:', error);
     return null;
   }
 }
@@ -125,17 +92,17 @@ export async function detectLocationByIP(): Promise<IPLocationData | null> {
 export async function setLanguageBasedOnLocation(setLanguage: (lang: string) => void): Promise<void> {
   try {
     const locationData = await detectLocationByIP();
+    
     if (locationData && locationData.country_code) {
       const countryCode = locationData.country_code;
-      const language = COUNTRY_TO_LANGUAGE[countryCode] || 'en';
+      const language = COUNTRY_LANGUAGE_MAP[countryCode] || 'en';
       
+      // Set the language in the app
       setLanguage(language);
       console.log(`Set language to ${language} based on location (${locationData.country_name})`);
     }
   } catch (error) {
     console.error('Error setting language by location:', error);
-    // Fallback to English
-    setLanguage('en');
   }
 }
 
@@ -146,16 +113,16 @@ export async function setLanguageBasedOnLocation(setLanguage: (lang: string) => 
  */
 export async function getAddressFromPincode(pincode: string): Promise<Partial<PincodeData>> {
   try {
-    const data = await getPincodeData(pincode);
+    const pincodeData = await getPincodeData(pincode);
     return {
-      city: data.city,
-      district: data.district,
-      state: data.state,
-      country: data.country
+      city: pincodeData.city,
+      state: pincodeData.state,
+      district: pincodeData.district,
+      country: pincodeData.country
     };
   } catch (error) {
     console.error('Error getting address from pincode:', error);
-    throw new Error('Failed to get address from pincode');
+    throw new Error('Unable to get address from pincode');
   }
 }
 
@@ -166,11 +133,25 @@ export async function getAddressFromPincode(pincode: string): Promise<Partial<Pi
  */
 export async function getEstimatedDeliveryTime(pincode: string): Promise<number> {
   try {
-    const data = await getPincodeData(pincode);
-    return data.deliveryDays;
+    const pincodeData = await getPincodeData(pincode);
+    return pincodeData.deliveryDays;
   } catch (error) {
-    console.error('Error getting delivery time:', error);
-    // Default to 3 days if we can't get exact estimate
-    return 3;
+    console.error('Error getting delivery estimate:', error);
+    return 5; // Default to 5 days if error
+  }
+}
+
+/**
+ * Check if delivery is available at a pincode
+ * @param pincode Delivery pincode
+ * @returns Promise with boolean indicating availability
+ */
+export async function isDeliveryAvailable(pincode: string): Promise<boolean> {
+  try {
+    const response = await axios.get(`/api/pincode/${pincode}/delivery`);
+    return response.data.isServiceable;
+  } catch (error) {
+    console.error('Error checking delivery availability:', error);
+    return false; // Default to not available if error
   }
 }

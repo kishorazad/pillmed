@@ -707,31 +707,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid pincode format. Must be a 6-digit number." });
       }
       
-      // Try to get from both MongoDB and in-memory storage
+      // First try MongoDB if available
+      let mongodbResult = null;
       try {
-        // Try MongoDB first using Mongoose
         const mongoose = await import('mongoose');
         const { Pincode } = await import('./models');
         
-        if (mongoose.connection.readyState === 1) {  // Connected
+        if (mongoose && mongoose.connection && mongoose.connection.readyState === 1) {
           const pincodeData = await Pincode.findOne({ pincode });
           
           if (pincodeData) {
-            return res.json({
+            mongodbResult = {
               pincode: pincodeData.pincode,
               city: pincodeData.officename,
               district: pincodeData.district,
               state: pincodeData.statename,
               deliveryAvailable: pincodeData.delivery === 'Delivery'
-            });
+            };
           }
         }
-      } catch (error) {
-        console.error("MongoDB pincode lookup failed:", error);
-        // Continue to in-memory fallback
+      } catch (mongoDbError) {
+        console.error("MongoDB pincode lookup failed:", mongoDbError);
+        // Continue to CSV fallback
       }
       
-      // Fallback to in-memory search through CSV sample
+      // Return MongoDB result if found
+      if (mongodbResult) {
+        return res.json(mongodbResult);
+      }
+      
+      // Otherwise try CSV file
       try {
         const fs = await import('fs');
         const path = await import('path');
@@ -743,42 +748,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ error: "Pincode database not available" });
         }
         
-        let found = false;
+        const results: any[] = [];
+        const stream = fs.default.createReadStream(csvFilePath).pipe(csvParser.default());
         
-        return new Promise<void>((resolve, reject) => {
-          fs.default.createReadStream(csvFilePath)
-            .pipe(csvParser.default())
-            .on('data', (data) => {
-              if (data.pincode === pincode) {
-                found = true;
-                res.json({
-                  pincode: data.pincode,
-                  city: data.officename,
-                  district: data.district,
-                  state: data.statename,
-                  deliveryAvailable: data.delivery === 'Delivery'
-                });
-                resolve();
-              }
-            })
-            .on('end', () => {
-              if (!found) {
-                res.status(404).json({ error: "Pincode not found" });
-              }
-              resolve();
-            })
-            .on('error', (error) => {
-              console.error("CSV parsing error:", error);
-              reject(error);
-            });
+        stream.on('data', (data) => {
+          if (data.pincode === pincode) {
+            results.push(data);
+          }
         });
-      } catch (error) {
-        console.error("In-memory pincode lookup failed:", error);
+        
+        // Wait for stream to finish
+        await new Promise<void>((resolve, reject) => {
+          stream.on('end', resolve);
+          stream.on('error', reject);
+        });
+        
+        // Check if we found a match
+        if (results.length > 0) {
+          const data = results[0];
+          return res.json({
+            pincode: data.pincode,
+            city: data.officename,
+            district: data.district,
+            state: data.statename,
+            deliveryAvailable: data.delivery === 'Delivery'
+          });
+        } else {
+          return res.status(404).json({ error: "Pincode not found" });
+        }
+      } catch (csvError) {
+        console.error("CSV pincode lookup failed:", csvError);
         return res.status(500).json({ error: "Failed to lookup pincode" });
       }
     } catch (error) {
       console.error("Pincode lookup error:", error);
-      res.status(500).json({ error: "Failed to lookup pincode" });
+      return res.status(500).json({ error: "Failed to lookup pincode" });
     }
   });
   
@@ -824,7 +828,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const mongoose = await import('mongoose');
         const { Product } = await import('./models');
         
-        if (mongoose.connection.readyState === 1) {  // Connected
+        if (mongoose && mongoose.connection && mongoose.connection.readyState === 1) {  // Connected
           console.log('Using MongoDB for optimized product search');
           
           // Create weighted text index if not exists
