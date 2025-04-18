@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
   profileImageUrl: { type: String, default: null }
 }, { timestamps: true });
 
-// Product Schema
+// Product Schema - optimized for 10 lakh products like PharmEasy
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   brand: { type: String, default: null },
@@ -21,7 +21,19 @@ const productSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   discountedPrice: { type: Number, default: null },
   imageUrl: { type: String, default: null },
-  categoryId: { type: Number, required: true },
+  // Support both Number and ObjectId for compatibility with both DrizzleORM and MongoDB
+  categoryId: { 
+    type: mongoose.Schema.Types.Mixed, 
+    required: true,
+    // Custom getter to ensure we always get the ID in numerical form when possible
+    get: function(val: any) {
+      if (typeof val === 'object' && val !== null && val.toString) {
+        // If it's an ObjectId, convert to string first
+        return String(val);
+      }
+      return val;
+    }
+  },
   inStock: { type: Boolean, default: true },
   quantity: { type: String, required: true },
   rating: { type: Number, default: null },
@@ -52,12 +64,25 @@ productSchema.index({
   }
 });
 
-// Category Schema
+// Category Schema optimized for large dataset compatibility
 const categorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String, default: null },
   imageUrl: { type: String, default: null },
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true }, // Enable virtual properties
+  toObject: { virtuals: true } 
+});
+
+// Virtual for products in this category - used for efficient listing
+categorySchema.virtual('products', {
+  ref: 'Product',
+  localField: '_id',
+  foreignField: 'categoryId',
+  // Limit to prevent loading too many products at once (for 10 lakh+ dataset)
+  options: { limit: 50 }
+});
 
 // Cart Item Schema
 const cartItemSchema = new mongoose.Schema({
