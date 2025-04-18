@@ -691,67 +691,71 @@ const ProductDetail = () => {
               {activeTab === 'facts' && (
                 <div className="text-gray-700">
                   <div className="flex items-start mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#FF8F00] mr-3 mt-1">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                       <path d="M14 2v6h6" />
                       <path d="M16 13H8" />
                       <path d="M16 17H8" />
                       <path d="M10 9H8" />
                     </svg>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">Fact Box - {product.name.toUpperCase()}</h3>
+                    <div className="w-full">
+                      <h3 className="font-semibold text-lg mb-3">
+                        <span className="bg-[#FF8F00] text-white px-3 py-1 rounded">
+                          {t('fact_box')} - {product.name.toUpperCase()}
+                        </span>
+                      </h3>
                       
-                      <div className="mt-2 space-y-4 bg-gray-50 p-4 rounded-lg">
+                      <div className="mt-4 bg-[#FFF5E6] p-4 rounded-md">
                         {(product as any).Fact_Box ? (
                           <div dangerouslySetInnerHTML={{ __html: (product as any).Fact_Box }} />
                         ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {(product as any).primary_use && (
-                              <div>
-                                <h4 className="font-medium text-sm text-gray-500">PRIMARY USE</h4>
-                                <p className="text-sm">{(product as any).primary_use}</p>
+                              <div className="bg-[#FFFAEE] p-3 rounded-md border border-[#FF8F00]">
+                                <h4 className="font-medium text-[#FF8F00]">{t('primary_use').toUpperCase()}</h4>
+                                <p className="text-gray-700 mt-1">{(product as any).primary_use}</p>
                               </div>
                             )}
                             
                             {(product as any).medicine_type && (
-                              <div>
-                                <h4 className="font-medium text-sm text-gray-500">MEDICINE TYPE</h4>
-                                <p className="text-sm">{(product as any).medicine_type}</p>
+                              <div className="bg-[#FFFAEE] p-3 rounded-md border border-[#FF8F00]">
+                                <h4 className="font-medium text-[#FF8F00]">{t('medicine_type').toUpperCase()}</h4>
+                                <p className="text-gray-700 mt-1">{(product as any).medicine_type}</p>
                               </div>
                             )}
                             
                             {(product as any).salt_composition && (
-                              <div>
-                                <h4 className="font-medium text-sm text-gray-500">SALT COMPOSITION</h4>
-                                <p className="text-sm">{(product as any).salt_composition}</p>
+                              <div className="bg-[#FFFAEE] p-3 rounded-md border border-[#FF8F00]">
+                                <h4 className="font-medium text-[#FF8F00]">{t('salt_composition').toUpperCase()}</h4>
+                                <p className="text-gray-700 mt-1">{(product as any).salt_composition}</p>
                               </div>
                             )}
                             
                             {(product as any).packaging && (
-                              <div>
-                                <h4 className="font-medium text-sm text-gray-500">PACKAGING</h4>
-                                <p className="text-sm">{(product as any).packaging} {(product as any).packaging_typ || ''}</p>
+                              <div className="bg-[#FFFAEE] p-3 rounded-md border border-[#FF8F00]">
+                                <h4 className="font-medium text-[#FF8F00]">{t('packaging').toUpperCase()}</h4>
+                                <p className="text-gray-700 mt-1">{(product as any).packaging} {(product as any).packaging_typ || ''}</p>
                               </div>
                             )}
                             
                             {(product as any).country_of_origin && (
-                              <div>
-                                <h4 className="font-medium text-sm text-gray-500">COUNTRY OF ORIGIN</h4>
-                                <p className="text-sm">{(product as any).country_of_origin}</p>
+                              <div className="bg-[#FFFAEE] p-3 rounded-md border border-[#FF8F00]">
+                                <h4 className="font-medium text-[#FF8F00]">{t('country_of_origin').toUpperCase()}</h4>
+                                <p className="text-gray-700 mt-1">{(product as any).country_of_origin}</p>
                               </div>
                             )}
                             
                             {(product as any).MANUFACTURER_ADDRESS && (
-                              <div>
-                                <h4 className="font-medium text-sm text-gray-500">MANUFACTURER ADDRESS</h4>
-                                <p className="text-sm">{(product as any).MANUFACTURER_ADDRESS}</p>
+                              <div className="bg-[#FFFAEE] p-3 rounded-md border border-[#FF8F00]">
+                                <h4 className="font-medium text-[#FF8F00]">{t('manufacturer_address').toUpperCase()}</h4>
+                                <p className="text-gray-700 mt-1">{(product as any).MANUFACTURER_ADDRESS}</p>
                               </div>
                             )}
                             
                             {(product as any).prescription_required && (
-                              <div>
-                                <h4 className="font-medium text-sm text-gray-500">PRESCRIPTION REQUIRED</h4>
-                                <p className="text-sm">{(product as any).prescription_required === 'Yes' ? 'Yes' : 'No'}</p>
+                              <div className="bg-[#FFFAEE] p-3 rounded-md border border-[#FF8F00]">
+                                <h4 className="font-medium text-[#FF8F00]">{t('prescription_required').toUpperCase()}</h4>
+                                <p className="text-gray-700 mt-1">{(product as any).prescription_required === 'Yes' ? t('yes') : t('no')}</p>
                               </div>
                             )}
                           </div>
@@ -759,8 +763,8 @@ const ProductDetail = () => {
                       </div>
                       
                       {(product as any).Q_A && (
-                        <div className="mt-6">
-                          <h4 className="font-medium mb-2">Frequently Asked Questions</h4>
+                        <div className="mt-6 bg-[#FFF5E6] p-4 rounded-md border-l-4 border-[#FF8F00]">
+                          <h4 className="font-medium mb-3 text-[#FF8F00]">{t('q_and_a')}</h4>
                           <div dangerouslySetInnerHTML={{ __html: (product as any).Q_A }} />
                         </div>
                       )}
