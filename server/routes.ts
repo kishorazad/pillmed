@@ -6,6 +6,7 @@ import { insertCartItemSchema, insertUserSchema } from "@shared/schema";
 import { processHealthQuery, getMedicationInfo, analyzeMedicationInteractions } from "./ai-service";
 import { sendNotificationToUser, sendNotificationToAllUsers } from './notification-service';
 import cacheService from './cache-service'; // Cache service for reducing database load
+import { pincodeService } from './pincode-service'; // Pincode service for delivery availability
 import { z } from "zod";
 import multer from 'multer';
 import path from 'path';
