@@ -905,17 +905,30 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
-  // Translation function
-  const t = (key: string): string => {
+  // Translation function with parameter support
+  const t = (key: string, params?: Record<string, string>): string => {
+    let text: string;
+    
+    // Get translation from current language or fallback to English
     if (translations[language] && translations[language][key]) {
-      return translations[language][key];
+      text = translations[language][key];
+    } else if (translations['en'] && translations['en'][key]) {
+      text = translations['en'][key];
+    } else {
+      // If no translation is found, return the key
+      return key;
     }
-    // Fallback to English
-    if (translations['en'] && translations['en'][key]) {
-      return translations['en'][key];
+    
+    // If we have parameters to replace, do the replacement
+    if (params) {
+      // Replace each parameter in the text {param} with the actual value
+      Object.keys(params).forEach(param => {
+        const regex = new RegExp(`\\{${param}\\}`, 'g');
+        text = text.replace(regex, params[param]);
+      });
     }
-    // If no translation is found, return the key
-    return key;
+    
+    return text;
   };
 
   // Set language based on IP location when component mounts
