@@ -1,252 +1,209 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { OrderItem, Product } from '@shared/schema';
-import { formatCurrency } from '@/lib/utils';
-import { Package, Truck, ArrowDown, Repeat } from 'lucide-react';
+import { useLanguage } from '../LanguageSwitcher';
+import { Package, ShoppingCart, Clock, Calendar, CheckCircle2, TruckIcon, RotateCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'wouter';
 
-interface OrderHistoryProps {
-  userId: number;
+interface OrderItem {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number;
+  imageUrl: string;
 }
 
-const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
-  // Fetch the user's orders
-  const { data: orders, isLoading: ordersLoading, error: ordersError } = useQuery({
-    queryKey: ['/api/orders/user', userId],
-    enabled: !!userId
-  });
+interface Order {
+  id: string;
+  date: string;
+  status: 'delivered' | 'processing' | 'shipped';
+  totalAmount: number;
+  items: OrderItem[];
+  deliveryDate?: string;
+  trackingId?: string;
+}
 
-  // A function to fetch order items
-  const fetchOrderItems = async (orderId: number) => {
-    const response = await fetch(`/api/orders/${orderId}/items`);
-    if (!response.ok) throw new Error('Failed to fetch order items');
-    return await response.json();
-  };
-
-  // Functions to get order status badge color
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'delivered':
-        return 'default' as const;
-      case 'shipped':
-        return 'secondary' as const;
-      case 'processing':
-        return 'outline' as const;
-      case 'cancelled':
-        return 'destructive' as const;
-      default:
-        return 'outline' as const;
-    }
-  };
+const OrderHistory: React.FC = () => {
+  const { t } = useLanguage();
   
-  // Get custom class for badge based on status
-  const getStatusBadgeClass = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'delivered':
-        return 'bg-[#10847e]/10 text-[#10847e] hover:bg-[#10847e]/10 border-[#10847e]/20';
-      case 'shipped':
-        return 'bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200';
-      case 'processing':
-        return 'bg-amber-50 text-amber-700 hover:bg-amber-50 border-amber-200';
-      case 'cancelled':
-        return 'bg-red-50 text-red-700 hover:bg-red-50 border-red-200';
-      default:
-        return 'bg-gray-50 text-gray-700 hover:bg-gray-50 border-gray-200';
+  // Sample order data
+  const orders: Order[] = [
+    {
+      id: 'ORD12345678',
+      date: '2025-04-10',
+      status: 'delivered',
+      totalAmount: 1245.50,
+      deliveryDate: '2025-04-15',
+      items: [
+        {
+          id: 1,
+          name: 'Teltab 80mg Tablet',
+          quantity: 2,
+          price: 420.25,
+          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/I05582/dolo-650-tablet-15s-1-1669710798.jpg'
+        },
+        {
+          id: 2,
+          name: 'Blood Pressure Monitor',
+          quantity: 1,
+          price: 1599,
+          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/W67219/dr-morepen-bp-one-bp02-fully-automatic-blood-pressure-monitor-with-adaptor-2-1671745339.jpg'
+        }
+      ]
+    },
+    {
+      id: 'ORD87654321',
+      date: '2025-04-02',
+      status: 'shipped',
+      totalAmount: 755.75,
+      trackingId: 'TRK38472638',
+      items: [
+        {
+          id: 3,
+          name: 'Multivitamin Tablets',
+          quantity: 1,
+          price: 450,
+          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/000665/accusure-simple-gluco-test-strips-box-of-50-1-1669710026.jpg'
+        },
+        {
+          id: 4,
+          name: 'Pain Relief Gel',
+          quantity: 2,
+          price: 120,
+          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/142528/cetaphil-gentle-skin-cleanser-250ml-2-1669710367.jpg'
+        }
+      ]
     }
-  };
-  
-  const getStatusIcon = (status: string) => {
-    switch (status?.toLowerCase()) {
+  ];
+
+  const getStatusIcon = (status: Order['status']) => {
+    switch(status) {
       case 'delivered':
-        return <Package className="h-4 w-4 mr-1" />;
-      case 'shipped':
-        return <Truck className="h-4 w-4 mr-1" />;
+        return <CheckCircle2 className="text-green-500" />;
       case 'processing':
-        return <ArrowDown className="h-4 w-4 mr-1" />;
+        return <Clock className="text-blue-500" />;
+      case 'shipped':
+        return <TruckIcon className="text-orange-500" />;
       default:
-        return <Package className="h-4 w-4 mr-1" />;
+        return <Package />;
     }
   };
 
-  // Format date string
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return format(date, 'MMM dd, yyyy');
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
-  if (ordersLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-      </div>
-    );
-  }
-
-  if (ordersError) {
-    return <p className="text-destructive">Error loading orders. Please try again later.</p>;
-  }
-
-  if (!orders || orders.length === 0) {
-    return (
-      <Card className="bg-muted/20">
-        <CardContent className="py-8 text-center">
-          <Package className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
-          <h3 className="mt-4 text-lg font-medium">No orders yet</h3>
-          <p className="mt-2 text-muted-foreground">
-            Your order history will appear here once you make a purchase.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const reorderItems = async (orderId: number) => {
-    try {
-      // Get the order items
-      const items = await fetchOrderItems(orderId);
-      
-      // Add each item to the cart
-      for (const item of items) {
-        await fetch('/api/cart', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId,
-            productId: item.productId,
-            quantity: item.quantity
-          })
-        });
-      }
-      
-      alert('Items added to cart!');
-    } catch (err) {
-      console.error('Error reordering items:', err);
-      alert('Failed to add items to cart');
-    }
+  const handleReorder = (orderId: string) => {
+    console.log(`Reordering items from order ${orderId}`);
+    // Implement reorder logic
   };
 
   return (
-    <div className="space-y-4">
-      {orders.map((order: any) => (
-        <Accordion key={order.id} type="single" collapsible>
-          <AccordionItem value={`order-${order.id}`}>
-            <div className="bg-card border border-border rounded-lg">
-              <div className="p-4 flex flex-col sm:flex-row justify-between">
-                <div>
-                  <p className="text-sm font-medium">Order #{order.id}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Placed on {formatDate(order.orderDate)}
-                  </p>
-                  <div className="mt-2 flex items-center">
-                    <Badge 
-                      variant={getStatusBadgeVariant(order.status)} 
-                      className={`flex items-center ${getStatusBadgeClass(order.status)}`}
-                    >
-                      {getStatusIcon(order.status)} {order.status}
-                    </Badge>
+    <section className="py-6">
+      <div className="container mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl md:text-2xl font-bold">{t('order_history')}</h2>
+          <Link href="/orders" className="text-primary text-sm">
+            {t('view_all_orders')}
+          </Link>
+        </div>
+        
+        <p className="text-gray-600 mb-4">{t('reorder_previous_purchases')}</p>
+        
+        {orders.length > 0 ? (
+          <div className="space-y-6">
+            {orders.map((order) => (
+              <div key={order.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="p-4 border-b flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(order.status)}
+                    <div>
+                      <h3 className="font-medium text-gray-900">{t('order')} #{order.id}</h3>
+                      <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <Calendar className="h-3 w-3" />
+                        <span>{formatDate(order.date)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">₹{order.totalAmount.toFixed(2)}</div>
+                    <div className="text-xs capitalize text-gray-500">
+                      {t(order.status)}
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4 sm:mt-0 flex flex-col sm:items-end justify-between">
-                  <p className="text-lg font-bold">
-                    {formatCurrency(order.totalAmount)}
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent accordion from toggling
-                      reorderItems(order.id);
-                    }}
-                    className="mt-2 border-[#10847e] text-[#10847e] hover:bg-[#10847e]/10 hover:text-[#10847e] hover:border-[#10847e]"
-                  >
-                    <Repeat className="w-4 h-4 mr-1" /> Reorder
-                  </Button>
+                
+                <div className="p-4">
+                  <div className="flex flex-col space-y-3">
+                    {order.items.map((item) => (
+                      <div key={item.id} className="flex gap-4">
+                        <div className="flex-shrink-0 h-16 w-16 bg-gray-50 rounded-md flex items-center justify-center p-1">
+                          <img 
+                            src={item.imageUrl} 
+                            alt={item.name} 
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        </div>
+                        <div className="flex-grow">
+                          <Link href={`/products/${item.id}`}>
+                            <h4 className="font-medium text-sm hover:text-primary transition-colors">{item.name}</h4>
+                          </Link>
+                          <div className="text-sm text-gray-500 mt-1">
+                            {t('quantity')}: {item.quantity} × ₹{item.price.toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 p-4 flex justify-between items-center">
+                  <div>
+                    {order.status === 'shipped' && order.trackingId && (
+                      <div className="text-xs text-gray-600">
+                        {t('tracking_id')}: {order.trackingId}
+                      </div>
+                    )}
+                    {order.status === 'delivered' && order.deliveryDate && (
+                      <div className="text-xs text-gray-600">
+                        {t('delivered_on')}: {formatDate(order.deliveryDate)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-1"
+                      onClick={() => handleReorder(order.id)}
+                    >
+                      <RotateCw className="h-3.5 w-3.5" />
+                      {t('reorder')}
+                    </Button>
+                    <Link href={`/orders/${order.id}`}>
+                      <Button variant="ghost" size="sm">{t('view_details')}</Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
-              <AccordionTrigger className="px-4 py-2 text-sm border-t">
-                View Order Details
-              </AccordionTrigger>
-              <AccordionContent>
-                <OrderItems orderId={order.id} />
-                <div className="p-4 border-t">
-                  <p className="text-sm">
-                    <span className="font-medium">Shipping Address:</span> {order.shippingAddress}
-                  </p>
-                  <p className="text-sm mt-1">
-                    <span className="font-medium">Payment Method:</span> {order.paymentMethod}
-                  </p>
-                  {order.trackingNumber && (
-                    <p className="text-sm mt-1">
-                      <span className="font-medium">Tracking #:</span> {order.trackingNumber}
-                    </p>
-                  )}
-                </div>
-              </AccordionContent>
-            </div>
-          </AccordionItem>
-        </Accordion>
-      ))}
-    </div>
-  );
-};
-
-// Component to show order items
-const OrderItems = ({ orderId }: { orderId: number }) => {
-  const { data: orderItems, isLoading, error } = useQuery({
-    queryKey: ['/api/orders', orderId, 'items'],
-    queryFn: async () => {
-      const response = await fetch(`/api/orders/${orderId}/items`);
-      if (!response.ok) throw new Error('Failed to fetch order items');
-      return await response.json();
-    }
-  });
-
-  if (isLoading) {
-    return <div className="p-4"><Skeleton className="h-20 w-full" /></div>;
-  }
-
-  if (error || !orderItems) {
-    return <div className="p-4 text-destructive">Error loading order items</div>;
-  }
-
-  if (orderItems.length === 0) {
-    return <div className="p-4 text-muted-foreground">No items in this order</div>;
-  }
-
-  return (
-    <div className="divide-y">
-      {orderItems.map((item: OrderItem & { product: Product }) => (
-        <div key={item.id} className="p-4 flex justify-between items-center">
-          <div className="flex items-center">
-            {item.product?.imageUrl && (
-              <div className="h-12 w-12 mr-4 overflow-hidden rounded border">
-                <img 
-                  src={item.product.imageUrl} 
-                  alt={item.product.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            )}
-            <div>
-              <p className="font-medium">{item.product?.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {formatCurrency(item.price)} × {item.quantity}
-              </p>
-            </div>
+            ))}
           </div>
-          <div className="text-right">
-            <p className="font-semibold">{formatCurrency(item.price * item.quantity)}</p>
+        ) : (
+          <div className="bg-gray-50 p-8 rounded-lg text-center">
+            <ShoppingCart className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900">{t('no_orders_yet')}</h3>
+            <p className="text-gray-500 mt-1">{t('start_shopping_to_see_orders')}</p>
+            <Link href="/products">
+              <Button className="mt-4">{t('browse_products')}</Button>
+            </Link>
           </div>
-        </div>
-      ))}
-    </div>
+        )}
+      </div>
+    </section>
   );
 };
 

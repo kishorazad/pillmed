@@ -1,93 +1,118 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useLanguage } from '../LanguageSwitcher';
+import { ArrowRightIcon, Clock } from 'lucide-react';
 import { Link } from 'wouter';
-import { useLanguage } from '@/components/LanguageSwitcher';
-import { ArrowRight } from 'lucide-react';
 
-interface BrowsedProduct {
+interface BrowsedItem {
   id: number;
   name: string;
   imageUrl: string;
   price: number;
-  discountedPrice?: number;
-  quantity: string;
+  viewedAt: string;
 }
 
 const PreviouslyBrowsedItems: React.FC = () => {
   const { t } = useLanguage();
-  const [browsedItems, setBrowsedItems] = useState<BrowsedProduct[]>([]);
-
-  const { language } = useLanguage();
   
-  useEffect(() => {
-    // Get previously browsed items from localStorage
-    const getPreviouslyBrowsedItems = () => {
-      try {
-        const storedItems = localStorage.getItem('browsedProducts');
-        if (storedItems) {
-          const parsedItems = JSON.parse(storedItems);
-          // Limit to 5 most recent items
-          setBrowsedItems(parsedItems.slice(0, 5));
-        }
-      } catch (error) {
-        console.error('Error retrieving browsed products:', error);
-      }
-    };
+  // Sample browsed items data
+  const items: BrowsedItem[] = [
+    {
+      id: 1,
+      name: 'Dolo 650mg Tablet',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/I05582/dolo-650-tablet-15s-1-1669710798.jpg',
+      price: 30.50,
+      viewedAt: '2025-04-17T10:30:00'
+    },
+    {
+      id: 2,
+      name: 'Cetaphil Gentle Skin Cleanser',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/142528/cetaphil-gentle-skin-cleanser-250ml-2-1669710367.jpg',
+      price: 450,
+      viewedAt: '2025-04-17T11:15:00'
+    },
+    {
+      id: 3,
+      name: 'Blood Glucose Test Strips',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/000665/accusure-simple-gluco-test-strips-box-of-50-1-1669710026.jpg',
+      price: 999,
+      viewedAt: '2025-04-17T14:20:00'
+    },
+    {
+      id: 4,
+      name: 'Dr. Morepen BP Monitor',
+      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/W67219/dr-morepen-bp-one-bp02-fully-automatic-blood-pressure-monitor-with-adaptor-2-1671745339.jpg',
+      price: 1899,
+      viewedAt: '2025-04-18T09:10:00'
+    }
+  ];
 
-    getPreviouslyBrowsedItems();
-  }, [language]); // Re-run when language changes
-
-  if (browsedItems.length === 0) {
-    return null;
-  }
+  const formatViewTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const amPm = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    
+    const formattedTime = `${hour12}:${minutes < 10 ? '0' : ''}${minutes} ${amPm}`;
+    
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const isToday = date.toDateString() === today.toDateString();
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+    
+    if (isToday) {
+      return `${t('today')} ${formattedTime}`;
+    } else if (isYesterday) {
+      return `${t('yesterday')} ${formattedTime}`;
+    } else {
+      return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ` ${formattedTime}`;
+    }
+  };
 
   return (
-    <div className="my-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">{t('previously_browsed_items')}</h2>
-        <Link to="/products" className="text-saffron-600 hover:text-saffron-700 flex items-center text-sm">
-          {t('view_all')} <ArrowRight size={16} className="ml-1" />
-        </Link>
-      </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {browsedItems.map((item) => (
-          <Link key={item.id} to={`/products/${item.id}`}>
-            <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-              <div className="h-32 bg-gray-100 flex items-center justify-center p-2">
-                {item.imageUrl ? (
+    <section className="py-6 bg-gray-50">
+      <div className="container mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl md:text-2xl font-bold">{t('previously_browsed_items')}</h2>
+          <Link href="/browsing-history" className="text-primary flex items-center text-sm">
+            {t('view_all')} <ArrowRightIcon className="ml-1 h-4 w-4" />
+          </Link>
+        </div>
+        
+        <p className="text-gray-600 mb-4">{t('recently_viewed_products')}</p>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 gap-4">
+          {items.map((item) => (
+            <Link key={item.id} href={`/products/${item.id}`}>
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden transition duration-300 hover:shadow-md cursor-pointer h-full flex flex-col">
+                <div className="relative px-4 pt-4 flex justify-center">
                   <img 
                     src={item.imageUrl} 
                     alt={item.name} 
-                    className="max-h-full max-w-full object-contain" 
+                    className="h-32 object-contain"
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                    <span className="text-gray-500 text-xs text-center">No Image</span>
+                </div>
+                
+                <div className="p-4 flex flex-col flex-grow">
+                  <h3 className="font-medium text-sm mb-1 line-clamp-2 h-10">{item.name}</h3>
+                  
+                  <div className="flex items-center mb-2 text-xs text-gray-500">
+                    <Clock className="h-3 w-3 mr-1" />
+                    <span>{formatViewTime(item.viewedAt)}</span>
                   </div>
-                )}
-              </div>
-              <div className="p-3">
-                <h3 className="text-sm font-medium line-clamp-2 h-10 mb-1">{item.name}</h3>
-                <div className="text-xs text-gray-500 mb-1">{t('strip_of_tablets', { count: '15' })}</div>
-                
-                <div className="flex items-center">
-                  <div className="text-xs text-gray-500">{t('mrp')} ₹{item.price.toFixed(2)}</div>
-                </div>
-                
-                <div className="flex items-center mt-1">
-                  <div className="text-md font-semibold">₹{(item.discountedPrice || item.price).toFixed(2)}</div>
-                  {item.discountedPrice && (
-                    <div className="ml-2 text-xs text-green-600">
-                      {Math.round(((item.price - item.discountedPrice) / item.price) * 100)}% {t('off')}
-                    </div>
-                  )}
+                  
+                  <div className="mt-auto">
+                    <div className="text-lg font-semibold">₹{item.price.toFixed(2)}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 
