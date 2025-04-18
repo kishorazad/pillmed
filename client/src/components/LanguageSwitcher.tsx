@@ -914,7 +914,18 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     return key;
   };
 
-  // Apply language direction for RTL languages (if needed)
+  // Set language based on IP location when component mounts
+  useEffect(() => {
+    // Import dynamically to avoid server-side rendering issues
+    import('../services/location-service').then(({ setLanguageBasedOnLocation }) => {
+      // Set language based on IP location (only if not already set by user)
+      setLanguageBasedOnLocation(setLanguage);
+    }).catch(error => {
+      console.error('Failed to load location service:', error);
+    });
+  }, []); // Empty dependency array - only run on mount
+
+  // Apply language direction for RTL languages
   useEffect(() => {
     // Add RTL languages here if needed
     const rtlLanguages: string[] = ['ar'];

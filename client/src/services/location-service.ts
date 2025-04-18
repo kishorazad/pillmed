@@ -1,4 +1,7 @@
-import axios from 'axios';
+/**
+ * Location service for IP-based language detection
+ * and pincode-based city detection
+ */
 
 /**
  * Interface for IP location data
@@ -15,81 +18,6 @@ interface IPLocationData {
 }
 
 /**
- * Get user's location based on IP address
- * Uses a free IP geolocation API (ipapi.co)
- */
-export const getUserLocation = async (): Promise<IPLocationData | null> => {
-  try {
-    const response = await axios.get('https://ipapi.co/json/');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching location data:', error);
-    return null;
-  }
-};
-
-/**
- * Map country code to language code
- * Default fallback to English if no mapping exists
- */
-export const getLanguageFromCountry = (countryCode: string): string => {
-  const countryToLanguageMap: Record<string, string> = {
-    // Major English-speaking countries
-    'US': 'en', 'GB': 'en', 'AU': 'en', 'NZ': 'en', 'CA': 'en',
-    
-    // German-speaking countries
-    'DE': 'de', 'AT': 'de', 'CH': 'de',
-    
-    // French-speaking countries
-    'FR': 'fr', 'BE': 'fr', 'MC': 'fr', 'LU': 'fr',
-    
-    // Spanish-speaking countries
-    'ES': 'es', 'MX': 'es', 'AR': 'es', 'CO': 'es', 'PE': 'es',
-    'CL': 'es', 'VE': 'es', 'EC': 'es', 'GT': 'es', 'CU': 'es',
-    'BO': 'es', 'DO': 'es', 'HN': 'es', 'PY': 'es', 'SV': 'es',
-    'NI': 'es', 'CR': 'es', 'PA': 'es', 'UY': 'es',
-    
-    // Chinese-speaking countries
-    'CN': 'zh', 'TW': 'zh', 'SG': 'zh',
-    
-    // Arabic-speaking countries
-    'SA': 'ar', 'AE': 'ar', 'QA': 'ar', 'BH': 'ar', 'KW': 'ar',
-    'OM': 'ar', 'JO': 'ar', 'LB': 'ar', 'SY': 'ar', 'IQ': 'ar',
-    'EG': 'ar', 'SD': 'ar', 'LY': 'ar', 'MA': 'ar', 'TN': 'ar',
-    'DZ': 'ar', 'YE': 'ar',
-    
-    // Hindi-speaking countries
-    'IN': 'hi',
-    
-    // Tamil-speaking regions
-    'LK': 'ta', // Sri Lanka
-  };
-  
-  return countryToLanguageMap[countryCode] || 'en';
-};
-
-/**
- * Set user language based on IP geolocation
- * @param setLanguage Function to set language in the app
- */
-export const setLanguageBasedOnLocation = async (setLanguage: (lang: string) => void): Promise<void> => {
-  try {
-    // Only set language if it's not already set by the user in localStorage
-    if (typeof window !== 'undefined' && !localStorage.getItem('language')) {
-      const locationData = await getUserLocation();
-      
-      if (locationData?.country_code) {
-        const detectedLanguage = getLanguageFromCountry(locationData.country_code);
-        setLanguage(detectedLanguage);
-        console.log(`Automatically set language to ${detectedLanguage} based on location (${locationData.country_code})`);
-      }
-    }
-  } catch (error) {
-    console.error('Error setting language based on location:', error);
-  }
-};
-
-/**
  * Interface for pincode data
  */
 export interface PincodeData {
@@ -102,14 +30,128 @@ export interface PincodeData {
 }
 
 /**
+ * Get user's location based on IP address
+ * Uses a free IP geolocation API (ipapi.co)
+ */
+export const getUserLocation = async (): Promise<IPLocationData | null> => {
+  try {
+    // Using ipapi.co which doesn't require API keys
+    const response = await fetch('https://ipapi.co/json/');
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get location data: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting user location:', error);
+    return null;
+  }
+};
+
+/**
+ * Map country code to language code
+ * Default fallback to English if no mapping exists
+ */
+export const getLanguageFromCountry = (countryCode: string): string => {
+  const countryToLanguage: Record<string, string> = {
+    // Most common countries and their primary languages
+    'US': 'en', // United States - English
+    'GB': 'en', // United Kingdom - English
+    'CA': 'en', // Canada - English (could also be French)
+    'AU': 'en', // Australia - English
+    'NZ': 'en', // New Zealand - English
+    'IN': 'hi', // India - Hindi
+    'FR': 'fr', // France - French
+    'DE': 'de', // Germany - German
+    'ES': 'es', // Spain - Spanish
+    'MX': 'es', // Mexico - Spanish
+    'CN': 'zh', // China - Chinese
+    'HK': 'zh', // Hong Kong - Chinese
+    'TW': 'zh', // Taiwan - Chinese
+    'SA': 'ar', // Saudi Arabia - Arabic
+    'AE': 'ar', // UAE - Arabic
+    'EG': 'ar', // Egypt - Arabic
+    'QA': 'ar', // Qatar - Arabic
+    'TN': 'ta', // Tunisia - Tamil speakers can be present
+    'LK': 'ta', // Sri Lanka - Tamil
+    // Add more country-to-language mappings as needed
+  };
+  
+  return countryToLanguage[countryCode] || 'en'; // Default to English
+};
+
+/**
+ * Set user language based on IP geolocation
+ * @param setLanguage Function to set language in the app
+ */
+export const setLanguageBasedOnLocation = async (setLanguage: (lang: string) => void): Promise<void> => {
+  try {
+    // Check if language is already set in localStorage
+    const savedLanguage = localStorage.getItem('pillnow-language');
+    
+    // If we already have a user-selected language, respect that choice
+    if (savedLanguage) {
+      return;
+    }
+    
+    // Get location data
+    const locationData = await getUserLocation();
+    
+    if (!locationData) {
+      return;
+    }
+    
+    // Map country to language
+    const languageCode = getLanguageFromCountry(locationData.country_code);
+    
+    // Set the language
+    setLanguage(languageCode);
+    
+    // Update localStorage
+    localStorage.setItem('pillnow-language', languageCode);
+    
+    console.log(`Set language to ${languageCode} based on location (${locationData.country_name})`);
+  } catch (error) {
+    console.error('Error setting language based on location:', error);
+  }
+};
+
+/**
  * Get city and delivery information by pincode
  */
 export const getCityByPincode = async (pincode: string): Promise<PincodeData | null> => {
   try {
-    const response = await axios.get(`/api/pincode/${pincode}`);
-    return response.data;
+    const response = await fetch(`/api/pincode/${pincode}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get pincode data: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error('Error fetching pincode data:', error);
+    console.error(`Error getting data for pincode ${pincode}:`, error);
     return null;
+  }
+};
+
+/**
+ * Check if delivery is available for a pincode
+ */
+export const checkDeliveryAvailability = async (pincode: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`/api/delivery-available/${pincode}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to check delivery availability: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data.deliveryAvailable;
+  } catch (error) {
+    console.error(`Error checking delivery availability for pincode ${pincode}:`, error);
+    return false;
   }
 };
