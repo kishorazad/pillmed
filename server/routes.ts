@@ -1142,8 +1142,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate a deterministic cache key based on all search parameters
       const cacheKey = `medicine:search:${q}:limit=${limit}:page=${page}:category=${categoryId || ''}:price=${minPrice || ''}-${maxPrice || ''}:sort=${sortBy}:brand=${brand || ''}:inStock=${inStock || ''}`;
       
-      // Try to get from cache first
-      const cachedResults = cacheService.get(cacheKey);
+      // Try to get from cache first with LRU optimization for 10 lakh+ products
+      const cachedResults = cacheService.get(cacheKey, 'search');
       if (cachedResults) {
         console.log(`Cache HIT for medicine search: "${q}"`);
         return res.json(cachedResults);
@@ -1341,8 +1341,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               searchTime: true
             };
             
-            // Save to cache with search TTL (5 minutes)
-            cacheService.set(cacheKey, response, cacheService.getTTL('search'));
+            // Save to cache with search TTL (5 minutes) and specialized type for LRU optimization
+            cacheService.set(cacheKey, response, cacheService.getTTL('search'), 'search');
             
             return res.json(response);
           }
@@ -1527,8 +1527,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
       
-      // Save to cache with search TTL (5 minutes)
-      cacheService.set(cacheKey, inMemoryResponse, cacheService.getTTL('search'));
+      // Save to cache with search TTL (5 minutes) and specialized type for LRU optimization
+      cacheService.set(cacheKey, inMemoryResponse, cacheService.getTTL('search'), 'search');
       
       return res.json(inMemoryResponse);
     } catch (error) {
@@ -1549,8 +1549,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate a cache key based on query parameters
       const cacheKey = `substitutes:${composition || ''}:${name || ''}:${excludeId || ''}`;
       
-      // Try to get from cache first
-      const cachedResults = cacheService.get(cacheKey);
+      // Try to get from cache first using LRU optimization for product-type cache
+      const cachedResults = cacheService.get(cacheKey, 'product');
       if (cachedResults) {
         console.log(`Cache HIT for medicine substitutes: "${composition || name}"`);
         return res.json(cachedResults);
@@ -1615,8 +1615,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .limit(10)
             .lean();
           
-          // Cache the results for future requests
-          cacheService.set(cacheKey, substitutes, cacheService.getTTL('search'));
+          // Cache the results for future requests with LRU optimization for product-type cache
+          cacheService.set(cacheKey, substitutes, cacheService.getTTL('search'), 'product');
           
           return res.json(substitutes);
         }
