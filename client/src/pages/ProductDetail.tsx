@@ -569,24 +569,46 @@ const ProductDetail = () => {
               {activeTab === 'safety' && (
                 <div className="text-gray-700">
                   <div className="flex items-start mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#FF8F00] mr-3 mt-1">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                       <path d="m9 12 2 2 4-4" />
                     </svg>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">Safety Advice for {product.name.toUpperCase()}</h3>
-                      {(product as any).safety_advise ? (
-                        <div dangerouslySetInnerHTML={{ __html: (product as any).safety_advise }} />
-                      ) : (
-                        <p>Please consult your healthcare provider for safety information specific to this medication.</p>
-                      )}
+                    <div className="w-full">
+                      <h3 className="font-semibold text-lg mb-3">
+                        <span className="bg-[#FF8F00] text-white px-3 py-1 rounded">
+                          {t('safety_advice')} - {product.name.toUpperCase()}
+                        </span>
+                      </h3>
+                      
+                      <div className="mt-4 bg-[#FFF5E6] p-4 rounded-md border-l-4 border-[#FF8F00]">
+                        {(product as any).safety_advise ? (
+                          <div dangerouslySetInnerHTML={{ __html: (product as any).safety_advise }} />
+                        ) : (
+                          <p>Please consult your healthcare provider for safety information specific to this medication.</p>
+                        )}
+                      </div>
                       
                       {((product as any).storageInstructions || (product as any).storage) && (
-                        <div className="mt-4">
-                          <h4 className="font-medium mb-1">Storage Instructions</h4>
-                          <p>{(product as any).storageInstructions || (product as any).storage}</p>
+                        <div className="mt-4 p-3 bg-[#FFFAEE] rounded-md border border-[#FF8F00]">
+                          <p className="text-[#FF8F00] font-medium">Storage Instructions</p>
+                          <p className="text-gray-700 mt-1">{(product as any).storageInstructions || (product as any).storage}</p>
                         </div>
                       )}
+                      
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-[#FFFAEE] p-3 rounded-md border border-[#FF8F00]">
+                          <p className="text-[#FF8F00] font-medium">{t('pregnancy_interaction')}</p>
+                          <p className="text-gray-700 mt-1">
+                            {(product as any).pregnancyInteraction || 'Consult your doctor before taking this medication during pregnancy.'}
+                          </p>
+                        </div>
+                        <div className="bg-[#FFFAEE] p-3 rounded-md border border-[#FF8F00]">
+                          <p className="text-[#FF8F00] font-medium">{t('lactation_interaction')}</p>
+                          <p className="text-gray-700 mt-1">
+                            {(product as any).lactationInteraction || 'Consult your doctor before taking this medication while breastfeeding.'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -595,66 +617,72 @@ const ProductDetail = () => {
               {activeTab === 'interactions' && (
                 <div className="text-gray-700">
                   <div className="flex items-start mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 mr-3 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#FF8F00] mr-3 mt-1">
                       <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                       <line x1="12" y1="9" x2="12" y2="13" />
                       <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">Interactions of {product.name.toUpperCase()}</h3>
+                    <div className="w-full">
+                      <h3 className="font-semibold text-lg mb-3">
+                        <span className="bg-[#FF8F00] text-white px-3 py-1 rounded">
+                          {t('interactions')} - {product.name.toUpperCase()}
+                        </span>
+                      </h3>
                       
-                      <div className="space-y-4">
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(product as any).alcoholInteraction && (
-                          <div>
-                            <h4 className="font-medium mb-1">Alcohol Interaction</h4>
+                          <div className="bg-[#FFF5E6] p-4 rounded-md border-l-4 border-[#FF8F00]">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">{t('alcohol_interaction')}</h4>
                             <p>{(product as any).alcoholInteraction}</p>
                           </div>
                         )}
                         
                         {(product as any).pregnancyInteraction && (
-                          <div>
-                            <h4 className="font-medium mb-1">Pregnancy</h4>
+                          <div className="bg-[#FFF5E6] p-4 rounded-md border-l-4 border-[#FF8F00]">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">{t('pregnancy_interaction')}</h4>
                             <p>{(product as any).pregnancyInteraction}</p>
                           </div>
                         )}
                         
                         {(product as any).lactationInteraction && (
-                          <div>
-                            <h4 className="font-medium mb-1">Breastfeeding</h4>
+                          <div className="bg-[#FFF5E6] p-4 rounded-md border-l-4 border-[#FF8F00]">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">{t('lactation_interaction')}</h4>
                             <p>{(product as any).lactationInteraction}</p>
                           </div>
                         )}
                         
                         {(product as any).drivingInteraction && (
-                          <div>
-                            <h4 className="font-medium mb-1">Driving</h4>
+                          <div className="bg-[#FFF5E6] p-4 rounded-md border-l-4 border-[#FF8F00]">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">{t('driving_interaction')}</h4>
                             <p>{(product as any).drivingInteraction}</p>
                           </div>
                         )}
                         
                         {(product as any).kidneyInteraction && (
-                          <div>
-                            <h4 className="font-medium mb-1">Kidney</h4>
+                          <div className="bg-[#FFF5E6] p-4 rounded-md border-l-4 border-[#FF8F00]">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">{t('kidney_interaction')}</h4>
                             <p>{(product as any).kidneyInteraction}</p>
                           </div>
                         )}
                         
                         {(product as any).liverInteraction && (
-                          <div>
-                            <h4 className="font-medium mb-1">Liver</h4>
+                          <div className="bg-[#FFF5E6] p-4 rounded-md border-l-4 border-[#FF8F00]">
+                            <h4 className="font-medium mb-1 text-[#FF8F00]">{t('liver_interaction')}</h4>
                             <p>{(product as any).liverInteraction}</p>
                           </div>
                         )}
-                        
-                        {!((product as any).alcoholInteraction || 
-                          (product as any).pregnancyInteraction || 
-                          (product as any).lactationInteraction || 
-                          (product as any).drivingInteraction || 
-                          (product as any).kidneyInteraction || 
-                          (product as any).liverInteraction) && (
-                          <p>No specific interaction information available. Please consult your doctor for personalized advice.</p>
-                        )}
                       </div>
+                      
+                      {!((product as any).alcoholInteraction || 
+                        (product as any).pregnancyInteraction || 
+                        (product as any).lactationInteraction || 
+                        (product as any).drivingInteraction || 
+                        (product as any).kidneyInteraction || 
+                        (product as any).liverInteraction) && (
+                        <div className="mt-4 p-4 bg-[#FFFAEE] rounded-md border border-[#FF8F00]">
+                          <p className="text-center">No specific interaction information available. Please consult your doctor for personalized advice.</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
