@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useStore } from '@/lib/store';
+import { useAuth } from '@/lib/auth-provider';
 import Logo from './Logo';
 import MedicineSearch from '@/components/search/MedicineSearch';
 import NotificationHandler from '@/components/notifications/NotificationHandler';
@@ -8,7 +9,8 @@ import LanguageSwitcher, { useLanguage } from '@/components/LanguageSwitcher';
 
 const Header = () => {
   const [location, navigate] = useLocation();
-  const { cart, openCart, user } = useStore();
+  const { cart, openCart } = useStore();
+  const { user, logoutMutation } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -131,29 +133,17 @@ const Header = () => {
                     
                     <div className="border-t border-gray-200 my-1"></div>
                     <button 
-                      onClick={() => {
+                      onClick={async () => {
                         // Close the menu first for better UX
                         setIsUserMenuOpen(false);
                         
-                        // Perform logout API call first
-                        fetch('/api/logout', {
-                          method: 'POST',
-                          credentials: 'include',
-                          headers: {
-                            'Content-Type': 'application/json'
-                          }
-                        })
-                        .then(() => {
-                          // Only update state after successful logout
-                          useStore.getState().setUser(null);
-                          navigate('/');
-                        })
-                        .catch(error => {
+                        // Use the auth provider's logout mutation
+                        try {
+                          await logoutMutation.mutateAsync();
+                          // Note: Redirection is handled by the auth provider
+                        } catch (error) {
                           console.error('Logout failed:', error);
-                          // Even if the API call fails, update the local state
-                          useStore.getState().setUser(null);
-                          navigate('/');
-                        });
+                        }
                       }} 
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                     >

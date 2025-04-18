@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useStore } from '@/lib/store';
+import { useAuth } from '@/lib/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -154,177 +155,36 @@ const Profile = () => {
     }
   };
   
-  // Handle registration
+  // Handle registration using the new auth provider
+  const { registerMutation } = useAuth();
+  
   const onRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
     try {
       const { confirmPassword, ...registerData } = data;
       
-      // Get the temporary user ID and cart info to transfer the cart
-      const { tempUserId, cart } = useStore.getState();
-      const cartCount = cart.length;
+      // Submit registration data through the auth provider's mutation
+      await registerMutation.mutateAsync(registerData);
       
-      console.log(`Registration: Transferring cart with ${cartCount} items from guest user ${tempUserId} to new user`);
+      // Note: Success handling, toast notifications, and redirection are all managed by the auth provider
       
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...registerData,
-          tempUserId
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
-      }
-      
-      const userData = await response.json();
-      
-      // Important: Use the store's setUser function directly to handle cart transfer
-      useStore.getState().setUser(userData);
-      
-      // Show success message right away
-      toast({
-        title: "Registration successful",
-        description: `Welcome, ${userData.name}!`,
-      });
-      
-      // Only handle cart transfer in background if needed
-      if (userData.id) {
-        setTimeout(() => {
-          // Update cart in background after registration
-          useStore.getState().fetchCart(userData.id);
-        }, 500);
-      }
-      
-      // Redirect based on user role with improved logging and debugging
-      if (userData.role) {
-        const role = userData.role.toLowerCase();
-        console.log(`Registration successful! Redirecting user with role: ${role}`);
-        
-        // Make sure the role is correctly set - log it for verification
-        setTimeout(() => {
-          fetch('/api/session-check')
-            .then(res => res.json())
-            .then(data => {
-              console.log('Session check after registration:', data);
-            })
-            .catch(err => {
-              console.error('Error checking session:', err);
-            });
-        }, 500);
-        
-        // Properly handle the redirection based on the role
-        switch (role) {
-          case 'admin':
-            console.log('Admin registration detected, redirecting to admin dashboard...');
-            // Use a short delay to ensure session is fully saved before redirect
-            setTimeout(() => {
-              window.location.href = '/admin';
-            }, 800);
-            break;
-          case 'doctor':
-            console.log('Doctor registration detected, redirecting to doctor dashboard...');
-            setTimeout(() => {
-              window.location.href = '/doctor';
-            }, 800);
-            break;
-          case 'chemist':
-            console.log('Chemist registration detected, redirecting to chemist dashboard...');
-            setTimeout(() => {
-              window.location.href = '/chemist';
-            }, 800);
-            break;
-          case 'pharmacy':
-            console.log('Pharmacy registration detected, redirecting to pharmacy dashboard...');
-            setTimeout(() => {
-              window.location.href = '/pharmacy';
-            }, 800);
-            break;
-          case 'hospital':
-          case 'laboratory':
-            console.log('Hospital/Laboratory registration detected, redirecting to laboratory dashboard...');
-            setTimeout(() => {
-              window.location.href = '/laboratory';
-            }, 800);
-            break;
-          case 'delivery':
-            console.log('Delivery registration detected, redirecting to delivery dashboard...');
-            setTimeout(() => {
-              window.location.href = '/delivery';
-            }, 800);
-            break;
-          default:
-            console.log(`User role ${role} has no special dashboard, staying on profile page`);
-            setActiveTab('profile');
-        }
-      } else {
-        console.log('No role specified for user, staying on profile page');
-        setActiveTab('profile');
-      }
     } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
+      // Error handling is managed by the auth provider
+      console.error("Registration error:", error);
     }
   };
   
-  // Enhanced logout with proper server-side session cleanup
+  // Enhanced logout with auth provider
+  const { logoutMutation } = useAuth();
+  
   const handleLogout = async () => {
     try {
-      console.log('Initiating logout process');
+      // Use the auth provider's logout mutation
+      await logoutMutation.mutateAsync();
       
-      // Call the server to destroy the session
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      // Note: Success handling, toast notifications, and redirects are handled by the auth provider
       
-      if (!response.ok) {
-        throw new Error('Logout failed on server');
-      }
-      
-      console.log('Server-side logout successful');
-      
-      // Use the store's setUser function to clear local state
-      useStore.getState().setUser(null);
-      
-      // Query client invalidation to force refetch of user data
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      queryClient.setQueryData(['/api/user'], null);
-      
-      // Explicitly fetch cart for guest user after logout
-      setTimeout(() => {
-        console.log('Fetching guest cart after logout');
-        useStore.getState().fetchCart();
-      }, 500);
-      
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out",
-      });
-      
-      // Force reload the page to clear any lingering state
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 500);
     } catch (error) {
       console.error('Logout error:', error);
-      
-      // Fallback: Even if server logout fails, clear client state
-      useStore.getState().setUser(null);
-      queryClient.setQueryData(['/api/user'], null);
-      
-      toast({
-        title: "Logout issue",
-        description: "Logged out with some issues. Please refresh the page.",
-        variant: "destructive",
-      });
-      
-      setActiveTab('login');
     }
   };
   
