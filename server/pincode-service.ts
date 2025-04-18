@@ -69,16 +69,27 @@ let pincodeServiceAvailable = false;
 export async function initializePincodeService() {
   try {
     if (!mongoClient) {
-      const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017/pillnow';
+      // If MongoDB URI is not provided, gracefully fallback to default data
+      if (!process.env.MONGODB_URI) {
+        console.log('No MongoDB URI provided for pincode service. Using fallback pincode data.');
+        pincodeServiceAvailable = false;
+        return false;
+      }
+      
+      const mongoUrl = process.env.MONGODB_URI;
       console.log('Pincode service using MongoDB connection:', mongoUrl.replace(/mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/, 'mongodb$1://$2:****@'));
       
-      // Explicitly define the database name
-      const dbName = 'pillnow';
+      // Explicitly define the database name - extract from connection string or use default
+      const dbName = process.env.MONGODB_URI?.includes('pillnowinfo') ? 'pillnowinfo' : 'pillnow';
+      console.log(`Pincode service using database: ${dbName}`);
       
+      // Connect with improved options for better reliability
       mongoClient = new MongoClient(mongoUrl, {
         serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 10000
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 30000
       });
+      
       await mongoClient.connect();
       mongoDb = mongoClient.db(dbName);
       pincodeCollection = mongoDb.collection('pincodes');
@@ -97,7 +108,8 @@ export async function initializePincodeService() {
   } catch (error) {
     console.error('Failed to initialize pincode service:', error);
     pincodeServiceAvailable = false;
-    // Don't throw the error, just return false so the app can continue
+    console.log('Pincode service initialization failed, using fallback data');
+    // Don't throw the error, just return false so the app can continue with fallback data
     return false;
   }
 }
@@ -105,7 +117,7 @@ export async function initializePincodeService() {
 // Import pincodes from CSV file
 async function importPincodes() {
   try {
-    const csvFilePath = path.join(__dirname, '../attached_assets/pincode.csv');
+    const csvFilePath = path.join(process.cwd(), 'attached_assets/pincode.csv');
     const pincodes: PincodeData[] = [];
     
     // Read CSV file and parse data

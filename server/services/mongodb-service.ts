@@ -14,7 +14,8 @@ import {
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pillnow';
 
 // Make sure we specify the database name in the connection string
-const dbName = 'pillnow';
+// Extract database name from connection string or use default
+const dbName = process.env.MONGODB_URI?.includes('pillnowinfo') ? 'pillnowinfo' : 'pillnow';
 
 // Flag to track if MongoDB is available
 let mongoDbAvailable = false;
@@ -25,6 +26,12 @@ let mongoDbAvailable = false;
 export const connectToDatabase = async (retries = 5) => {
   console.log('Attempting to connect to MongoDB...');
   
+  // If there's no MongoDB URI, gracefully fallback to in-memory storage
+  if (!process.env.MONGODB_URI) {
+    console.log('No MongoDB URI provided. Using in-memory storage instead.');
+    return false;
+  }
+  
   // Log the MongoDB URI with masked password for debugging
   const uriWithoutPassword = MONGODB_URI.replace(
     /mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/,
@@ -34,21 +41,28 @@ export const connectToDatabase = async (retries = 5) => {
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      await mongoose.connect(MONGODB_URI, {
+      // Connect with a timeout to avoid slow connections
+      const connectionOptions = {
         serverSelectionTimeoutMS: 5000,
         connectTimeoutMS: 10000,
         socketTimeoutMS: 45000,
         family: 4,  // Force IPv4
         dbName: dbName  // Use explicitly defined database name
-      });
+      };
+      
+      console.log(`MongoDB connection attempt ${attempt} with database name: ${dbName}`);
+      
+      await mongoose.connect(MONGODB_URI, connectionOptions);
+      
       console.log('Connected to MongoDB successfully');
+      mongoDbAvailable = true;
       return true;
     } catch (error: any) {
       console.error(`MongoDB connection attempt ${attempt} failed: ${error.message}`);
       
       // Check for specific error types and log more details
       if (error.name === 'MongoServerSelectionError') {
-        console.error('Server selection error - check if MongoDB server is running');
+        console.error('Server selection error - check if MongoDB server is running and network connectivity');
       } else if (error.name === 'MongoNetworkError') {
         console.error('Network error - check connectivity and MongoDB URI');
       } else if (error.message && error.message.includes('bad auth')) {
@@ -57,6 +71,8 @@ export const connectToDatabase = async (retries = 5) => {
       
       if (attempt === retries) {
         console.error('MongoDB connection error: Cannot connect to MongoDB - using in-memory storage');
+        console.log('Using in-memory storage instead of MongoDB');
+        mongoDbAvailable = false;
         return false;
       }
       // Wait before retrying (exponential backoff)
