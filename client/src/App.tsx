@@ -32,6 +32,7 @@ import AdminDashboard from "./pages/Admin/Dashboard";
 import PharmacyDashboard from "./pages/Pharmacy/Dashboard";
 import DoctorDashboard from "./pages/Doctor/Dashboard";
 import LaboratoryDashboard from "./pages/Laboratory/Dashboard";
+import ChemistDashboard from "./pages/dashboard/ChemistDashboard";
 
 // New Features
 import DeliveryDashboard from "./pages/Delivery/Dashboard";
@@ -59,6 +60,7 @@ function Router() {
       <Route path="/doctor" component={DoctorDashboard} />
       <Route path="/laboratory" component={LaboratoryDashboard} />
       <Route path="/delivery" component={DeliveryDashboard} />
+      <Route path="/chemist" component={ChemistDashboard} />
       
       <Route component={NotFound} />
     </Switch>
