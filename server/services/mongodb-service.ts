@@ -8,8 +8,11 @@ import {
   Appointment, LabBooking, Order, OrderItem, HealthTip, Pincode
 } from '../models';
 
-// MongoDB connection URL - directly use the MongoDB Atlas URI passed in environment
-const MONGODB_URI = 'mongodb+srv://brijkishorazad:guPu0iRBclfQFpKa@cluster0.zjekb29.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+// MongoDB connection URL with additional configuration parameters
+const MONGODB_URI = 'mongodb+srv://brijkishorazad:guPu0iRBclfQFpKa@cluster0.zjekb29.mongodb.net/pillnowdb?retryWrites=true&w=majority&appName=Cluster0';
+
+// MongoDB connection needs to have network access from all IPs (0.0.0.0/0) in the MongoDB Atlas dashboard
+// Go to: Network Access > Add IP Address > Allow Access from Anywhere (0.0.0.0/0)
 
 export const connectToDatabase = async (retries = 5) => {
   console.log('Attempting to connect to MongoDB...');

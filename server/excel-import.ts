@@ -30,9 +30,13 @@ export async function importMedicinesFromExcel(): Promise<boolean> {
     console.log("Starting Excel import process...");
     
     // Check how many products we already have
+    // For handling large datasets (10 lakh+ products) like PharmEasy, we'd use:
+    // 1. Batch processing with pagination
+    // 2. Database count vs full retrieval
+    // 3. Incremental imports with change tracking
     const existingProducts = await storage.getProducts();
-    if (existingProducts.length > 100) {
-      console.log(`Already have ${existingProducts.length} products in memory storage. Skipping import.`);
+    if (existingProducts.length > 1000) {
+      console.log(`Already have ${existingProducts.length} products in storage. Skipping import.`);
       return true;
     }
     
@@ -84,8 +88,13 @@ export async function importMedicinesFromExcel(): Promise<boolean> {
       categoryMap.set(cat.name, cat.id);
     });
     
-    // Process more medicines for better search coverage (increased from 30 to 100)
-    const medicineData: MedicineData[] = (results as any[]).slice(0, 100).map((item: any) => {
+    // Process more medicines for scaling like PharmEasy (which handles 10 lakh+ products)
+    // In production, we would use:
+    // 1. Batch processing (1000 products at a time)
+    // 2. Parallel processing with worker threads
+    // 3. Chunked database inserts with bulk operations
+    // 4. Redis-based job queue for background processing
+    const medicineData: MedicineData[] = (results as any[]).slice(0, 1000).map((item: any) => {
       // Debugging - log the keys of the first item to understand structure
       if (results.indexOf(item) === 0) {
         console.log('First item keys:', Object.keys(item));
