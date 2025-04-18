@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useLanguage } from '../LanguageSwitcher';
 import { Link } from 'wouter';
 import { 
@@ -8,9 +8,12 @@ import {
   Pill, 
   Home, 
   MessageSquare,
-  ArrowRightIcon
+  ArrowRightIcon,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface HealthService {
   id: number;
@@ -23,6 +26,20 @@ interface HealthService {
 
 const HealthServices: React.FC = () => {
   const { t } = useLanguage();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
+  const handleScrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+  
+  const handleScrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
   
   const services: HealthService[] = [
     {
@@ -80,26 +97,54 @@ const HealthServices: React.FC = () => {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl md:text-2xl font-bold">{t('health_services')}</h2>
-          <Link href="/services" className="text-primary flex items-center text-sm">
-            {t('view_all')} <ArrowRightIcon className="ml-1 h-4 w-4" />
-          </Link>
+          <div className="flex items-center">
+            {!isMobile && (
+              <div className="flex gap-2 mr-4">
+                <button 
+                  onClick={handleScrollLeft}
+                  className="p-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={handleScrollRight}
+                  className="p-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            <Link href="/services" className="text-primary flex items-center text-sm">
+              {t('view_all')} <ArrowRightIcon className="ml-1 h-4 w-4" />
+            </Link>
+          </div>
         </div>
         
         <p className="text-gray-600 mb-4">{t('comprehensive_healthcare_solutions')}</p>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div 
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory"
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
           {services.map((service) => (
-            <Link key={service.id} href={service.url}>
-              <div className="bg-white rounded-lg shadow-sm p-4 h-full transition-shadow hover:shadow-md flex flex-col">
+            <Link key={service.id} href={service.url} className="snap-start">
+              <div className="bg-white rounded-lg shadow-sm p-4 transition-shadow hover:shadow-md flex flex-col min-w-[160px] max-w-[200px]">
                 <div className={`${service.color} p-3 rounded-full w-fit mb-3`}>
                   {service.icon}
                 </div>
                 
-                <h3 className="font-semibold text-lg mb-1">{service.title}</h3>
-                <p className="text-sm text-gray-600 flex-grow mb-3">{service.description}</p>
+                <h3 className="font-semibold text-base mb-1 line-clamp-1">{service.title}</h3>
+                <p className="text-xs text-gray-600 flex-grow mb-3 line-clamp-2">{service.description}</p>
                 
-                <Button variant="ghost" className="mt-auto w-fit p-0 h-auto text-primary text-sm font-medium hover:bg-transparent">
-                  {t('explore')} <ArrowRightIcon className="ml-1 h-4 w-4" />
+                <Button variant="ghost" className="mt-auto w-fit p-0 h-auto text-primary text-xs font-medium hover:bg-transparent">
+                  {t('explore')} <ArrowRightIcon className="ml-1 h-3 w-3" />
                 </Button>
               </div>
             </Link>
