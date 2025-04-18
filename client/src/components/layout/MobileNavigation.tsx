@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'wouter';
-import { Home, Search, ShoppingCart, Clock, User, Bot } from 'lucide-react';
+import { Home, Search, ShoppingCart, Clock, User, Bot, Building, Building2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useLanguage } from '@/components/LanguageSwitcher';
 
@@ -33,6 +33,12 @@ const MobileNavigation: React.FC = () => {
       label: t('medicines'),
       icon: <Search className="h-5 w-5" />,
       path: '/products',
+    },
+    {
+      label: 'Hospitals',
+      icon: <Building2 className="h-5 w-5" />,
+      path: '/hospitals',
+      highlight: true,
     },
     {
       label: t('ai_assistant'),
