@@ -72,9 +72,15 @@ export async function initializePincodeService() {
       const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017/pillnow';
       console.log('Pincode service using MongoDB connection:', mongoUrl.replace(/mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/, 'mongodb$1://$2:****@'));
       
-      mongoClient = new MongoClient(mongoUrl);
+      // Explicitly define the database name
+      const dbName = 'pillnow';
+      
+      mongoClient = new MongoClient(mongoUrl, {
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 10000
+      });
       await mongoClient.connect();
-      mongoDb = mongoClient.db('pillnow');
+      mongoDb = mongoClient.db(dbName);
       pincodeCollection = mongoDb.collection('pincodes');
       
       // Check if pincodes are already loaded

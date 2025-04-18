@@ -13,6 +13,9 @@ import {
 // Fallback to use PostgreSQL instead if MongoDB connection fails
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pillnow';
 
+// Make sure we specify the database name in the connection string
+const dbName = 'pillnow';
+
 // Flag to track if MongoDB is available
 let mongoDbAvailable = false;
 
@@ -35,7 +38,8 @@ export const connectToDatabase = async (retries = 5) => {
         serverSelectionTimeoutMS: 5000,
         connectTimeoutMS: 10000,
         socketTimeoutMS: 45000,
-        family: 4  // Force IPv4
+        family: 4,  // Force IPv4
+        dbName: dbName  // Use explicitly defined database name
       });
       console.log('Connected to MongoDB successfully');
       return true;
