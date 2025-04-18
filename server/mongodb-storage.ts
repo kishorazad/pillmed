@@ -932,35 +932,70 @@ export class MongoDBStorage implements IStorage {
 
   // Helper methods to convert MongoDB documents to our schema types
   private convertToUserType(user: any): UserType {
+    // Make sure MongoDB documents are properly converted
+    if (!user) return null;
+    
+    // Handle case where user document might not have proper _id
+    const id = user._id ? 
+              (typeof user._id === 'object' ? user._id.toString() : user._id) : 
+              (user.id ? user.id : null);
+              
+    if (!id) {
+      console.warn('Warning: User document missing both _id and id fields');
+    }
+    
     return {
-      id: user._id.toString(),
+      id: id,
       username: user.username,
       email: user.email,
       password: user.password,
       name: user.name,
-      phone: user.phone,
-      address: user.address,
-      pincode: user.pincode,
-      role: user.role,
-      profileImageUrl: user.profileImageUrl
+      phone: user.phone || null,
+      address: user.address || null,
+      pincode: user.pincode || null,
+      role: user.role || 'customer',
+      profileImageUrl: user.profileImageUrl || null
     };
   }
 
   private convertToProductType(product: any): ProductType {
+    if (!product) return null;
+    
+    // Handle MongoDB ObjectId conversion safely
+    const id = product._id ? 
+              (typeof product._id === 'object' ? product._id.toString() : product._id) : 
+              (product.id ? product.id : null);
+              
+    // Handle categoryId which might be ObjectId or Number
+    const categoryId = product.categoryId ? 
+                     (typeof product.categoryId === 'object' ? product.categoryId.toString() : product.categoryId) : 
+                     null;
+    
+    if (!id) {
+      console.warn('Warning: Product document missing both _id and id fields');
+    }
+    
     return {
-      id: product._id.toString(),
+      id: id,
       name: product.name,
-      description: product.description,
+      description: product.description || null,
       price: product.price,
-      discountedPrice: product.discountedPrice,
-      imageUrl: product.imageUrl,
-      categoryId: product.categoryId.toString(),
-      brand: product.brand,
-      inStock: product.inStock,
+      discountedPrice: product.discountedPrice || null,
+      imageUrl: product.imageUrl || null,
+      categoryId: categoryId,
+      brand: product.brand || null,
+      inStock: product.inStock !== undefined ? product.inStock : true,
       quantity: product.quantity,
-      rating: product.rating,
-      ratingCount: product.ratingCount,
-      isFeatured: product.isFeatured
+      rating: product.rating || null,
+      ratingCount: product.ratingCount || null,
+      isFeatured: product.isFeatured !== undefined ? product.isFeatured : false,
+      // Include medicine-specific fields
+      composition: product.composition || null,
+      uses: product.uses || null,
+      sideEffects: product.sideEffects || null,
+      contraindications: product.contraindications || null,
+      manufacturer: product.manufacturer || null,
+      packSize: product.packSize || null
     };
   }
 
