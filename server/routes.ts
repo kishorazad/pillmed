@@ -2059,12 +2059,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Initialize pincode service
+  // Initialize pincode service with graceful degradation
   try {
-    await initializePincodeService();
-    console.log('Pincode service initialized successfully');
+    const pincodeServiceInitialized = await initializePincodeService();
+    if (pincodeServiceInitialized) {
+      console.log('Pincode service initialized successfully');
+    } else {
+      console.log('Pincode service initialization failed, using fallback data');
+    }
   } catch (error) {
     console.error('Failed to initialize pincode service:', error);
+    console.log('Using fallback pincode data for service availability checks');
   }
   
   // Pincode lookup endpoint

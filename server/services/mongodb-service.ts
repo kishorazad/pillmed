@@ -10,7 +10,11 @@ import {
 
 // MongoDB connection URL with additional configuration parameters
 // Use environment variable for MongoDB connection string to avoid hardcoding credentials
+// Fallback to use PostgreSQL instead if MongoDB connection fails
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pillnow';
+
+// Flag to track if MongoDB is available
+let mongoDbAvailable = false;
 
 // MongoDB connection needs to have network access from all IPs (0.0.0.0/0) in the MongoDB Atlas dashboard
 // Go to: Network Access > Add IP Address > Allow Access from Anywhere (0.0.0.0/0)
@@ -376,29 +380,36 @@ export const initializeDatabase = async () => {
   try {
     // Connect to MongoDB
     const connected = await connectToDatabase();
+    mongoDbAvailable = connected;
+    
     if (!connected) {
       // Simple error message with no details to avoid cluttering logs
       console.log('Using in-memory storage instead of MongoDB');
-      throw new Error('Failed to connect to MongoDB');
+      // We'll return false but not throw an error so the application can continue
+      return false;
     }
     
-    // Seed basic data
-    const seeded = await seedData();
-    if (!seeded) {
-      throw new Error('Failed to seed data');
+    // Seed basic data - only if MongoDB is available
+    if (mongoDbAvailable) {
+      const seeded = await seedData();
+      if (!seeded) {
+        console.log('Failed to seed data, but continuing with existing data');
+      }
+      
+      // Import medicines from CSV
+      await importMedicinesFromCSV();
+      
+      // Import pincodes from CSV
+      await importPincodesFromCSV();
     }
-    
-    // Import medicines from CSV
-    await importMedicinesFromCSV();
-    
-    // Import pincodes from CSV
-    await importPincodesFromCSV();
     
     return true;
   } catch (error) {
     // Simplified error message
     console.error('Error initializing database, using in-memory storage');
-    throw error;
+    mongoDbAvailable = false;
+    // Return false but don't throw to allow the application to continue with PostgreSQL
+    return false;
   }
 };
 

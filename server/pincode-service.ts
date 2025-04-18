@@ -62,12 +62,16 @@ const SERVICE_AREAS = [
   { state: 'Chhattisgarh', deliveryDays: 4 },
 ];
 
+// Flag to track if pincodes data via MongoDB is available
+let pincodeServiceAvailable = false;
+
 // Initialize MongoDB connection
 export async function initializePincodeService() {
   try {
     if (!mongoClient) {
       const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017/pillnow';
       console.log('Pincode service using MongoDB connection:', mongoUrl.replace(/mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/, 'mongodb$1://$2:****@'));
+      
       mongoClient = new MongoClient(mongoUrl);
       await mongoClient.connect();
       mongoDb = mongoClient.db('pillnow');
@@ -79,11 +83,16 @@ export async function initializePincodeService() {
         await importPincodes();
       }
       
+      pincodeServiceAvailable = true;
       console.log('Pincode service initialized successfully');
     }
+    
+    return true;
   } catch (error) {
     console.error('Failed to initialize pincode service:', error);
-    throw error;
+    pincodeServiceAvailable = false;
+    // Don't throw the error, just return false so the app can continue
+    return false;
   }
 }
 
