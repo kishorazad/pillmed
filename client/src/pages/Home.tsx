@@ -42,6 +42,7 @@ import FeaturedProductsSlider from '@/components/home/FeaturedProductsSlider';
 import OrderHistory from '@/components/orders/OrderHistory';
 import HealthServices from '@/components/home/HealthServices';
 import NearbyHospitals from '@/components/hospitals/NearbyHospitals';
+import EmergencyCallButton from '@/components/EmergencyCallButton';
 
 // Mobile-optimized components
 import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
@@ -119,22 +120,34 @@ const Home = () => {
             {/* Mobile Banner Carousel */}
             <MobileBannerCarousel />
             
+            {/* Categories slider for Mobile - MOVED TO TOP */}
+            {!categoriesLoading && categories?.length > 0 && (
+              <MedicineCategorySlider 
+                categories={categories.map((cat: Category) => ({
+                  id: cat.id,
+                  name: cat.name,
+                  imageUrl: cat.imageUrl || null,
+                  link: `/products/category/${cat.id}`
+                }))}
+              />
+            )}
+            
             {/* Featured Products Slider (single column with sliding functionality) */}
             <FeaturedProductsSlider 
               products={featuredProducts} 
               loading={productsLoading} 
             />
 
-            {/* Product Deals (Top Deals) */}
+            {/* Product Deals (Top Deals) with same grid & sliding */}
             <TopDeals />
             
-            {/* Browsing History */}
+            {/* Browsing History with same grid & sliding */}
             <PreviouslyBrowsedItems />
             
-            {/* Order History */}
+            {/* Order History with same grid & sliding */}
             <OrderHistory />
             
-            {/* Health Services */}
+            {/* Health Services with smaller grid & sliding */}
             <HealthServices />
             
             {/* Festival Offers */}
@@ -147,20 +160,11 @@ const Home = () => {
               <BrandPromotions />
             </div>
             
-            {/* Nearby Hospitals Section */}
+            {/* Nearby Hospitals Section with Google Maps integration */}
             <NearbyHospitals />
             
-            {/* Categories slider for Mobile */}
-            {!categoriesLoading && categories?.length > 0 && (
-              <MedicineCategorySlider 
-                categories={categories.map((cat: Category) => ({
-                  id: cat.id,
-                  name: cat.name,
-                  imageUrl: cat.imageUrl || null,
-                  link: `/products/category/${cat.id}`
-                }))}
-              />
-            )}
+            {/* Emergency Call Button */}
+            <EmergencyCallButton />
           </>
         ) : (
           /* Desktop View */
@@ -168,34 +172,7 @@ const Home = () => {
             <HeroSection />
             <ServicesSection />
             
-            {/* Featured Products Slider (single column with sliding functionality) */}
-            <FeaturedProductsSlider 
-              products={featuredProducts} 
-              loading={productsLoading} 
-            />
-            
-            {/* Product Deals */}
-            <TopDeals />
-            
-            {/* Browsing History */}
-            <PreviouslyBrowsedItems />
-            
-            {/* Order History */}
-            <OrderHistory />
-            
-            {/* Health Services */}
-            <HealthServices />
-            
-            {/* Festival Offers */}
-            <FestivalOffers />
-            
-            {/* Brand Promotions */}
-            <BrandPromotions />
-            
-            {/* Nearby Hospitals Section */}
-            <NearbyHospitals />
-            
-            {/* Top Categories */}
+            {/* Top Categories - MOVED TO TOP */}
             <section className="py-8">
               <div className="container mx-auto">
                 <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>
@@ -218,9 +195,39 @@ const Home = () => {
               </div>
             </section>
             
+            {/* Featured Products Slider (single column with sliding functionality) */}
+            <FeaturedProductsSlider 
+              products={featuredProducts} 
+              loading={productsLoading} 
+            />
+            
+            {/* Product Deals with same grid & sliding */}
+            <TopDeals />
+            
+            {/* Browsing History with same grid & sliding */}
+            <PreviouslyBrowsedItems />
+            
+            {/* Order History with same grid & sliding */}
+            <OrderHistory />
+            
+            {/* Health Services with smaller grid & sliding */}
+            <HealthServices />
+            
+            {/* Festival Offers */}
+            <FestivalOffers />
+            
+            {/* Brand Promotions */}
+            <BrandPromotions />
+            
+            {/* Nearby Hospitals Section with Google Maps integration */}
+            <NearbyHospitals />
+            
             <PromotionalBanner />
             <HealthArticles />
             <Testimonials />
+            
+            {/* Emergency Call Button */}
+            <EmergencyCallButton />
           </>
         )}
 

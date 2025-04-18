@@ -48,6 +48,15 @@ export const translations: Record<string, Record<string, string>> = {
     'search': 'Search',
     'account': 'Account',
     'login': 'Login',
+    
+    // Emergency features
+    'emergency_numbers': 'Emergency Numbers',
+    'hospital': 'Hospital',
+    'ambulance': 'Ambulance',
+    'relative': 'Close Relative',
+    'add_relative_number': 'Add relative\'s number',
+    'open_emergency_contacts': 'Open emergency contacts',
+    'close_emergency_contacts': 'Close emergency contacts',
     'logout': 'Logout',
     'register': 'Register',
     'add_to_cart': 'Add to Cart',
@@ -246,6 +255,15 @@ export const translations: Record<string, Record<string, string>> = {
     'search': 'खोज',
     'account': 'खाता',
     'login': 'लॉगिन',
+    
+    // Emergency features
+    'emergency_numbers': 'आपातकालीन नंबर',
+    'hospital': 'अस्पताल',
+    'ambulance': 'एम्बुलेंस',
+    'relative': 'निकट संबंधी',
+    'add_relative_number': 'रिश्तेदार का नंबर जोड़ें',
+    'open_emergency_contacts': 'आपातकालीन संपर्क खोलें',
+    'close_emergency_contacts': 'आपातकालीन संपर्क बंद करें',
     'logout': 'लॉगआउट',
     'register': 'रजिस्टर',
     'add_to_cart': 'कार्ट में जोड़ें',
