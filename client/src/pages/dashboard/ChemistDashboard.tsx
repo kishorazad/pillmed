@@ -786,6 +786,163 @@ const ChemistDashboard: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <Dialog open={openAddMedicineDialog} onOpenChange={setOpenAddMedicineDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{t('add_new_medicine')}</DialogTitle>
+            <DialogDescription>
+              {t('add_medicine_description')}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmitMedicine} className="space-y-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name" className="required">{t('medicine_name')}</Label>
+                  <Input 
+                    id="name" 
+                    name="name" 
+                    value={newMedicine.name}
+                    onChange={handleMedicineInputChange}
+                    placeholder="e.g., Telma-H 40 Tablet" 
+                    required
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="brand" className="required">{t('brand')}</Label>
+                  <Input 
+                    id="brand" 
+                    name="brand" 
+                    value={newMedicine.brand}
+                    onChange={handleMedicineInputChange}
+                    placeholder="e.g., Glenmark" 
+                    required
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="genericName">{t('generic_name')}</Label>
+                  <Input 
+                    id="genericName" 
+                    name="genericName" 
+                    value={newMedicine.genericName}
+                    onChange={handleMedicineInputChange}
+                    placeholder="e.g., Telmisartan/Hydrochlorothiazide" 
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="category" className="required">{t('category')}</Label>
+                  <Input 
+                    id="category" 
+                    name="category" 
+                    value={newMedicine.category}
+                    onChange={handleMedicineInputChange}
+                    placeholder="e.g., Cardiac Care" 
+                    required
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="composition" className="required">{t('composition')}</Label>
+                  <Input 
+                    id="composition" 
+                    name="composition" 
+                    value={newMedicine.composition}
+                    onChange={handleMedicineInputChange}
+                    placeholder="e.g., Telmisartan (40mg) + Hydrochlorothiazide (12.5mg)" 
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="description">{t('description')}</Label>
+                  <Textarea 
+                    id="description" 
+                    name="description" 
+                    value={newMedicine.description}
+                    onChange={handleMedicineInputChange}
+                    placeholder="e.g., Used for hypertension and reduces risk of cardiovascular events" 
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="price" className="required">{t('price')}</Label>
+                  <Input 
+                    id="price" 
+                    name="price" 
+                    type="number" 
+                    min="0" 
+                    step="0.01"
+                    value={newMedicine.price}
+                    onChange={handleMedicineInputChange}
+                    placeholder="e.g., 120" 
+                    required
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="discountedPrice">{t('discounted_price')}</Label>
+                  <Input 
+                    id="discountedPrice" 
+                    name="discountedPrice" 
+                    type="number" 
+                    min="0" 
+                    step="0.01"
+                    value={newMedicine.discountedPrice}
+                    onChange={handleMedicineInputChange}
+                    placeholder="e.g., 108" 
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="packSize">{t('pack_size')}</Label>
+                  <Input 
+                    id="packSize" 
+                    name="packSize" 
+                    value={newMedicine.packSize}
+                    onChange={handleMedicineInputChange}
+                    placeholder="e.g., 10 tablets per strip" 
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="image">{t('product_image')}</Label>
+                  <Input 
+                    id="image" 
+                    name="image" 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  <p className="text-xs text-gray-500">{t('image_requirements')}</p>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter className="mt-6">
+              <Button variant="outline" type="button" onClick={() => setOpenAddMedicineDialog(false)}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit" disabled={isUploading}>
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('uploading')}
+                  </>
+                ) : (
+                  t('submit_for_approval')
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
