@@ -1079,17 +1079,46 @@ export class MongoDBStorage implements IStorage {
     // Make sure MongoDB documents are properly converted
     if (!user) return null;
     
-    // Handle case where user document might not have proper _id
-    const id = user._id ? 
-              (typeof user._id === 'object' ? user._id.toString() : user._id) : 
-              (user.id ? user.id : null);
-              
-    if (!id) {
-      console.warn('Warning: User document missing both _id and id fields');
+    // Handle numeric IDs consistently
+    // Priority: 1. numericId (specifically for our app), 2. id, 3. _id converted to number if possible
+    let numericId = null;
+    
+    if (user.numericId) {
+      // Use explicit numericId if available
+      numericId = Number(user.numericId);
+    } else if (user.id && !isNaN(Number(user.id))) {
+      // Try using the id field if it's a number
+      numericId = Number(user.id);
+    } else if (user._id) {
+      // If we have a MongoDB ObjectId, use the timestamp part as a numeric ID
+      // This ensures we have a numeric value that can be used in place of serial IDs
+      if (typeof user._id === 'object' && user._id.getTimestamp) {
+        // MongoDB ObjectId - use timestamp in milliseconds as a numeric ID
+        numericId = user._id.getTimestamp().getTime();
+      } else if (!isNaN(Number(user._id))) {
+        // If _id is numeric, use it directly
+        numericId = Number(user._id);
+      } else if (typeof user._id === 'string') {
+        // If _id is a string (like a hex string), get the last 4 digits
+        // and convert to number - this is just a fallback
+        const idStr = user._id.toString();
+        numericId = parseInt(idStr.slice(-4), 16);
+      }
+    }
+    
+    // Ensure we have a valid numeric ID
+    if (!numericId || isNaN(numericId)) {
+      // Generate a numeric ID based on username hash as last resort
+      numericId = Math.abs(user.username.split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+      }, 0)) % 1000000; // Limit to 6 digits
+      
+      console.warn(`Generated numeric ID ${numericId} for user ${user.username} as fallback`);
     }
     
     return {
-      id: id,
+      id: numericId,
       username: user.username,
       email: user.email,
       password: user.password,
@@ -1105,28 +1134,60 @@ export class MongoDBStorage implements IStorage {
   private convertToProductType(product: any): ProductType {
     if (!product) return null;
     
-    // Handle MongoDB ObjectId conversion safely
-    const id = product._id ? 
-              (typeof product._id === 'object' ? product._id.toString() : product._id) : 
-              (product.id ? product.id : null);
-              
-    // Handle categoryId which might be ObjectId or Number
-    const categoryId = product.categoryId ? 
-                     (typeof product.categoryId === 'object' ? product.categoryId.toString() : product.categoryId) : 
-                     null;
+    // Handle numeric IDs consistently - similar approach as in convertToUserType
+    let numericId = null;
     
-    if (!id) {
-      console.warn('Warning: Product document missing both _id and id fields');
+    if (product.numericId) {
+      numericId = Number(product.numericId);
+    } else if (product.id && !isNaN(Number(product.id))) {
+      numericId = Number(product.id);
+    } else if (product._id) {
+      if (typeof product._id === 'object' && product._id.getTimestamp) {
+        numericId = product._id.getTimestamp().getTime() % 1000000;
+      } else if (!isNaN(Number(product._id))) {
+        numericId = Number(product._id);
+      } else if (typeof product._id === 'string') {
+        const idStr = product._id.toString();
+        numericId = parseInt(idStr.slice(-6), 16) % 1000000;
+      }
+    }
+    
+    // Ensure we have a valid numeric ID
+    if (!numericId || isNaN(numericId)) {
+      // Generate a numeric ID based on product name hash as last resort
+      numericId = Math.abs(product.name.split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+      }, 0)) % 1000000; // Limit to 6 digits
+    }
+    
+    // Handle categoryId which might be ObjectId or Number
+    let categoryIdNum = null;
+    if (product.categoryId) {
+      if (typeof product.categoryId === 'number') {
+        categoryIdNum = product.categoryId;
+      } else if (typeof product.categoryId === 'string' && !isNaN(Number(product.categoryId))) {
+        categoryIdNum = Number(product.categoryId);
+      } else if (typeof product.categoryId === 'object' && product.categoryId._id) {
+        // Handle nested object with _id
+        categoryIdNum = Number(product.categoryId._id);
+      } else {
+        // Default to category 1 if we can't parse a valid number
+        categoryIdNum = 1;
+      }
+    } else {
+      // Default to category 1 if not specified
+      categoryIdNum = 1;
     }
     
     return {
-      id: id,
+      id: numericId,
       name: product.name,
       description: product.description || null,
       price: product.price,
       discountedPrice: product.discountedPrice || null,
       imageUrl: product.imageUrl || null,
-      categoryId: categoryId,
+      categoryId: categoryIdNum,
       brand: product.brand || null,
       inStock: product.inStock !== undefined ? product.inStock : true,
       quantity: product.quantity,

@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
 
 // Product Schema - optimized for 10 lakh products like PharmEasy
 const productSchema = new mongoose.Schema({
+  numericId: { type: Number, unique: true, sparse: true }, // Added for consistency with user schema
   name: { type: String, required: true },
   brand: { type: String, default: null },
   description: { type: String, default: null },
