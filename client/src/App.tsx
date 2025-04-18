@@ -65,27 +65,9 @@ interface RoleBasedRouteProps {
 function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedRouteProps) {
   const [, setLocation] = useLocation();
   const { user } = useStore();
-  const [isLoading, setIsLoading] = useState(true);
   
-  useEffect(() => {
-    // Short delay to ensure store is loaded
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000); // Increased delay to ensure user state is fully loaded
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  if (isLoading) {
-    return (
-      <Route path={path}>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Loading dashboard...</span>
-        </div>
-      </Route>
-    );
-  }
+  // Check user state immediately without artificial delay
+  // This will make the login process much faster
   
   // Check if user is authenticated
   if (!user) {

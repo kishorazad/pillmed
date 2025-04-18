@@ -132,10 +132,28 @@ const Header = () => {
                     <div className="border-t border-gray-200 my-1"></div>
                     <button 
                       onClick={() => {
-                        useStore.getState().setUser(null);
-                        // No need to call setTempUserId as it doesn't exist in the store
+                        // Close the menu first for better UX
                         setIsUserMenuOpen(false);
-                        navigate('/');
+                        
+                        // Perform logout API call first
+                        fetch('/api/logout', {
+                          method: 'POST',
+                          credentials: 'include',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          }
+                        })
+                        .then(() => {
+                          // Only update state after successful logout
+                          useStore.getState().setUser(null);
+                          navigate('/');
+                        })
+                        .catch(error => {
+                          console.error('Logout failed:', error);
+                          // Even if the API call fails, update the local state
+                          useStore.getState().setUser(null);
+                          navigate('/');
+                        });
                       }} 
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                     >

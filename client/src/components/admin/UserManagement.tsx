@@ -45,8 +45,7 @@ import {
   Stethoscope,
   Beaker,
   Building2,
-  Pill, // Added missing Pill icon
-  Flask
+  Pill // Added missing Pill icon
 } from 'lucide-react';
 import {
   DropdownMenu,

@@ -137,63 +137,64 @@ export const useStore = create<AppState>((set, get) => ({
   },
   
   // User actions
-  setUser: async (user) => {
+  setUser: (user) => {
     const { tempUserId } = get();
     const prevUser = get().user;
     
-    // Update user state
+    // Update user state immediately - this is important for UI responsiveness
     set({ user });
     
-    // If a user just logged in
+    // If a user just logged in, handle cart operations in background
     if (user && !prevUser) {
-      try {
-        console.log("User logged in with ID:", user.id, "- Transferring cart from tempUserId:", tempUserId);
-        
-        // First transfer any items from the temp cart to the user's cart
-        await apiRequest('POST', '/api/cart/transfer', {
-          fromUserId: tempUserId,
-          toUserId: user.id
-        });
-        
-        // Then fetch the updated cart
-        console.log("Fetching cart after transfer for user ID:", user.id);
-        const response = await fetch(`/api/cart/${user.id}`);
-        const cartItems = await response.json();
-        console.log("Cart items after login and transfer:", cartItems);
-        set({ cart: cartItems });
-      } catch (error) {
-        console.error('Failed to transfer or fetch cart items after login:', error);
-        
-        // As a fallback, just fetch the cart without transfer
+      // Use setTimeout to make it non-blocking so UI doesn't freeze
+      setTimeout(async () => {
         try {
+          console.log("User logged in with ID:", user.id, "- Transferring cart from tempUserId:", tempUserId);
+          
+          // First transfer any items from the temp cart to the user's cart
+          await apiRequest('POST', '/api/cart/transfer', {
+            fromUserId: tempUserId,
+            toUserId: user.id
+          });
+          
+          // Then fetch the updated cart
+          console.log("Fetching cart after transfer for user ID:", user.id);
           const response = await fetch(`/api/cart/${user.id}`);
           const cartItems = await response.json();
+          console.log("Cart items after login and transfer:", cartItems);
           set({ cart: cartItems });
-        } catch (innerError) {
-          console.error('Failed to fetch cart as fallback:', innerError);
+        } catch (error) {
+          console.error('Failed to transfer or fetch cart items after login:', error);
+          
+          // As a fallback, just fetch the cart without transfer
+          try {
+            const response = await fetch(`/api/cart/${user.id}`);
+            const cartItems = await response.json();
+            set({ cart: cartItems });
+          } catch (innerError) {
+            console.error('Failed to fetch cart as fallback:', innerError);
+          }
         }
-      }
+      }, 0); // Schedule for next event loop tick
     } else if (!user && prevUser) {
       // User logged out, generate a new tempUserId by setting it to current timestamp
-      // This ensures a clean slate for anonymous users after logout
       const newTempId = Date.now();
       console.log("User logged out, setting new tempUserId:", newTempId);
       
-      // Update the tempUserId
-      set({ tempUserId: newTempId });
+      // Update the tempUserId and clear cart immediately
+      set({ tempUserId: newTempId, cart: [] });
       
-      // Clear the cart
-      set({ cart: [] });
-      
-      try {
-        // Initialize an empty cart for the new temp user
-        console.log("Fetching temp cart items for new ID:", newTempId);
-        const response = await fetch(`/api/cart/${newTempId}`);
-        const cartItems = await response.json();
-        set({ cart: cartItems });
-      } catch (error) {
-        console.error('Failed to fetch temp cart items after logout:', error);
-      }
+      // Fetch new cart in background
+      setTimeout(async () => {
+        try {
+          console.log("Fetching temp cart items for new ID:", newTempId);
+          const response = await fetch(`/api/cart/${newTempId}`);
+          const cartItems = await response.json();
+          set({ cart: cartItems });
+        } catch (error) {
+          console.error('Failed to fetch temp cart items after logout:', error);
+        }
+      }, 0);
     }
   },
   
