@@ -180,6 +180,7 @@ export const translations: Record<string, Record<string, string>> = {
     'exclusive_discounts_for_you': 'Exclusive discounts just for you',
     'top_deals': 'Top Deals',
     'best_deals_and_savings': 'Best deals and savings',
+    'ratings': 'ratings',
   },
   hi: {
     // Navigation & Basic UI
@@ -325,6 +326,7 @@ export const translations: Record<string, Record<string, string>> = {
     'exclusive_discounts_for_you': 'सिर्फ आपके लिए विशेष छूट',
     'top_deals': 'टॉप डील्स',
     'best_deals_and_savings': 'सर्वोत्तम डील्स और बचत',
+    'ratings': 'रेटिंग',
   },
   ta: {
     'home': 'முகப்பு',
