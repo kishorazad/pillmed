@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   CheckCircle, AlertTriangle, Package, Truck, Clock, FileText, XCircle, 
   MapPin, User, Phone, Plus, Pill, Upload, Search, Filter, MoreVertical, 
-  PlusCircle, UploadCloud, RefreshCw
+  PlusCircle, UploadCloud, RefreshCw, Pencil, Loader2
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -1163,6 +1163,13 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
 const MedicineCard: React.FC<{ medicine: ChemistMedicine }> = ({ medicine }) => {
   const { t } = useLanguage();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editData, setEditData] = useState({
+    price: medicine.price.toString(),
+    discountedPrice: medicine.discountedPrice.toString(),
+    packSize: medicine.packSize
+  });
+  const { toast } = useToast();
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -1172,6 +1179,37 @@ const MedicineCard: React.FC<{ medicine: ChemistMedicine }> = ({ medicine }) => 
       month: 'short',
       day: 'numeric',
     });
+  };
+  
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // In a real app, this would make an API call to update the medicine
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      toast({
+        title: "Price Updated",
+        description: "The medicine price has been updated successfully.",
+      });
+      
+      setOpenEditDialog(false);
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update medicine price. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Render status badge
@@ -1232,12 +1270,80 @@ const MedicineCard: React.FC<{ medicine: ChemistMedicine }> = ({ medicine }) => 
           {medicine.composition}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between border-t pt-3">
+      <CardFooter className="flex gap-2 border-t pt-3">
         <Button variant="ghost" size="sm" onClick={() => setOpenDetailsDialog(true)}>
           {t('view_details')}
         </Button>
-        <span className="text-xs text-gray-500">{t('added')}: {formatDate(medicine.createdAt)}</span>
+        <Button variant="outline" size="sm" onClick={() => setOpenEditDialog(true)}>
+          <Pencil className="h-4 w-4 mr-1" />
+          {t('edit_price')}
+        </Button>
+        <div className="ml-auto">
+          <span className="text-xs text-gray-500">{formatDate(medicine.createdAt)}</span>
+        </div>
       </CardFooter>
+      
+      <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('edit_medicine_price')}</DialogTitle>
+            <DialogDescription>
+              {t('edit_medicine_price_description')}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4 mt-4">
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="price">{t('regular_price')}</Label>
+                <Input 
+                  id="price" 
+                  name="price" 
+                  type="number" 
+                  min="0" 
+                  step="0.01"
+                  value={editData.price}
+                  onChange={handleEditChange}
+                  placeholder="e.g., 120"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="discountedPrice">{t('discounted_price')}</Label>
+                <Input 
+                  id="discountedPrice" 
+                  name="discountedPrice" 
+                  type="number" 
+                  min="0" 
+                  step="0.01"
+                  value={editData.discountedPrice}
+                  onChange={handleEditChange}
+                  placeholder="e.g., 108" 
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="packSize">{t('pack_size')}</Label>
+                <Input 
+                  id="packSize" 
+                  name="packSize" 
+                  value={editData.packSize}
+                  onChange={handleEditChange}
+                  placeholder="e.g., 10 tablets per strip" 
+                />
+              </div>
+            </div>
+            
+            <DialogFooter className="mt-6">
+              <Button variant="outline" type="button" onClick={() => setOpenEditDialog(false)}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit">
+                {t('update_price')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={openDetailsDialog} onOpenChange={setOpenDetailsDialog}>
         <DialogContent className="max-w-3xl">
