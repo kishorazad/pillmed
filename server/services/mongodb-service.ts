@@ -14,8 +14,8 @@ import {
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pillnow';
 
 // Make sure we specify the database name in the connection string
-// Extract database name from connection string or use default
-const dbName = process.env.MONGODB_URI?.includes('pillnowinfo') ? 'pillnowinfo' : 'pillnow';
+// Use 'pillnow' as the database name since that's where our data is stored
+const dbName = 'pillnow';
 
 // Flag to track if MongoDB is available
 let mongoDbAvailable = false;
