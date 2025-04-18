@@ -46,13 +46,13 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
   };
   
   // Fetch user's orders from the API
-  const { data: userOrders, isLoading } = useQuery({
+  const { data: userOrders, isLoading } = useQuery<Order[]>({
     queryKey: ['/api/orders', userId],
     enabled: !!userId, // Only run the query if userId is provided
   });
   
   // Use sample data or fetched data
-  const orders: Order[] = userOrders || [
+  const orders: Order[] = (userOrders as Order[]) || [
     {
       id: 'ORD12345678',
       date: '2025-04-10',
@@ -251,7 +251,11 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
         
         <p className="text-gray-600 mb-4">{t('reorder_previous_purchases')}</p>
         
-        {orders.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : orders.length > 0 ? (
           <div 
             ref={scrollContainerRef}
             className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory"
