@@ -138,8 +138,28 @@ export class MongoDBStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<UserType | undefined> {
     try {
-      const user = await User.findOne({ username }).lean();
-      return user ? this.convertToUserType(user) : undefined;
+      let user = await User.findOne({ username }).lean();
+      
+      if (user) {
+        // If user exists but doesn't have numericId, update it based on our type system
+        const convertedUser = this.convertToUserType(user);
+        
+        if (!user.numericId && convertedUser.id) {
+          // Add the numericId field if missing
+          await User.updateOne(
+            { _id: user._id },
+            { $set: { numericId: convertedUser.id } }
+          );
+          console.log(`Added numericId ${convertedUser.id} to user ${username}`);
+          
+          // Get the updated user
+          user = await User.findOne({ username }).lean();
+        }
+        
+        return this.convertToUserType(user);
+      }
+      
+      return undefined;
     } catch (error) {
       console.error('Error getting user by username:', error);
       return undefined;
@@ -176,7 +196,28 @@ export class MongoDBStorage implements IStorage {
 
   async updateUser(id: number, user: Partial<InsertUser>): Promise<UserType | undefined> {
     try {
-      const updatedUser = await User.findByIdAndUpdate(id, user, { new: true }).lean();
+      // Use findOneAndUpdate with numeric ID stored as custom field instead of MongoDB's _id
+      const updatedUser = await User.findOneAndUpdate(
+        { numericId: id }, // Look up by numericId instead of _id
+        user, 
+        { new: true }
+      ).lean();
+      
+      if (!updatedUser) {
+        console.log(`No user found with numericId: ${id}, trying to find by other criteria`);
+        
+        // Fallback: Find by username if present in the update
+        if (user.username) {
+          const userByUsername = await User.findOneAndUpdate(
+            { username: user.username },
+            { ...user, numericId: id }, // Also set the numericId
+            { new: true }
+          ).lean();
+          
+          return userByUsername ? this.convertToUserType(userByUsername) : undefined;
+        }
+      }
+      
       return updatedUser ? this.convertToUserType(updatedUser) : undefined;
     } catch (error) {
       console.error('Error updating user:', error);

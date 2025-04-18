@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 // User Schema
 const userSchema = new mongoose.Schema({
+  numericId: { type: Number, unique: true, sparse: true }, // Added for compatibility with Drizzle
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   name: { type: String, required: true },
