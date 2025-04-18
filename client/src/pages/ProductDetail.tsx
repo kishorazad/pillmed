@@ -284,10 +284,10 @@ const ProductDetail = () => {
                   Composition
                 </button>
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'contraindications' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
-                  onClick={() => setActiveTab('contraindications')}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'how-to-use' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  onClick={() => setActiveTab('how-to-use')}
                 >
-                  Contraindications
+                  How to Use
                 </button>
                 <button 
                   className={`py-3 px-4 whitespace-nowrap ${activeTab === 'side-effects' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
@@ -296,10 +296,22 @@ const ProductDetail = () => {
                   Side Effects
                 </button>
                 <button 
-                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'dosage' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
-                  onClick={() => setActiveTab('dosage')}
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'safety' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  onClick={() => setActiveTab('safety')}
                 >
-                  Dosage
+                  Safety Advice
+                </button>
+                <button 
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'interactions' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  onClick={() => setActiveTab('interactions')}
+                >
+                  Interactions
+                </button>
+                <button 
+                  className={`py-3 px-4 whitespace-nowrap ${activeTab === 'facts' ? 'text-[#10847e] border-b-2 border-[#10847e]' : 'text-gray-500'}`}
+                  onClick={() => setActiveTab('facts')}
+                >
+                  Fact Box
                 </button>
               </div>
               
@@ -423,7 +435,7 @@ const ProductDetail = () => {
                 </div>
               )}
               
-              {activeTab === 'dosage' && (
+              {activeTab === 'how-to-use' && (
                 <div className="text-gray-700">
                   <div className="flex items-start mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
@@ -435,17 +447,199 @@ const ProductDetail = () => {
                       <path d="M16 19h.01" />
                     </svg>
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">Dosage Information for {product.name.toUpperCase()}</h3>
-                      {(product as any).dosage ? (
-                        <div dangerouslySetInnerHTML={{ __html: (product as any).dosage }} />
+                      <h3 className="font-semibold text-lg mb-2">How to Use {product.name.toUpperCase()}</h3>
+                      {(product as any).how_to_use ? (
+                        <div dangerouslySetInnerHTML={{ __html: (product as any).how_to_use }} />
                       ) : (
                         <p>Take this medication as directed by your doctor. Do not increase your dose or use this drug more often or for longer than prescribed. Use the lowest effective dose for the shortest duration possible to minimize side effects.</p>
+                      )}
+                      
+                      {(product as any).if_miss && (
+                        <div className="mt-4">
+                          <h4 className="font-medium mb-1">If You Miss a Dose</h4>
+                          <p>{(product as any).if_miss}</p>
+                        </div>
                       )}
                       
                       <div className="mt-4 p-3 bg-amber-50 rounded-md">
                         <p className="text-amber-800 text-sm font-medium">Important Note</p>
                         <p className="text-amber-700 text-sm mt-1">This medication information is provided for informational purposes only. Always consult your healthcare provider for proper dosage instructions tailored to your specific health condition.</p>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'safety' && (
+                <div className="text-gray-700">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Safety Advice for {product.name.toUpperCase()}</h3>
+                      {(product as any).safety_advise ? (
+                        <div dangerouslySetInnerHTML={{ __html: (product as any).safety_advise }} />
+                      ) : (
+                        <p>Please consult your healthcare provider for safety information specific to this medication.</p>
+                      )}
+                      
+                      {((product as any).storageInstructions || (product as any).storage) && (
+                        <div className="mt-4">
+                          <h4 className="font-medium mb-1">Storage Instructions</h4>
+                          <p>{(product as any).storageInstructions || (product as any).storage}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'interactions' && (
+                <div className="text-gray-700">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 mr-3 mt-1">
+                      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Interactions of {product.name.toUpperCase()}</h3>
+                      
+                      <div className="space-y-4">
+                        {(product as any).alcoholInteraction && (
+                          <div>
+                            <h4 className="font-medium mb-1">Alcohol Interaction</h4>
+                            <p>{(product as any).alcoholInteraction}</p>
+                          </div>
+                        )}
+                        
+                        {(product as any).pregnancyInteraction && (
+                          <div>
+                            <h4 className="font-medium mb-1">Pregnancy</h4>
+                            <p>{(product as any).pregnancyInteraction}</p>
+                          </div>
+                        )}
+                        
+                        {(product as any).lactationInteraction && (
+                          <div>
+                            <h4 className="font-medium mb-1">Breastfeeding</h4>
+                            <p>{(product as any).lactationInteraction}</p>
+                          </div>
+                        )}
+                        
+                        {(product as any).drivingInteraction && (
+                          <div>
+                            <h4 className="font-medium mb-1">Driving</h4>
+                            <p>{(product as any).drivingInteraction}</p>
+                          </div>
+                        )}
+                        
+                        {(product as any).kidneyInteraction && (
+                          <div>
+                            <h4 className="font-medium mb-1">Kidney</h4>
+                            <p>{(product as any).kidneyInteraction}</p>
+                          </div>
+                        )}
+                        
+                        {(product as any).liverInteraction && (
+                          <div>
+                            <h4 className="font-medium mb-1">Liver</h4>
+                            <p>{(product as any).liverInteraction}</p>
+                          </div>
+                        )}
+                        
+                        {!((product as any).alcoholInteraction || 
+                          (product as any).pregnancyInteraction || 
+                          (product as any).lactationInteraction || 
+                          (product as any).drivingInteraction || 
+                          (product as any).kidneyInteraction || 
+                          (product as any).liverInteraction) && (
+                          <p>No specific interaction information available. Please consult your doctor for personalized advice.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'facts' && (
+                <div className="text-gray-700">
+                  <div className="flex items-start mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10847e] mr-3 mt-1">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <path d="M14 2v6h6" />
+                      <path d="M16 13H8" />
+                      <path d="M16 17H8" />
+                      <path d="M10 9H8" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Fact Box - {product.name.toUpperCase()}</h3>
+                      
+                      <div className="mt-2 space-y-4 bg-gray-50 p-4 rounded-lg">
+                        {(product as any).Fact_Box ? (
+                          <div dangerouslySetInnerHTML={{ __html: (product as any).Fact_Box }} />
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {(product as any).primary_use && (
+                              <div>
+                                <h4 className="font-medium text-sm text-gray-500">PRIMARY USE</h4>
+                                <p className="text-sm">{(product as any).primary_use}</p>
+                              </div>
+                            )}
+                            
+                            {(product as any).medicine_type && (
+                              <div>
+                                <h4 className="font-medium text-sm text-gray-500">MEDICINE TYPE</h4>
+                                <p className="text-sm">{(product as any).medicine_type}</p>
+                              </div>
+                            )}
+                            
+                            {(product as any).salt_composition && (
+                              <div>
+                                <h4 className="font-medium text-sm text-gray-500">SALT COMPOSITION</h4>
+                                <p className="text-sm">{(product as any).salt_composition}</p>
+                              </div>
+                            )}
+                            
+                            {(product as any).packaging && (
+                              <div>
+                                <h4 className="font-medium text-sm text-gray-500">PACKAGING</h4>
+                                <p className="text-sm">{(product as any).packaging} {(product as any).packaging_typ || ''}</p>
+                              </div>
+                            )}
+                            
+                            {(product as any).country_of_origin && (
+                              <div>
+                                <h4 className="font-medium text-sm text-gray-500">COUNTRY OF ORIGIN</h4>
+                                <p className="text-sm">{(product as any).country_of_origin}</p>
+                              </div>
+                            )}
+                            
+                            {(product as any).MANUFACTURER_ADDRESS && (
+                              <div>
+                                <h4 className="font-medium text-sm text-gray-500">MANUFACTURER ADDRESS</h4>
+                                <p className="text-sm">{(product as any).MANUFACTURER_ADDRESS}</p>
+                              </div>
+                            )}
+                            
+                            {(product as any).prescription_required && (
+                              <div>
+                                <h4 className="font-medium text-sm text-gray-500">PRESCRIPTION REQUIRED</h4>
+                                <p className="text-sm">{(product as any).prescription_required === 'Yes' ? 'Yes' : 'No'}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {(product as any).Q_A && (
+                        <div className="mt-6">
+                          <h4 className="font-medium mb-2">Frequently Asked Questions</h4>
+                          <div dangerouslySetInnerHTML={{ __html: (product as any).Q_A }} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -559,27 +753,29 @@ const ProductDetail = () => {
                   Composition
                 </Badge>
                 <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
-                  onClick={() => setActiveTab('contraindications')}>
-                  Contraindications
+                  onClick={() => setActiveTab('how-to-use')}>
+                  How to Use
                 </Badge>
                 <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
                   onClick={() => setActiveTab('side-effects')}>
                   Side Effects
                 </Badge>
                 <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
-                  onClick={() => setActiveTab('dosage')}>
-                  Dosage
+                  onClick={() => setActiveTab('safety')}>
+                  Safety Advice
                 </Badge>
-                {(product as any).storageInstructions && (
+                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => setActiveTab('interactions')}>
+                  Interactions
+                </Badge>
+                <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => setActiveTab('facts')}>
+                  Facts
+                </Badge>
+                {(product as any).Q_A && (
                   <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
-                    onClick={() => setActiveTab('composition')}>
-                    Storage
-                  </Badge>
-                )}
-                {(product as any).warnings && (
-                  <Badge variant="outline" className="cursor-pointer hover:bg-gray-100"
-                    onClick={() => setActiveTab('contraindications')}>
-                    Warnings
+                    onClick={() => setActiveTab('facts')}>
+                    FAQ
                   </Badge>
                 )}
               </div>
