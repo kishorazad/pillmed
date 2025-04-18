@@ -278,7 +278,7 @@ const AppointmentConfirmation: React.FC = () => {
                     htmlFor="netbanking"
                     className="flex items-center cursor-pointer flex-1"
                   >
-                    <Bank className="h-5 w-5 text-gray-600 mr-3" />
+                    <Building2 className="h-5 w-5 text-gray-600 mr-3" />
                     <div className="flex-1">
                       <div>Netbanking</div>
                       <p className="text-sm text-gray-500">Pay using your bank's online banking service</p>
