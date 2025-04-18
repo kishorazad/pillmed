@@ -629,7 +629,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Password is stored in hashed format (hash.salt)
       try {
         const [hashedPassword, salt] = user.password.split('.');
-        const hashVerify = require('crypto').scryptSync(password, salt, 64).toString('hex');
+        const crypto = await import('crypto');
+        const hashVerify = crypto.scryptSync(password, salt, 64).toString('hex');
         isPasswordValid = hashedPassword === hashVerify;
       } catch (error) {
         console.error('Error verifying hashed password:', error);
@@ -641,9 +642,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Auto-upgrade to a hashed password if it was a match
       if (isPasswordValid) {
         try {
-          // Import the hash function from auth-routes
-          const { hashPassword } = require('./auth-routes');
-          const hashedPassword = hashPassword(password);
+          // Create a hash function directly here
+          const crypto = await import('crypto');
+          const salt = crypto.randomBytes(16).toString('hex');
+          const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+          const hashedPassword = `${hash}.${salt}`;
           
           // Update the user's password to be hashed
           await dbStorage.updateUser(user.id, { password: hashedPassword });
