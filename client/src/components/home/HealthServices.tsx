@@ -135,7 +135,7 @@ const HealthServices: React.FC = () => {
         >
           {services.map((service) => (
             <Link key={service.id} href={service.url} className="snap-start">
-              <div className="bg-white rounded-lg shadow-sm p-4 transition-shadow hover:shadow-md flex flex-col min-w-[160px] max-w-[200px]">
+              <div className="bg-white rounded-lg shadow-sm p-4 transition-shadow hover:shadow-md flex flex-col min-w-[160px] w-[160px]">
                 <div className={`${service.color} p-3 rounded-full w-fit mb-3`}>
                   {service.icon}
                 </div>
