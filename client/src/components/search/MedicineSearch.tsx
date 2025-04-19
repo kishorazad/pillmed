@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { useDebounce } from '@/hooks/use-debounce';
 
 interface SearchResult {
@@ -23,6 +23,9 @@ const searchSuggestions = [
 ];
 
 const MedicineSearch: React.FC = () => {
+  const [location] = useLocation();
+  const isDoctorsPage = location.startsWith('/doctors');
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
