@@ -201,15 +201,20 @@ const Profile = () => {
     }
     
     // If user is logged in and tries to navigate to the login tab, redirect to profile tab
-    if (auth.user && activeTab === 'login') {
+    if (auth.user && (activeTab === 'login' || activeTab === 'register')) {
       setActiveTab('profile');
     }
     
     // If user is logged out but tries to view profile or orders tab, redirect to login tab
-    if (!auth.user && activeTab !== 'login') {
+    if (!auth.user && activeTab !== 'login' && activeTab !== 'register') {
       setActiveTab('login');
     }
   }, [userData, auth.user, setUser, activeTab]);
+  
+  // Log activeTab changes for debugging
+  useEffect(() => {
+    console.log('Active tab changed to:', activeTab);
+  }, [activeTab]);
 
   // Scroll to top on page load
   useEffect(() => {
@@ -355,6 +360,7 @@ const Profile = () => {
               </>
             ) : (
               <TabsContent value="login">
+                {/* This will handle both login and register forms through the activeTab state */}
                 <Card>
                   <CardHeader>
                     <div className="flex h-9 items-center space-x-1 rounded-md border mb-2">
@@ -375,7 +381,7 @@ const Profile = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {activeTab === 'login' ? (
+                    {activeTab !== 'register' ? (
                       <Form {...loginForm}>
                         <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                           <FormField
