@@ -31,10 +31,43 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     return <Redirect to="/" />;
   }
 
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
+  const [currentTime, setCurrentTime] = useState(getCurrentTime());
+
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(getCurrentTime());
+    }, 60000);
+    
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-background">
       <AdminNavigation />
-      <div className="flex-1 md:ml-64 pt-16">
+      <div className="flex-1 md:ml-64">
+        {/* Welcome Header with Time */}
+        <div className="bg-white border-b p-4 sticky top-0 z-10 shadow-sm">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-semibold">Welcome, {user?.name || user?.username}</h1>
+              <p className="text-sm text-muted-foreground">PillNow Admin Dashboard</p>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-medium">{currentTime}</div>
+              <div className="text-sm text-muted-foreground">{new Date().toLocaleDateString()}</div>
+            </div>
+          </div>
+        </div>
         <main className="p-4 md:p-8">
           {children}
         </main>
