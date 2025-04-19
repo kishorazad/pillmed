@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Home, Search, ShoppingCart, Clock, User, Bot, Building, Building2, Globe, X, Ambulance } from 'lucide-react';
+import { Home, Search, ShoppingCart, Clock, User, Bot, Building, Building2, Globe, X, Ambulance, MessageSquare } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useLanguage, LANGUAGES } from '@/components/LanguageSwitcher';
 
@@ -39,6 +39,12 @@ const MobileNavigation: React.FC = () => {
       label: 'Hospitals',
       icon: <Building2 className="h-5 w-5" />,
       path: '/hospitals',
+      highlight: true,
+    },
+    {
+      label: 'Communication',
+      icon: <MessageSquare className="h-5 w-5" />,
+      path: '/communication',
       highlight: true,
     },
     {

@@ -421,7 +421,7 @@ const VideoCallInterface: React.FC<VideoCallProps> = ({
               className={`rounded-full h-10 w-10 p-0 ${isScreenSharing ? 'bg-green-500 text-white' : ''}`}
               onClick={toggleScreenShare}
             >
-              {isScreenSharing ? <StopScreenShare className="h-5 w-5" /> : <ScreenShare className="h-5 w-5" />}
+              {isScreenSharing ? <X className="h-5 w-5" /> : <ScreenShare className="h-5 w-5" />}
             </Button>
             <Button
               variant="destructive"

@@ -185,6 +185,9 @@ const Header = () => {
             <li><Link href="/ai-healthcare" className="text-orange-500 font-semibold flex items-center">
               <i className="fas fa-robot mr-1"></i> AI Health Assistant
             </Link></li>
+            <li><Link href="/communication" className="text-orange-500 font-semibold flex items-center">
+              <i className="fas fa-comments mr-1"></i> Communication
+            </Link></li>
             <li><Link href="/products/category/4" className="hover:text-orange-500">COVID-19</Link></li>
             <li><Link href="/products/category/5" className="hover:text-orange-500">Ayurveda</Link></li>
             <li><Link href="/products/category/6" className="hover:text-orange-500">Healthcare Devices</Link></li>

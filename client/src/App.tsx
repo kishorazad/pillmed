@@ -28,6 +28,7 @@ import AIHealthcare from "./pages/AIHealthcare";
 import Achievements from "./pages/Achievements";
 import MedicationTracking from "./pages/MedicationTracking";
 import OrderHistory from "./pages/OrderHistory";
+import CommunicationPage from "./pages/Communication";
 
 // Admin and Professional Dashboards
 import AdminPanel from "./pages/admin";
@@ -148,6 +149,7 @@ function Router() {
       <Route path="/services/medical-services" component={MedicalServices} />
       <Route path="/services/ambulance-request" component={AmbulanceRequest} />
       <Route path="/services/emergency" component={EmergencyServicesPage} />
+      <Route path="/communication" component={CommunicationPage} />
       
       {/* Doctor Routes */}
       <Route path="/doctors" component={DoctorSearch} />
