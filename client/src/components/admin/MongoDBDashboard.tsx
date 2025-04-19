@@ -110,6 +110,21 @@ const MongoDBDashboard = () => {
     queryKey: ['/api/lab-tests'],
     staleTime: 60000,
   });
+  
+  const { data: appointmentsData } = useQuery<any[]>({
+    queryKey: ['/api/appointments'],
+    staleTime: 60000,
+  });
+  
+  const { data: healthTipsData } = useQuery<any[]>({
+    queryKey: ['/api/health-tips'],
+    staleTime: 60000,
+  });
+  
+  const { data: articlesData } = useQuery<any[]>({
+    queryKey: ['/api/articles'],
+    staleTime: 60000,
+  });
 
   if (isLoading) {
     return (
@@ -157,6 +172,9 @@ const MongoDBDashboard = () => {
           <TabsTrigger value="pharmacies">Pharmacies</TabsTrigger>
           <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
           <TabsTrigger value="lab-tests">Lab Tests</TabsTrigger>
+          <TabsTrigger value="appointments">Appointments</TabsTrigger>
+          <TabsTrigger value="health-tips">Health Tips</TabsTrigger>
+          <TabsTrigger value="articles">Articles</TabsTrigger>
           <TabsTrigger value="storage">Storage</TabsTrigger>
         </TabsList>
         
