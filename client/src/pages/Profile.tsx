@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet';
 import { useStore } from '@/lib/store';
 import { useAuth } from '@/lib/auth-provider';
+import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -268,10 +268,7 @@ const Profile = () => {
   
   return (
     <>
-      <Helmet>
-        <title>{auth.user ? `${auth.user.name}'s Profile` : 'Sign In'} - PillNow</title>
-        <meta name="description" content="Manage your profile, orders, and account information" />
-      </Helmet>
+      <ProfileSEO />
       
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">{auth.user ? 'Your Account' : 'Sign In or Register'}</h1>

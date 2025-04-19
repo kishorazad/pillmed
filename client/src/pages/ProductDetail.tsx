@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useStore } from '@/lib/store';
@@ -12,6 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import SubstituteMedicines from '@/components/products/SubstituteMedicines';
 import { useLanguage } from '@/components/LanguageSwitcher';
 import { addToBrowsingHistory } from '@/services/browsing-history-service';
+import { ProductSEO } from '@/components/seo';
 
 const ProductDetail = () => {
   const params = useParams();
@@ -173,17 +173,10 @@ const ProductDetail = () => {
 
   return (
     <>
-      {/* Dynamic SEO metadata for each product */}
-      <Helmet>
-        <title>{generateSEOTitle()}</title>
-        <meta name="description" content={generateSEODescription()} />
-        <meta name="keywords" content={`${product.name}, ${product.brand || 'medicine'}, online pharmacy, healthcare, medicine, ${product.name.toLowerCase()}`} />
-        <meta property="og:title" content={`${product.name} - PillNow`} />
-        <meta property="og:description" content={product.description || `Buy ${product.name} online at the best price`} />
-        {product.imageUrl && <meta property="og:image" content={product.imageUrl} />}
-        <meta property="og:type" content="product" />
-        <link rel="canonical" href={`https://pillnow.com/products/${params.id}`} />
-      </Helmet>
+      {/* Enhanced SEO with structured data */}
+      <ProductSEO 
+        product={product}
+      />
       
       <div className="container mx-auto px-4 py-4">
         {/* Breadcrumbs */}

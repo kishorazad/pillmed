@@ -1,3 +1,4 @@
+import React from 'react';
 import SEOHead from '../SEO/SEOHead';
 
 interface HomeSEOProps {
