@@ -25,15 +25,18 @@ let mongoDbAvailable = false;
 
 export const connectToDatabase = async (retries = 5) => {
   console.log('Attempting to connect to MongoDB...');
-  
-  // If there's no MongoDB URI, gracefully fallback to in-memory storage
-  if (!process.env.MONGODB_URI) {
-    console.log('No MongoDB URI provided. Using in-memory storage instead.');
+
+  // Support both DATABASE_URL and MONGODB_URI environment variables
+  const connectionString = process.env.MONGODB_URI || process.env.DATABASE_URL;
+
+  // If there's no database connection string, gracefully fallback to in-memory storage
+  if (!connectionString) {
+    console.log('No database connection URL provided. Using in-memory storage instead.');
     return false;
   }
-  
+
   // Log the MongoDB URI with masked password for debugging
-  const uriWithoutPassword = MONGODB_URI.replace(
+  const uriWithoutPassword = connectionString.replace(
     /mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/,
     (match, srv, username) => `mongodb${srv || ''}://${username}:****@`
   );
@@ -49,17 +52,17 @@ export const connectToDatabase = async (retries = 5) => {
         family: 4,  // Force IPv4
         dbName: dbName  // Use explicitly defined database name
       };
-      
+
       console.log(`MongoDB connection attempt ${attempt} with database name: ${dbName}`);
-      
-      await mongoose.connect(MONGODB_URI, connectionOptions);
-      
+
+      await mongoose.connect(connectionString, connectionOptions);
+
       console.log('Connected to MongoDB successfully');
       mongoDbAvailable = true;
       return true;
     } catch (error: any) {
       console.error(`MongoDB connection attempt ${attempt} failed: ${error.message}`);
-      
+
       // Check for specific error types and log more details
       if (error.name === 'MongoServerSelectionError') {
         console.error('Server selection error - check if MongoDB server is running and network connectivity');
@@ -68,7 +71,7 @@ export const connectToDatabase = async (retries = 5) => {
       } else if (error.message && error.message.includes('bad auth')) {
         console.error('Authentication failed - check username, password and authentication database');
       }
-      
+
       if (attempt === retries) {
         console.error('MongoDB connection error: Cannot connect to MongoDB - using in-memory storage');
         console.log('Using in-memory storage instead of MongoDB');
@@ -89,7 +92,7 @@ export const seedData = async () => {
     const userCount = await User.countDocuments();
     if (userCount === 0) {
       console.log('Seeding users...');
-      
+
       // Create demo users
       const users = [
         {
@@ -137,18 +140,18 @@ export const seedData = async () => {
           profileImageUrl: null
         }
       ];
-      
+
       for (const user of users) {
         await User.create(user);
       }
       console.log('Users seeded successfully');
     }
-    
+
     // Check if we already have categories
     const categoryCount = await Category.countDocuments();
     if (categoryCount === 0) {
       console.log('Seeding categories...');
-      
+
       // Create medicine categories
       const categories = [
         { name: 'Pregnancy & Maternal Care', description: 'Medications for expecting mothers and maternal health', imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae' },
@@ -158,13 +161,13 @@ export const seedData = async () => {
         { name: 'Mental Health', description: 'Medications for anxiety, depression and other mental health conditions', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b' },
         { name: 'Skin Care', description: 'Topical medications for skin conditions and infections', imageUrl: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e' }
       ];
-      
+
       for (const category of categories) {
         await Category.create(category);
       }
       console.log('Categories seeded successfully');
     }
-    
+
     return true;
   } catch (error: any) {
     console.error('Error seeding data:', error.message || error);
@@ -176,39 +179,39 @@ export const seedData = async () => {
 export const importMedicinesFromCSV = async () => {
   try {
     console.log("Starting CSV import process...");
-    
+
     // Check how many products we already have
     const existingProducts = await Product.countDocuments();
     if (existingProducts > 10) {
       console.log(`Already have ${existingProducts} products in database. Skipping import.`);
       return true;
     }
-    
+
     // Get all categories first
     const categories = await Category.find();
     const categoryMap = new Map();
-    
+
     categories.forEach(cat => {
       categoryMap.set(cat.name, cat._id);
     });
-    
+
     // Create categories if needed
     if (categories.length === 0) {
       console.error("No categories found. Please seed categories first.");
       return false;
     }
-    
+
     const results: any[] = [];
     const csvFilePath = path.join(process.cwd(), 'attached_assets', '[March 25 Updated] Medicines and OTC samples - Medicines.csv');
-    
+
     console.log('Reading CSV from:', csvFilePath);
-    
+
     // Check if file exists
     if (!fs.existsSync(csvFilePath)) {
       console.error(`CSV file not found at ${csvFilePath}`);
       return false;
     }
-    
+
     // Read the CSV file and return promise
     return new Promise<boolean>((resolve, reject) => {
       fs.createReadStream(csvFilePath)
@@ -216,7 +219,7 @@ export const importMedicinesFromCSV = async () => {
         .on('data', (data) => results.push(data))
         .on('end', async () => {
           console.log(`CSV parsing complete. Found ${results.length} medicines.`);
-          
+
           try {
             // First 50 products only to avoid overwhelming the system
             const medicineData = results.slice(0, 50).map(item => {
@@ -224,7 +227,7 @@ export const importMedicinesFromCSV = async () => {
               let categoryId;
               const primaryUse = item.primary_use || '';
               const saltComposition = item.salt_composition || '';
-              
+
               // Default category mapping logic
               if (primaryUse.toLowerCase().includes('pregnancy')) {
                 categoryId = categoryMap.get('Pregnancy & Maternal Care');
@@ -252,15 +255,15 @@ export const importMedicinesFromCSV = async () => {
                 // If we can't determine a category, assign to Pain & Fever as default
                 categoryId = categoryMap.get('Pain & Fever');
               }
-              
+
               // Calculate discounted price (10-20% off)
               const price = Number(item.mrp) || Math.floor(Math.random() * 500) + 100;
               const discountPercent = Math.floor(Math.random() * 10) + 10;
               const discountedPrice = Math.floor(price * (1 - discountPercent / 100));
-              
+
               // Format medication name
               const productName = item.Product_Name || item.Product_ID || 'Medicine ' + (Math.random() * 1000).toFixed(0);
-              
+
               // Create description from salt composition and introduction
               const descriptionParts = [];
               if (saltComposition) descriptionParts.push(saltComposition);
@@ -268,9 +271,9 @@ export const importMedicinesFromCSV = async () => {
                 const intro = item.introduction.substring(0, 200);
                 descriptionParts.push(intro + (item.introduction.length > 200 ? '...' : ''));
               }
-              
+
               const description = descriptionParts.join(' - ') || 'No description available';
-              
+
               return {
                 name: productName,
                 description: description,
@@ -290,10 +293,10 @@ export const importMedicinesFromCSV = async () => {
                 packSize: item.Package || item.Packaging_Detail || null
               };
             });
-            
+
             // Add medicines one by one to avoid overwhelming the system
             console.log(`Importing ${medicineData.length} medicine products...`);
-            
+
             for (const medicine of medicineData) {
               try {
                 await Product.create(medicine);
@@ -301,7 +304,7 @@ export const importMedicinesFromCSV = async () => {
                 console.error(`Error importing medicine ${medicine.name}:`, error);
               }
             }
-            
+
             console.log("Medicine import from CSV completed successfully");
             resolve(true);
           } catch (error) {
@@ -324,25 +327,25 @@ export const importMedicinesFromCSV = async () => {
 export const importPincodesFromCSV = async () => {
   try {
     console.log("Starting Pincode CSV import process...");
-    
+
     // Check how many pincodes we already have
     const existingPincodes = await Pincode.countDocuments();
     if (existingPincodes > 10) {
       console.log(`Already have ${existingPincodes} pincodes in database. Skipping import.`);
       return true;
     }
-    
+
     const results: any[] = [];
     const csvFilePath = path.join(process.cwd(), 'attached_assets', 'pincode.csv');
-    
+
     console.log('Reading Pincode CSV from:', csvFilePath);
-    
+
     // Check if file exists
     if (!fs.existsSync(csvFilePath)) {
       console.error(`Pincode CSV file not found at ${csvFilePath}`);
       return false;
     }
-    
+
     // Read the CSV file
     return new Promise<boolean>((resolve, reject) => {
       fs.createReadStream(csvFilePath)
@@ -350,7 +353,7 @@ export const importPincodesFromCSV = async () => {
         .on('data', (data) => results.push(data))
         .on('end', async () => {
           console.log(`Pincode CSV parsing complete. Found ${results.length} pincodes.`);
-          
+
           try {
             // First 1000 pincodes only to avoid overwhelming the system
             const pincodeData = results.slice(0, 1000).map(item => ({
@@ -365,7 +368,7 @@ export const importPincodesFromCSV = async () => {
               longitude: parseFloat(item.longitude) || null,
               delivery: item.delivery
             }));
-            
+
             // Batch insert pincodes
             if (pincodeData.length > 0) {
               try {
@@ -376,7 +379,7 @@ export const importPincodesFromCSV = async () => {
                 console.log(`Imported pincodes with some duplicates skipped`);
               }
             }
-            
+
             console.log("Pincode import from CSV completed");
             resolve(true);
           } catch (error) {
@@ -401,28 +404,28 @@ export const initializeDatabase = async () => {
     // Connect to MongoDB
     const connected = await connectToDatabase();
     mongoDbAvailable = connected;
-    
+
     if (!connected) {
       // Simple error message with no details to avoid cluttering logs
       console.log('Using in-memory storage instead of MongoDB');
       // We'll return false but not throw an error so the application can continue
       return false;
     }
-    
+
     // Seed basic data - only if MongoDB is available
     if (mongoDbAvailable) {
       const seeded = await seedData();
       if (!seeded) {
         console.log('Failed to seed data, but continuing with existing data');
       }
-      
+
       // Import medicines from CSV
       await importMedicinesFromCSV();
-      
+
       // Import pincodes from CSV
       await importPincodesFromCSV();
     }
-    
+
     return true;
   } catch (error) {
     // Simplified error message
