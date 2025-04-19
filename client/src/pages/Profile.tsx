@@ -168,6 +168,32 @@ const Profile = () => {
   // Handle registration
   const onRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
     try {
+      console.log('Submitting registration data:', data);
+      
+      // Show validation errors if fields are empty
+      if (!data.name || !data.email || !data.username || !data.password || !data.confirmPassword) {
+        toast({
+          title: "Registration Error",
+          description: "Please fill in all required fields",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Make sure passwords match
+      if (data.password !== data.confirmPassword) {
+        toast({
+          title: "Password Error",
+          description: "Passwords do not match",
+          variant: "destructive"
+        });
+        registerForm.setError('confirmPassword', { 
+          type: 'manual', 
+          message: 'Passwords do not match' 
+        });
+        return;
+      }
+      
       const { confirmPassword, ...registerData } = data;
       
       // Submit registration data through the auth provider's mutation
@@ -178,6 +204,13 @@ const Profile = () => {
     } catch (error) {
       // Error handling is managed by the auth provider
       console.error("Registration error:", error);
+      
+      // Display a generic error if the auth provider doesn't handle it
+      toast({
+        title: "Registration Failed",
+        description: error instanceof Error ? error.message : "An error occurred during registration",
+        variant: "destructive"
+      });
     }
   };
   
@@ -560,9 +593,33 @@ const Profile = () => {
                             )}
                           />
                           
-                          <Button type="submit" className="w-full">
-                            Register
+                          <Button 
+                            type="submit" 
+                            className="w-full"
+                            disabled={registerForm.formState.isSubmitting}
+                          >
+                            {registerForm.formState.isSubmitting ? (
+                              <span className="flex items-center justify-center">
+                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Registering...
+                              </span>
+                            ) : "Register"}
                           </Button>
+                          
+                          {/* Show form errors if any */}
+                          {Object.keys(registerForm.formState.errors).length > 0 && (
+                            <div className="mt-3 p-3 bg-red-50 text-red-600 rounded-md text-sm">
+                              <p className="font-bold">Please fix the following errors:</p>
+                              <ul className="list-disc pl-5 mt-1">
+                                {Object.entries(registerForm.formState.errors).map(([field, error]) => (
+                                  <li key={field}>{error?.message as string}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </form>
                       </Form>
                     )}
