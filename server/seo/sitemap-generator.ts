@@ -2,7 +2,7 @@ import { SitemapStream, streamToPromise } from 'sitemap';
 import { Readable } from 'stream';
 import { db } from '../db';
 import { products, categories } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 /**
  * Generates a sitemap for the entire website
@@ -46,7 +46,6 @@ export async function generateSitemap(baseUrl: string): Promise<Buffer> {
       // Fetch dynamic products using Drizzle
       const productsList = await db.select({
         id: products.id,
-        updatedAt: products.updatedAt,
       }).from(products);
       
       // Add product pages
@@ -54,8 +53,7 @@ export async function generateSitemap(baseUrl: string): Promise<Buffer> {
         sitemapEntries.push({
           url: `/product/${product.id}`,
           priority: 0.8,
-          changefreq: 'weekly',
-          lastmod: product.updatedAt ? new Date(product.updatedAt).toISOString() : undefined
+          changefreq: 'weekly'
         });
       });
       
