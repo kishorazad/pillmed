@@ -22,8 +22,9 @@ class MongoDBService {
    */
   public async connect(): Promise<boolean> {
     try {
-      if (!process.env.MONGODB_URI) {
-        console.error('MongoDB URI is not defined in environment variables');
+      const mongoUri = process.env.MONGODB_URI || process.env.DATABASE_URL;
+      if (!mongoUri) {
+        console.error('Neither MONGODB_URI nor DATABASE_URL is defined in environment variables');
         return false;
       }
 
