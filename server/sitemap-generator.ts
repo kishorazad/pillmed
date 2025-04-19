@@ -196,10 +196,16 @@ async function generateSitemap(req: Request, res: Response) {
     // Dynamic routes
     let routes = [...staticRoutes];
     
+    // Define category type
+    interface Category {
+      id: number | string;
+      name: string;
+    }
+
     // Get all product categories with error handling
-    let categories = [];
+    let categories: Category[] = [];
     try {
-      categories = await storage.getCategories();
+      categories = await storage.getCategories() as Category[];
     } catch (error) {
       console.log('Error getting categories for sitemap:', error);
     }
@@ -254,6 +260,20 @@ async function generateSitemap(req: Request, res: Response) {
     }
     
     // Enhanced sitemap generation with additional format support
+    // Define streaming options for strongly typed sitemap generation
+    interface ExtendedNamespaces {
+      news?: boolean;
+      xhtml?: boolean;
+      image?: boolean;
+      video?: boolean;
+      custom?: Array<{name: string, url: string}>;
+    }
+    
+    interface SitemapStreamOptions {
+      hostname: string;
+      xmlns?: ExtendedNamespaces;
+    }
+    
     // Create a sitemap stream with extended options (follows best practices from top pharmacy sites)
     const stream = new SitemapStream({ 
       hostname: baseUrl,
@@ -274,20 +294,27 @@ async function generateSitemap(req: Request, res: Response) {
             url: 'http://www.google.com/schemas/sitemap-codesearch/1.0'
           }
         ]
-      }
-    });
+      } as ExtendedNamespaces
+    } as SitemapStreamOptions);
     
     // Try to get SEO settings from storage
-    let settings;
+    // Define interface for SEO settings to ensure TypeScript compatibility
+    interface SitemapSeoSettings {
+      sitemapIncludeImages?: boolean;
+      sitemapChangeFrequency?: string;
+      sitemapPriority?: number;
+    }
+    
+    let settings: SitemapSeoSettings | null = null;
     try {
       if (typeof storage.getSeoSettings === 'function') {
-        settings = await storage.getSeoSettings();
+        settings = await storage.getSeoSettings() as SitemapSeoSettings;
       }
     } catch (error) {
       console.log('Error fetching SEO settings, using defaults:', error);
     }
 
-    // Set defaults if settings not found
+    // Set defaults if settings not found with fallback to true (industry standard)
     const sitemapIncludeImages = settings?.sitemapIncludeImages !== undefined ? 
       settings.sitemapIncludeImages : true;
     
@@ -295,22 +322,40 @@ async function generateSitemap(req: Request, res: Response) {
     // This significantly improves image SEO and discovery following patterns from 1mg, PharmEasy, and Netmeds
     let enhancedRoutes = [];
     
+    // Define types for articles and doctors to avoid implicit any[] types
+    interface Article {
+      id: number | string;
+      title?: string;
+      imageUrl?: string;
+    }
+    
+    interface Doctor {
+      id: number | string;
+      name?: string;
+      profileImage?: string;
+      profile?: {
+        name?: string;
+        imageUrl?: string;
+      };
+      specialization?: string;
+    }
+    
     // Pre-fetch required data for efficiency
-    let articles = [];
+    let articles: Article[] = [];
     try {
       if (typeof storage.getArticles === 'function') {
-        articles = await storage.getArticles();
+        articles = await storage.getArticles() as Article[];
       }
     } catch (error) {
       console.log('Error fetching articles for sitemap:', error);
     }
     
-    let doctors = [];
+    let doctors: Doctor[] = [];
     try {
       if (typeof storage.getDoctors === 'function') {
         const doctorsResult = await storage.getDoctors();
         if (Array.isArray(doctorsResult)) {
-          doctors = doctorsResult;
+          doctors = doctorsResult as Doctor[];
         }
       }
     } catch (error) {
@@ -369,7 +414,7 @@ async function generateSitemap(req: Request, res: Response) {
           
           // Use pre-fetched articles
           if (articles && articles.length > 0) {
-            article = articles.find((a: any) => a.id && a.id.toString() === articleId);
+            article = articles.find((a: Article) => a.id && a.id.toString() === articleId);
           }
           
           if (article && article.imageUrl) {
@@ -405,7 +450,7 @@ async function generateSitemap(req: Request, res: Response) {
           
           // Use pre-fetched doctors
           if (doctors && doctors.length > 0) {
-            doctor = doctors.find((d: any) => d.id && d.id.toString() === doctorId);
+            doctor = doctors.find((d: Doctor) => d.id && d.id.toString() === doctorId);
           }
           
           // Extract doctor information safely
