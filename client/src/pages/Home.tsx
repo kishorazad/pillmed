@@ -173,10 +173,12 @@ const Home = () => {
               <PreviouslyBrowsedItems />
             </Suspense>
             
-            {/* Order History with same grid & sliding */}
-            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <OrderHistory />
-            </Suspense>
+            {/* Order History - only shown when user is logged in */}
+            {user && (
+              <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+                <OrderHistory userId={user.id} />
+              </Suspense>
+            )}
             
             {/* Health Services with smaller grid & sliding */}
             <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
@@ -275,10 +277,12 @@ const Home = () => {
               <PreviouslyBrowsedItems />
             </Suspense>
             
-            {/* Order History with same grid & sliding */}
-            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <OrderHistory />
-            </Suspense>
+            {/* Order History - only shown when user is logged in */}
+            {user && (
+              <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+                <OrderHistory userId={user.id} />
+              </Suspense>
+            )}
             
             {/* Health Services with smaller grid & sliding */}
             <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
