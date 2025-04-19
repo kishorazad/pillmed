@@ -16,6 +16,7 @@ import { queryClient } from '@/lib/queryClient';
 import { Link } from 'wouter';
 import OrderHistory from '@/components/orders/OrderHistory';
 import { Eye, EyeOff } from 'lucide-react';
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 
 // Define User type for this component
 interface User {
@@ -57,6 +58,8 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('profile');
   // Additional state to track form type (login or register) within the login tab
   const [formType, setFormType] = useState('login');
+  // Track if forgot password form should be shown
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   
   // Reset form error states when switching between forms
   const resetFormErrors = () => {
@@ -438,57 +441,72 @@ const Profile = () => {
                   </CardHeader>
                   <CardContent>
                     {formType === 'login' ? (
-                      <Form {...loginForm}>
-                        <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                          <FormField
-                            control={loginForm.control}
-                            name="username"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Username or Email</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Enter your username or email" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={loginForm.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Password</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <Input 
-                                      type={showLoginPassword ? "text" : "password"} 
-                                      placeholder="Your password" 
-                                      {...field} 
-                                    />
-                                    <div 
-                                      className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" 
-                                      onClick={() => setShowLoginPassword(!showLoginPassword)}
-                                      aria-label={showLoginPassword ? "Hide password" : "Show password"}
-                                    >
-                                      {showLoginPassword ? 
-                                        <EyeOff className="h-4 w-4 text-gray-500" /> : 
-                                        <Eye className="h-4 w-4 text-gray-500" />
-                                      }
+                      showForgotPassword ? (
+                        <ForgotPasswordForm onSuccess={() => setShowForgotPassword(false)} />
+                      ) : (
+                        <Form {...loginForm}>
+                          <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                            <FormField
+                              control={loginForm.control}
+                              name="username"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Username or Email</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Enter your username or email" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={loginForm.control}
+                              name="password"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Password</FormLabel>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <Input 
+                                        type={showLoginPassword ? "text" : "password"} 
+                                        placeholder="Your password" 
+                                        {...field} 
+                                      />
+                                      <div 
+                                        className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" 
+                                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                        aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                                      >
+                                        {showLoginPassword ? 
+                                          <EyeOff className="h-4 w-4 text-gray-500" /> : 
+                                          <Eye className="h-4 w-4 text-gray-500" />
+                                        }
+                                      </div>
                                     </div>
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <Button type="submit" className="w-full">
-                            Login
-                          </Button>
-                        </form>
-                      </Form>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <div className="flex justify-end">
+                              <Button 
+                                variant="link" 
+                                type="button" 
+                                onClick={() => setShowForgotPassword(true)}
+                                className="text-sm p-0 h-auto"
+                              >
+                                Forgot Password?
+                              </Button>
+                            </div>
+                            
+                            <Button type="submit" className="w-full">
+                              Login
+                            </Button>
+                          </form>
+                        </Form>
+                      )
                     ) : (
                       <div>
                         <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
