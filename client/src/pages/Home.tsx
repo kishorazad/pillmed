@@ -33,6 +33,7 @@ import PrescriptionUpload from '@/components/home/PrescriptionUpload';
 import FeaturedProductsSlider from '@/components/home/FeaturedProductsSlider';
 import CategoryCard from '@/components/categories/CategoryCard';
 import EmergencyCallButton from '@/components/EmergencyCallButton';
+import EmergencyServicesSection from '@/components/emergency/EmergencyServicesSection';
 
 // Lazy load non-critical components to improve initial load time
 const PromotionalBanner = lazy(() => import('@/components/home/PromotionalBanner'));
@@ -52,7 +53,6 @@ const HealthServices = lazy(() => import('@/components/home/HealthServices'));
 const NearbyHospitals = lazy(() => import('@/components/hospitals/NearbyHospitals'));
 const MedicalEquipmentSection = lazy(() => import('@/components/equipment/MedicalEquipmentSection'));
 const MedicalServicesSection = lazy(() => import('@/components/medical-services/MedicalServicesSection'));
-const EmergencyServicesSection = lazy(() => import('@/components/emergency/EmergencyServicesSection'));
 const CategoryGrid = lazy(() => import('@/components/home/CategoryGrid'));
 const OffersCarousel = lazy(() => import('@/components/home/OffersCarousel'));
 const ProductSlider = lazy(() => import('@/components/products/ProductSlider'));
@@ -196,9 +196,7 @@ const Home = () => {
             </Suspense>
             
             {/* Emergency Services Section */}
-            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <EmergencyServicesSection />
-            </Suspense>
+            <EmergencyServicesSection />
             
             {/* Festival Offers */}
             <div className="my-6">
@@ -220,9 +218,7 @@ const Home = () => {
             </Suspense>
             
             {/* Emergency Call Button */}
-            <Suspense fallback={<div className="fixed bottom-5 right-5 w-12 h-12 rounded-full bg-gray-200 animate-pulse"></div>}>
-              <EmergencyCallButton />
-            </Suspense>
+            <EmergencyCallButton />
           </>
         ) : (
           /* Desktop View */
@@ -300,9 +296,7 @@ const Home = () => {
             </Suspense>
             
             {/* Emergency Services Section */}
-            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <EmergencyServicesSection />
-            </Suspense>
+            <EmergencyServicesSection />
             
             {/* Offers Carousel */}
             <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
@@ -335,9 +329,7 @@ const Home = () => {
             </Suspense>
             
             {/* Emergency Call Button */}
-            <Suspense fallback={<div className="fixed bottom-5 right-5 w-12 h-12 rounded-full bg-gray-200 animate-pulse"></div>}>
-              <EmergencyCallButton />
-            </Suspense>
+            <EmergencyCallButton />
           </>
         )}
       </div>
