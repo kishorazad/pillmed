@@ -49,7 +49,9 @@ router.post('/request', async (req: Request, res: Response) => {
     // Find user by email
     const user = await storage.getUserByEmail(email);
     if (!user) {
-      // For security reasons, don't reveal if the email exists in the database
+      console.log(`Password reset requested for non-existent email: ${email}`);
+      // For security reasons, still return success to avoid revealing if the email exists
+      // But don't actually send an OTP
       return res.json({ success: true, message: 'If the email exists, an OTP has been sent' });
     }
     
@@ -71,6 +73,8 @@ router.post('/request', async (req: Request, res: Response) => {
     // Store new OTP
     otpStore.push({ email, otp, expiresAt });
     
+    console.log(`Generated OTP ${otp} for ${email} with expiration at ${new Date(expiresAt).toLocaleString()}`);
+    
     // Send OTP via mock email service
     await mockEmailService.sendOtpEmail(email, otp);
     
@@ -82,12 +86,20 @@ router.post('/request', async (req: Request, res: Response) => {
 });
 
 // Route to verify OTP
-router.post('/verify-otp', (req: Request, res: Response) => {
+router.post('/verify-otp', async (req: Request, res: Response) => {
   try {
     const { email, otp } = req.body;
     
     if (!email || !otp) {
       return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    }
+    
+    // Check if the user exists first
+    const user = await storage.getUserByEmail(email);
+    if (!user) {
+      console.log(`OTP verification attempted for non-existent email: ${email}`);
+      // For security reasons, don't reveal if the email exists
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
     }
     
     // Clean up expired OTPs
@@ -97,9 +109,11 @@ router.post('/verify-otp', (req: Request, res: Response) => {
     const otpRecord = otpStore.find(record => record.email === email && record.otp === otp);
     
     if (!otpRecord) {
+      console.log(`Invalid OTP attempt for ${email}: ${otp}`);
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
     }
     
+    console.log(`OTP verified successfully for ${email}`);
     return res.json({ success: true, message: 'OTP verified successfully' });
   } catch (error) {
     console.error('OTP verification error:', error);
@@ -116,6 +130,14 @@ router.post('/reset', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Email, OTP, and new password are required' });
     }
     
+    // Find user by email first - verify the user exists before even checking OTP
+    const user = await storage.getUserByEmail(email);
+    if (!user) {
+      console.log(`Password reset attempted for non-existent email: ${email}`);
+      // For security reasons, return a generic error message
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+    }
+    
     // Clean up expired OTPs
     cleanupExpiredOtps();
     
@@ -123,13 +145,8 @@ router.post('/reset', async (req: Request, res: Response) => {
     const otpRecord = otpStore.find(record => record.email === email && record.otp === otp);
     
     if (!otpRecord) {
+      console.log(`Invalid OTP provided for password reset: ${email}, OTP: ${otp}`);
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
-    }
-    
-    // Find user by email
-    const user = await storage.getUserByEmail(email);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
     }
     
     // Hash the new password
@@ -143,6 +160,8 @@ router.post('/reset', async (req: Request, res: Response) => {
     if (otpIndex !== -1) {
       otpStore.splice(otpIndex, 1);
     }
+    
+    console.log(`Password reset successful for user: ${email}`);
     
     // Send confirmation email
     await mockEmailService.sendPasswordResetConfirmation(email);

@@ -72,14 +72,14 @@ const ForgotPasswordForm = ({ onSuccess }: { onSuccess: () => void }) => {
   // Request password reset mutation
   const requestResetMutation = useMutation({
     mutationFn: async (values: RequestResetFormValues) => {
-      const response = await apiRequest('POST', '/api/password-reset/request', values);
-      return response.json();
+      // apiRequest already returns the parsed JSON, no need to call .json() again
+      return apiRequest('POST', '/api/password-reset/request', values);
     },
     onSuccess: (data) => {
       if (data.success) {
         toast({
           title: 'OTP Sent',
-          description: 'A one-time password has been sent to your email address',
+          description: 'If your email exists in our system, a one-time password has been sent to it',
         });
         setEmail(requestResetForm.getValues().email);
         verifyOtpForm.setValue('email', requestResetForm.getValues().email);
@@ -105,8 +105,8 @@ const ForgotPasswordForm = ({ onSuccess }: { onSuccess: () => void }) => {
   // Verify OTP mutation
   const verifyOtpMutation = useMutation({
     mutationFn: async (values: VerifyOtpFormValues) => {
-      const response = await apiRequest('POST', '/api/password-reset/verify-otp', values);
-      return response.json();
+      // apiRequest already returns the parsed JSON, no need to call .json() again
+      return apiRequest('POST', '/api/password-reset/verify-otp', values);
     },
     onSuccess: (data) => {
       if (data.success) {
@@ -137,8 +137,8 @@ const ForgotPasswordForm = ({ onSuccess }: { onSuccess: () => void }) => {
   // Reset password mutation
   const resetPasswordMutation = useMutation({
     mutationFn: async (values: ResetPasswordFormValues) => {
-      const response = await apiRequest('POST', '/api/password-reset/reset', values);
-      return response.json();
+      // apiRequest already returns the parsed JSON, no need to call .json() again
+      return apiRequest('POST', '/api/password-reset/reset', values);
     },
     onSuccess: (data) => {
       if (data.success) {
