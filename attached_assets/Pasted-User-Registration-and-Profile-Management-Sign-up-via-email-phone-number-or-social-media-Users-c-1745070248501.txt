@@ -1,0 +1,22 @@
+User Registration and Profile Management – Sign up via email, phone number, or social media. Users can manage their details, address, and medical history.
+Medicine Search and Categories – A searchable database to find medicines by name, category, or symptoms.
+Upload Prescription – Users can upload prescriptions for validation and order medicines accordingly.
+Add to Cart and Checkout – A smooth shopping experience with multiple payment options.
+Order Tracking and Notifications – Live tracking of medicine delivery status and real-time alerts.
+Secure Payment Integration – Supports multiple payment methods like credit or debit cards, wallets, UPI, and cash on delivery.
+Order History and Reorder Option – Users can view previous orders and reorder medicines easily.
+Customer Support and Chat – In-app support via chatbot or live chat with pharmacists.
+Advanced Features of the User Panel (Customer Side)
+Subscription-Based Medicine Refills – Automated monthly medicine deliveries for chronic patients.
+Multi-User Profiles – Users can create profiles for family members and order medicines on their behalf.
+Doctor Consultation Integration – Telemedicine feature to consult doctors and receive digital prescriptions.
+In-App Wallet and Rewards – A digital wallet for quick payments and reward points for loyalty.
+Pill Reminder and Dosage Tracking – Automated alerts for medicine intake based on doctor prescriptions.
+Multi-Pharmacy Option – Users can choose a preferred pharmacy or compare prices from multiple pharmacies.
+E-Prescription Storage – Saves digital prescriptions securely for future orders.
+Health and Wellness Products – Option to buy supplements, fitness products, and medical devices.
+AI-Powered Features of the User Panel (Customer Side)
+AI-Driven Smart Search – Suggests medicines based on symptoms, previous orders, and user behavior.
+Personalized Recommendations – AI analyzes purchase history to offer relevant medicines and health products.
+Voice Search and Chatbot Assistance – Users can search for medicines or ask health-related queries using voice commands.
+Fraud Detection and Prescription Validation – AI ensures uploaded prescriptions are authentic and prevents abuse of restricted drugs.

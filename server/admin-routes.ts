@@ -4,6 +4,7 @@ import { IStorage } from './storage';
 import { z } from 'zod';
 import { apiRequest } from './utils/api-util';
 import adminCustomerRoutes from './admin-customer-routes';
+import adminPharmacyRoutes from './admin-pharmacy-routes';
 
 const router = express.Router();
 
@@ -508,5 +509,8 @@ router.get('/analytics/inventory-status', async (req: Request, res: Response) =>
 
 // Mount the customer management routes as a sub-router
 router.use('/customers', adminCustomerRoutes);
+
+// Mount the pharmacy management routes as a sub-router
+router.use('/pharmacies', adminPharmacyRoutes);
 
 export default router;
