@@ -192,6 +192,10 @@ router.post('/users', async (req: Request, res: Response) => {
       phone: z.string().optional(),
       address: z.string().optional(),
       pincode: z.string().optional(),
+      // The active flag can be sent from the client to determine the initial status
+      active: z.boolean().optional(),
+      // Or the status can be sent directly
+      status: z.enum(['active', 'pending', 'suspended']).optional(),
     });
     
     const validatedData = userSchema.parse(req.body);

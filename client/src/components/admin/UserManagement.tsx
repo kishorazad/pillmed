@@ -398,8 +398,12 @@ const UserManagement = () => {
       password: newUser.password,
       phone: newUser.phone,
       role: newUser.role,
-      status: newUser.active ? 'active' : 'pending'
+      // status field will be set on the server based on active flag
+      // We don't send status directly as the server validation schema doesn't expect it
     };
+    
+    // Log the data being sent for debugging
+    console.log('Submitting user data:', {...userData, password: '********'});
     
     createUserMutation.mutate(userData);
   };
