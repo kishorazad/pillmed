@@ -53,13 +53,62 @@ class MongoDBStorage implements IStorage {
   };
 
   constructor() {
-    this.initializeConnection();
+    // We can't use async/await in constructor, so we need to handle the Promise
+    this.initializeConnection().catch(error => {
+      console.error('Error during MongoDB connection initialization:', error);
+    });
+    
+    // To ensure MongoDB connection is retried periodically if it fails initially
+    setInterval(() => {
+      // Check connection status and reconnect if needed
+      if (!mongoDBService.isConnectedToDb()) {
+        console.log('Periodic MongoDB connection check - attempting reconnection');
+        this.initializeConnection().catch(error => {
+          console.error('Error during periodic MongoDB reconnection:', error);
+        });
+      }
+    }, 60000); // Check every minute
   }
 
   // Initialize MongoDB connection
   private async initializeConnection() {
     try {
-      await mongoDBService.connect();
+      // First check if the MongoDB service is already connected
+      const isAlreadyConnected = mongoDBService.isConnectedToDb();
+      console.log(`MongoDB storage initialization - Already connected: ${isAlreadyConnected}`);
+      
+      if (!isAlreadyConnected) {
+        // Explicitly connect again
+        console.log('MongoDB not connected. Attempting connection...');
+        const connected = await mongoDBService.connect();
+        console.log(`MongoDB connection attempt result: ${connected}`);
+        
+        if (connected) {
+          console.log('MongoDB successfully connected in MongoDBStorage initialization');
+          // Create a document in users collection to verify database write access
+          try {
+            const usersCollection = mongoDBService.getCollection(this.collections.users);
+            if (usersCollection) {
+              // Only perform this check if not already in the collection
+              const connectionTest = await usersCollection.findOne({ username: '__connection_test__' });
+              if (!connectionTest) {
+                await usersCollection.insertOne({
+                  id: -999,
+                  username: '__connection_test__',
+                  password: 'test',
+                  name: 'Connection Test',
+                  email: 'test@example.com'
+                });
+                console.log('MongoDB connection verified with successful write test');
+              } else {
+                console.log('MongoDB connection verified - test record exists');
+              }
+            }
+          } catch (writeError) {
+            console.error('Failed to write to MongoDB:', writeError);
+          }
+        }
+      }
     } catch (error) {
       console.error('Failed to initialize MongoDB connection:', error);
       console.warn('Falling back to in-memory storage');
@@ -119,21 +168,62 @@ class MongoDBStorage implements IStorage {
   }
 
   async createUser(user: Omit<User, 'id'>): Promise<User> {
-    if (!this.isConnected(this.collections.users)) {
-      throw new Error('MongoDB not connected for user creation'); // Will fall back to in-memory storage
-    }
-
-    const collection = mongoDBService.getCollection(this.collections.users);
-    if (!collection) throw new Error('Failed to get users collection');
-
-    // Generate a numeric ID for compatibility with in-memory storage
-    const lastUser = await collection.find().sort({ id: -1 }).limit(1).toArray();
-    const id = lastUser.length > 0 ? lastUser[0].id + 1 : 1;
-
-    const newUser = { ...user, id };
+    console.log(`Attempting to create user in MongoDB: ${user.username}`);
     
-    await collection.insertOne(newUser);
-    return newUser as User;
+    try {
+      // Reconnect MongoDB if needed
+      if (!mongoDBService.isConnectedToDb()) {
+        console.log('MongoDB connection lost. Attempting to reconnect before user creation...');
+        await this.initializeConnection();
+      }
+
+      if (!this.isConnected(this.collections.users)) {
+        console.error('MongoDB not connected for user creation after reconnection attempt');
+        throw new Error('MongoDB not connected for user creation'); // Will fall back to in-memory storage
+      }
+
+      const collection = mongoDBService.getCollection(this.collections.users);
+      if (!collection) {
+        console.error('Failed to get users collection from MongoDB');
+        throw new Error('Failed to get users collection');
+      }
+
+      // Check if user already exists to avoid duplicates
+      console.log(`Checking if user with username '${user.username}' already exists in MongoDB`);
+      const existingUser = await collection.findOne({ 
+        $or: [
+          { username: user.username }, 
+          { email: user.email }
+        ]
+      });
+      
+      if (existingUser) {
+        console.log(`User already exists in MongoDB: ${JSON.stringify(existingUser)}`);
+        throw new Error(`User with username '${user.username}' or email '${user.email}' already exists`);
+      }
+
+      // Generate a numeric ID for compatibility with in-memory storage
+      console.log('Generating unique ID for new user');
+      const lastUser = await collection.find().sort({ id: -1 }).limit(1).toArray();
+      const id = lastUser.length > 0 ? lastUser[0].id + 1 : 1;
+      console.log(`Generated ID: ${id} for user ${user.username}`);
+
+      const newUser = { ...user, id };
+      
+      console.log(`Inserting new user into MongoDB: ${JSON.stringify(newUser)}`);
+      const result = await collection.insertOne(newUser);
+      
+      if (result.acknowledged) {
+        console.log(`User successfully created in MongoDB with ID: ${id}`);
+        return newUser as User;
+      } else {
+        console.error('MongoDB insert operation was not acknowledged');
+        throw new Error('Failed to insert user - operation not acknowledged');
+      }
+    } catch (error) {
+      console.error('Error creating user in MongoDB:', error);
+      throw error; // Rethrow to allow fallback to in-memory storage
+    }
   }
 
   async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {

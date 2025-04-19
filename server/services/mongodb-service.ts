@@ -61,6 +61,12 @@ class MongoDBService {
    * Check if the connection is established
    */
   public isConnectedToDb(): boolean {
+    console.log(`MongoDB connection status check - isConnected flag: ${this.isConnected}`);
+    console.log(`MongoDB client exists: ${!!this.client}`);
+    console.log(`MongoDB database exists: ${!!this.db}`);
+    if (this.client && !this.isConnected) {
+      console.log('Connection flag is false but client exists. This could indicate a stale connection.');
+    }
     return this.isConnected;
   }
 
