@@ -14,6 +14,7 @@ import passwordResetRoutes from './password-reset-routes'; // Password reset rou
 import adminRoutes from './admin-routes'; // Admin panel routes
 import adminCustomerRoutes from './admin-customer-routes'; // Admin customer management routes
 import adminSeoRoutes from './admin-seo-routes'; // Admin SEO management routes
+import mongodbUsersRoutes from './api-mongodb-users'; // MongoDB direct user management
 import { z } from "zod";
 import multer from 'multer';
 import path from 'path';
