@@ -131,22 +131,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add prescription upload endpoint that saves to MongoDB
   app.post('/api/prescriptions/upload', upload.single('prescription'), async (req: Request, res: Response) => {
     try {
+      console.log('==========================================');
       console.log('Prescription upload request received');
+      console.log('Request body:', req.body);
+      console.log('File info:', req.file);
+      
       if (!req.file) {
+        console.error('No prescription file in the request');
         return res.status(400).json({ error: 'No prescription file uploaded' });
       }
       
       // Generate URL for the uploaded file
       const imageUrl = `/uploads/prescriptions/${req.file.filename}`;
+      console.log('Generated image URL:', imageUrl);
       
       // Get user ID from the request (or default to 1 if not authenticated)
       const userId = req.body.userId || (req.user?.id || 1);
       const userName = req.body.userName || req.user?.username || 'Guest User';
+      console.log(`User ID: ${userId}, User Name: ${userName}`);
       
       // Create a new prescription record in MongoDB
       const storage = global.useMongoStorage ? mongoDBStorage : memStorage;
       
       console.log('Checking MongoDB connection for prescriptions collection');
+      console.log('Current global.useMongoStorage value:', global.useMongoStorage);
+      
       if (global.useMongoStorage) {
         const isConnected = await mongoDBService.isConnected();
         console.log(`MongoDB connection status check - isConnected flag: ${isConnected}`);
@@ -156,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await mongoDBService.connect();
         }
         
-        console.log('Creating prescription in MongoDB');
+        console.log('MongoDB connection verified, now creating prescription');
         const collection = mongoDBService.getCollection('prescriptions');
         if (!collection) {
           console.error('Prescriptions collection not available');
@@ -165,7 +174,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Generate a new prescription ID
         const lastPrescription = await collection.findOne({}, { sort: { id: -1 } });
+        console.log('Last prescription found:', lastPrescription);
         const newId = (lastPrescription?.id || 0) + 1;
+        console.log('New prescription ID:', newId);
         
         // Create prescription document
         const prescription = {
@@ -180,9 +191,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fileType: req.file.mimetype,
           notes: req.body.notes || ''
         };
+        console.log('Prescription document to be inserted:', prescription);
         
         // Insert the prescription into MongoDB
-        await collection.insertOne(prescription);
+        const result = await collection.insertOne(prescription);
+        console.log('MongoDB insert result:', result);
         console.log(`Prescription ${newId} saved to MongoDB successfully`);
         
         // Return success response
@@ -200,8 +213,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: 'pending'
         });
       }
+      console.log('==========================================');
     } catch (error) {
       console.error('Prescription upload error:', error);
+      console.error('Error stack:', error.stack);
       res.status(500).json({ error: 'Failed to upload prescription' });
     }
   });
@@ -231,6 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Non-authenticated route for getting prescriptions (development only)
   app.get('/api/data-api/prescriptions', async (req: Request, res: Response) => {
     try {
+      console.log('==========================================');
       console.log('Fetching all prescriptions (non-authenticated development route)');
       
       // WARNING: DEVELOPMENT ONLY - This endpoint should be removed in production
@@ -238,14 +254,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Use the MongoDB storage to get all prescriptions
       const storage = global.useMongoStorage ? mongoDBStorage : memStorage;
+      console.log('Using MongoDB storage:', global.useMongoStorage);
+      
+      // Check MongoDB connection for prescriptions collection
+      console.log('Checking MongoDB connection for collection: prescriptions');
+      console.log('Current global.useMongoStorage value:', global.useMongoStorage);
+      
+      if (global.useMongoStorage) {
+        const isConnected = await mongoDBService.isConnected();
+        console.log(`MongoDB connection status check - isConnected flag: ${isConnected}`);
+        console.log(`MongoDB client exists: ${mongoDBService.clientExists()}`);
+        console.log(`MongoDB database exists: ${mongoDBService.dbExists()}`);
+        
+        // Check if we can access the collection
+        const collection = mongoDBService.getCollection('prescriptions');
+        console.log('MongoDB service reports connection status:', mongoDBService.isConnectedToDb());
+        if (!collection) {
+          console.error('Unable to access prescriptions collection');
+        } else {
+          const count = await collection.countDocuments();
+          console.log(`Found ${count} prescriptions in MongoDB`);
+        }
+      }
       
       const prescriptions = await storage.getAllPrescriptions();
-      
       console.log(`Found ${prescriptions.length} prescriptions`);
       
       res.status(200).json(prescriptions);
+      console.log('==========================================');
     } catch (error) {
       console.error('Error fetching prescriptions:', error);
+      console.error('Error stack:', error.stack);
       res.status(500).json({ error: 'Failed to fetch prescriptions' });
     }
   });
