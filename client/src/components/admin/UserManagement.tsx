@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +45,8 @@ import {
   Stethoscope,
   Beaker,
   Building2,
-  Pill // Added missing Pill icon
+  Pill, // Added missing Pill icon
+  AlertCircle
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -56,6 +57,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Type definitions
 interface User {
@@ -64,7 +69,7 @@ interface User {
   username: string;
   email: string;
   phone: string;
-  role: 'admin' | 'doctor' | 'pharmacy' | 'laboratory' | 'user' | 'chemist' | 'hospital';
+  role: 'admin' | 'doctor' | 'pharmacy' | 'laboratory' | 'user' | 'chemist' | 'hospital' | 'customer';
   status: 'active' | 'pending' | 'suspended';
   joinDate: string;
   lastActive: string;
