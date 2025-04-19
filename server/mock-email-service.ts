@@ -1,123 +1,99 @@
 /**
  * Mock Email Service
  * 
- * This service simulates email sending for development and testing purposes.
- * In a production environment, this would be replaced with a real email service like SendGrid.
+ * This service simulates email sending functionality for development purposes.
+ * In a production environment, this would be replaced with a real email service
+ * like SendGrid, Mailgun, or Amazon SES.
  */
 
-// Storage for OTPs with email as the key
-interface OtpRecord {
-  otp: string;
-  expiresAt: Date;
-  purpose: 'password-reset' | 'email-verification';
+interface EmailOptions {
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
 }
 
 class MockEmailService {
-  private otpStorage: Map<string, OtpRecord> = new Map();
-
   /**
-   * Generate a random OTP code
-   * @param length Length of the OTP (default: 6)
-   * @returns OTP string
+   * Simulates sending an email
+   * @param options Email options including recipient, subject, and content
+   * @returns Promise that resolves with success status
    */
-  generateOTP(length: number = 6): string {
-    const digits = '0123456789';
-    let otp = '';
-    
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * digits.length);
-      otp += digits[randomIndex];
-    }
-    
-    return otp;
-  }
-
-  /**
-   * Simulate sending an email
-   * @param to Recipient email address
-   * @param subject Email subject
-   * @param text Plain text email content
-   * @param html HTML email content (optional)
-   * @returns Promise resolving to true if successful
-   */
-  async sendEmail(to: string, subject: string, text: string, html?: string): Promise<boolean> {
-    console.log(`===== MOCK EMAIL =====`);
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${text}`);
-    console.log(`=====================`);
-    
-    return true;
-  }
-
-  /**
-   * Send a password reset OTP via email
-   * @param email Recipient email address
-   * @returns Promise resolving to the generated OTP
-   */
-  async sendPasswordResetOTP(email: string): Promise<string> {
-    const otp = this.generateOTP();
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 15); // OTP expires in 15 minutes
-    
-    // Store OTP for verification later
-    this.otpStorage.set(email, {
-      otp,
-      expiresAt,
-      purpose: 'password-reset'
-    });
-    
-    const subject = 'PillNow Password Reset OTP';
-    const text = `Your one-time password (OTP) for resetting your PillNow account password is: ${otp}. This code will expire in 15 minutes.`;
-    
-    await this.sendEmail(email, subject, text);
-    
-    return otp;
-  }
-
-  /**
-   * Verify an OTP for a specific email and purpose
-   * @param email Email address
-   * @param otp OTP to verify
-   * @param purpose Purpose of the OTP
-   * @returns Boolean indicating if the OTP is valid
-   */
-  verifyOTP(email: string, otp: string, purpose: 'password-reset' | 'email-verification'): boolean {
-    const record = this.otpStorage.get(email);
-    
-    if (!record) {
-      return false;
-    }
-    
-    // Check if OTP has expired
-    if (new Date() > record.expiresAt) {
-      this.otpStorage.delete(email);
-      return false;
-    }
-    
-    // Check if OTP matches and the purpose is correct
-    if (record.otp === otp && record.purpose === purpose) {
-      // OTP used successfully, remove it
-      this.otpStorage.delete(email);
+  async sendEmail(options: EmailOptions): Promise<boolean> {
+    try {
+      // Log the email details to the console instead of actually sending
+      console.log('\n=== MOCK EMAIL SERVICE ===');
+      console.log(`To: ${options.to}`);
+      console.log(`Subject: ${options.subject}`);
+      console.log('Content:');
+      console.log(options.text || options.html);
+      console.log('=========================\n');
+      
+      // Simulate a small delay as real email services aren't instantaneous
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       return true;
+    } catch (error) {
+      console.error('Mock email service error:', error);
+      return false;
     }
+  }
+
+  /**
+   * Sends an OTP (One-Time Password) email
+   * @param email Recipient's email address
+   * @param otp The one-time password
+   * @returns Promise that resolves with success status
+   */
+  async sendOtpEmail(email: string, otp: string): Promise<boolean> {
+    const subject = 'PillNow: Your Password Reset OTP';
+    const text = `
+      Hello,
+      
+      You have requested to reset your password for your PillNow account.
+      
+      Your One-Time Password (OTP) is: ${otp}
+      
+      This OTP will expire in 10 minutes.
+      
+      If you did not request a password reset, please ignore this email.
+      
+      Best regards,
+      The PillNow Team
+    `;
     
-    return false;
+    return await this.sendEmail({
+      to: email,
+      subject,
+      text
+    });
+  }
+
+  /**
+   * Sends a password reset confirmation email
+   * @param email Recipient's email address
+   * @returns Promise that resolves with success status
+   */
+  async sendPasswordResetConfirmation(email: string): Promise<boolean> {
+    const subject = 'PillNow: Password Reset Successful';
+    const text = `
+      Hello,
+      
+      Your password for PillNow has been successfully reset.
+      
+      If you did not perform this action, please contact our support team immediately.
+      
+      Best regards,
+      The PillNow Team
+    `;
+    
+    return await this.sendEmail({
+      to: email,
+      subject,
+      text
+    });
   }
 }
 
 // Export a singleton instance
 export const mockEmailService = new MockEmailService();
-
-// Helper functions that match the SendGrid interface
-export function generateOTP(length: number = 6): string {
-  return mockEmailService.generateOTP(length);
-}
-
-export async function sendEmail(to: string, subject: string, text: string, html?: string): Promise<boolean> {
-  return mockEmailService.sendEmail(to, subject, text, html);
-}
-
-export async function sendPasswordResetOTP(email: string): Promise<string> {
-  return mockEmailService.sendPasswordResetOTP(email);
-}

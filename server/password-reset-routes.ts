@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { storage } from './storage';
 import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
+import { mockEmailService } from './mock-email-service';
 
 const router = Router();
 const scryptAsync = promisify(scrypt);
@@ -70,9 +71,8 @@ router.post('/request', async (req: Request, res: Response) => {
     // Store new OTP
     otpStore.push({ email, otp, expiresAt });
     
-    // In a production app, you would send the OTP via email
-    // For our mock implementation, we'll just log it
-    console.log(`[MOCK EMAIL SERVICE] OTP for ${email}: ${otp}`);
+    // Send OTP via mock email service
+    await mockEmailService.sendOtpEmail(email, otp);
     
     return res.json({ success: true, message: 'OTP sent to email' });
   } catch (error) {
@@ -143,6 +143,9 @@ router.post('/reset', async (req: Request, res: Response) => {
     if (otpIndex !== -1) {
       otpStore.splice(otpIndex, 1);
     }
+    
+    // Send confirmation email
+    await mockEmailService.sendPasswordResetConfirmation(email);
     
     return res.json({ success: true, message: 'Password reset successfully' });
   } catch (error) {
