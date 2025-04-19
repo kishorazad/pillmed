@@ -1324,8 +1324,8 @@ const ChemistDashboard: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="verified" className="space-y-4">
-          {filterPrescriptions('readable').length > 0 ? (
-            filterPrescriptions('readable').map(prescription => (
+          {filterPrescriptions('reviewed').length > 0 ? (
+            filterPrescriptions('reviewed').map(prescription => (
               <PrescriptionCard 
                 key={prescription.id}
                 prescription={prescription}
