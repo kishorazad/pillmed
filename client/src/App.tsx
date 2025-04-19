@@ -7,7 +7,7 @@ import { useStore } from "./lib/store";
 import { LanguageProvider } from "./components/LanguageSwitcher";
 import { AuthProvider, useAuth } from "./lib/auth-provider";
 import { Loader2 } from "lucide-react";
-import { DefaultSEO } from "./components/seo";
+import SEO from "./components/seo/SEO";
 
 // Layout
 import Header from "./components/layout/Header";
@@ -122,46 +122,64 @@ function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedR
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/products" component={ProductListing} />
-      <Route path="/products/category/:categoryId" component={ProductListing} />
-      <Route path="/products/:id" component={ProductDetail} />
-      <Route path="/cart" component={Cart} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/checkout" component={Checkout} />
-      <Route path="/ai-healthcare" component={AIHealthcare} />
-      <Route path="/nearby-hospitals" component={NearbyHospitalsPage} />
-      <Route path="/hospitals" component={HospitalsList} />
-      <Route path="/hospitals/:id" component={HospitalDetail} />
-      <Route path="/achievements" component={Achievements} />
-      <Route path="/medication-tracking" component={MedicationTracking} />
-      <Route path="/orders" component={OrderHistory} />
+    <>
+      {/* Global SEO - acts as a fallback for pages without specific SEO */}
+      <SEO 
+        title="Online Medicine & Healthcare"
+        description="Get affordable healthcare products, medicines, and expert consultation at PillNow - India's leading online pharmacy with fast delivery and authentic products."
+        keywords={[
+          'online pharmacy',
+          'medicine delivery',
+          'healthcare products',
+          'prescription refill',
+          'doctor consultation',
+          'healthcare services',
+          'medical equipment',
+          'health tests'
+        ]}
+      />
       
-      {/* Services Routes */}
-      <Route path="/services" component={ServicesPage} />
-      <Route path="/services/medical-equipment" component={MedicalEquipment} />
-      <Route path="/services/medical-services" component={MedicalServices} />
-      <Route path="/services/ambulance-request" component={AmbulanceRequest} />
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/products" component={ProductListing} />
+        <Route path="/products/category/:categoryId" component={ProductListing} />
+        <Route path="/products/:id" component={ProductDetail} />
+        <Route path="/cart" component={Cart} />
+        <Route path="/profile" component={Profile} />
+        <Route path="/checkout" component={Checkout} />
+        <Route path="/ai-healthcare" component={AIHealthcare} />
+        <Route path="/nearby-hospitals" component={NearbyHospitalsPage} />
+        <Route path="/hospitals" component={HospitalsList} />
+        <Route path="/hospitals/:id" component={HospitalDetail} />
+        <Route path="/achievements" component={Achievements} />
+        <Route path="/medication-tracking" component={MedicationTracking} />
+        <Route path="/orders" component={OrderHistory} />
       
-      {/* Doctor Routes */}
-      <Route path="/doctors" component={DoctorSearch} />
-      <Route path="/doctors/:id" component={DoctorDetail} />
-      <Route path="/doctors/:id/book" component={AppointmentConfirmation} />
-      <Route path="/doctors/:id/success" component={AppointmentSuccess} />
-      <Route path="/doctors/:id/video" component={VideoConsultation} />
-      <Route path="/doctors/:id/prescription" component={EPrescription} />
-      
-      {/* Admin and Professional Dashboard Routes with Role Protection */}
-      <RoleBasedRoute path="/admin" component={AdminDashboard} allowedRoles={['admin']} />
-      <RoleBasedRoute path="/pharmacy" component={PharmacyDashboard} allowedRoles={['pharmacy']} />
-      <RoleBasedRoute path="/doctor" component={DoctorDashboard} allowedRoles={['doctor']} />
-      <RoleBasedRoute path="/laboratory" component={LaboratoryDashboard} allowedRoles={['laboratory', 'hospital']} />
-      <RoleBasedRoute path="/delivery" component={DeliveryDashboard} allowedRoles={['delivery']} />
-      <RoleBasedRoute path="/chemist" component={ChemistDashboard} allowedRoles={['chemist', 'pharmacy']} />
-      
-      <Route component={NotFound} />
-    </Switch>
+        {/* Services Routes */}
+        <Route path="/services" component={ServicesPage} />
+        <Route path="/services/medical-equipment" component={MedicalEquipment} />
+        <Route path="/services/medical-services" component={MedicalServices} />
+        <Route path="/services/ambulance-request" component={AmbulanceRequest} />
+        
+        {/* Doctor Routes */}
+        <Route path="/doctors" component={DoctorSearch} />
+        <Route path="/doctors/:id" component={DoctorDetail} />
+        <Route path="/doctors/:id/book" component={AppointmentConfirmation} />
+        <Route path="/doctors/:id/success" component={AppointmentSuccess} />
+        <Route path="/doctors/:id/video" component={VideoConsultation} />
+        <Route path="/doctors/:id/prescription" component={EPrescription} />
+        
+        {/* Admin and Professional Dashboard Routes with Role Protection */}
+        <RoleBasedRoute path="/admin" component={AdminDashboard} allowedRoles={['admin']} />
+        <RoleBasedRoute path="/pharmacy" component={PharmacyDashboard} allowedRoles={['pharmacy']} />
+        <RoleBasedRoute path="/doctor" component={DoctorDashboard} allowedRoles={['doctor']} />
+        <RoleBasedRoute path="/laboratory" component={LaboratoryDashboard} allowedRoles={['laboratory', 'hospital']} />
+        <RoleBasedRoute path="/delivery" component={DeliveryDashboard} allowedRoles={['delivery']} />
+        <RoleBasedRoute path="/chemist" component={ChemistDashboard} allowedRoles={['chemist', 'pharmacy']} />
+        
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 
