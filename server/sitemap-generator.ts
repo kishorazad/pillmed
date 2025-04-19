@@ -41,7 +41,8 @@ Sitemap: ${baseUrl}/sitemap.xml
 
 /**
  * Generates a dynamically updated XML sitemap for SEO optimization
- * Based on approaches used by leading pharmacy platforms for better indexing
+ * Based on industry-leading pharmacy platforms like 1mg, PharmEasy, and Netmeds
+ * This comprehensive approach helps search engines discover and index all important pages
  */
 async function generateSitemap(req: Request, res: Response) {
   try {
@@ -52,23 +53,67 @@ async function generateSitemap(req: Request, res: Response) {
     // Base URL from request
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     
-    // Start with static routes
-    const staticRoutes = [
+    // Start with static routes - organized by section for better management
+    // Core pages with highest priority
+    const corePages = [
       { url: '/', changefreq: 'daily', priority: 1.0 },
       { url: '/products', changefreq: 'daily', priority: 0.9 },
-      { url: '/cart', changefreq: 'monthly', priority: 0.5 },
-      { url: '/checkout', changefreq: 'monthly', priority: 0.5 },
-      { url: '/profile', changefreq: 'monthly', priority: 0.6 },
-      { url: '/doctors', changefreq: 'weekly', priority: 0.8 },
+      { url: '/search', changefreq: 'hourly', priority: 0.9 }, // Search page gets higher priority and frequency
+      { url: '/offers', changefreq: 'daily', priority: 0.8 }, // Offers/discounts page - high priority for e-commerce
+    ];
+    
+    // Healthcare services - moderate to high priority
+    const healthcareServices = [
+      { url: '/doctors', changefreq: 'daily', priority: 0.8 },
+      { url: '/doctors/specialities', changefreq: 'weekly', priority: 0.8 },
       { url: '/hospitals', changefreq: 'weekly', priority: 0.8 },
-      { url: '/ai-healthcare', changefreq: 'weekly', priority: 0.7 },
-      { url: '/medication-tracking', changefreq: 'monthly', priority: 0.6 },
-      { url: '/communication', changefreq: 'monthly', priority: 0.7 },
+      { url: '/ai-healthcare', changefreq: 'weekly', priority: 0.8 },
+      { url: '/lab-tests', changefreq: 'daily', priority: 0.8 }, // Lab tests are important service
+      { url: '/health-packages', changefreq: 'weekly', priority: 0.8 },
       { url: '/services', changefreq: 'weekly', priority: 0.8 },
       { url: '/services/medical-equipment', changefreq: 'weekly', priority: 0.7 },
       { url: '/services/medical-services', changefreq: 'weekly', priority: 0.7 },
-      { url: '/services/ambulance-request', changefreq: 'monthly', priority: 0.6 },
-      { url: '/services/emergency', changefreq: 'monthly', priority: 0.6 },
+      { url: '/services/ambulance-request', changefreq: 'weekly', priority: 0.7 },
+    ];
+    
+    // User-specific pages - low priority as they're personalized
+    const userPages = [
+      { url: '/cart', changefreq: 'monthly', priority: 0.4 },
+      { url: '/checkout', changefreq: 'monthly', priority: 0.4 },
+      { url: '/profile', changefreq: 'monthly', priority: 0.4 },
+      { url: '/medication-tracking', changefreq: 'monthly', priority: 0.5 },
+      { url: '/communication', changefreq: 'monthly', priority: 0.5 },
+      { url: '/orders', changefreq: 'monthly', priority: 0.5 },
+      { url: '/prescriptions', changefreq: 'monthly', priority: 0.5 },
+    ];
+    
+    // Information pages - moderate priority for trust building
+    const infoPages = [
+      { url: '/about-us', changefreq: 'monthly', priority: 0.6 },
+      { url: '/contact-us', changefreq: 'monthly', priority: 0.6 },
+      { url: '/faq', changefreq: 'weekly', priority: 0.7 }, // FAQs are higher priority for customer information
+      { url: '/terms-and-conditions', changefreq: 'monthly', priority: 0.5 },
+      { url: '/privacy-policy', changefreq: 'monthly', priority: 0.5 },
+      { url: '/shipping-policy', changefreq: 'monthly', priority: 0.5 },
+      { url: '/return-policy', changefreq: 'monthly', priority: 0.5 },
+      { url: '/careers', changefreq: 'monthly', priority: 0.5 },
+    ];
+    
+    // Health information pages - medium-high priority for SEO value
+    const healthInfoPages = [
+      { url: '/health-articles', changefreq: 'daily', priority: 0.7 },
+      { url: '/health-tips', changefreq: 'daily', priority: 0.7 },
+      { url: '/medicine-information', changefreq: 'weekly', priority: 0.7 },
+      { url: '/disease-conditions', changefreq: 'weekly', priority: 0.7 },
+    ];
+    
+    // Combine all static routes
+    const staticRoutes = [
+      ...corePages,
+      ...healthcareServices,
+      ...userPages,
+      ...infoPages,
+      ...healthInfoPages
     ];
 
     // Dynamic routes
@@ -99,13 +144,20 @@ async function generateSitemap(req: Request, res: Response) {
     }
     
     for (const product of products) {
-      routes.push({
+      // Create the base route entry
+      const routeEntry: any = {
         url: `/products/${product.id}`,
         changefreq: 'weekly',
-        priority: 0.7,
-        // Add lastmod based on product update date if available
-        lastmod: product.updatedAt ? new Date(product.updatedAt).toISOString() : undefined
-      });
+        priority: 0.7
+      };
+      
+      // Add lastmod if the product has an updatedAt property
+      // This supports products from both MongoDB and SQL storage
+      if ((product as any).updatedAt) {
+        routeEntry.lastmod = new Date((product as any).updatedAt).toISOString();
+      }
+      
+      routes.push(routeEntry);
     }
     
     // Get doctors/hospitals if applicable
