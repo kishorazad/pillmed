@@ -140,9 +140,10 @@ const MedicineSearch: React.FC = () => {
     return Math.round(((price - discountedPrice) / price) * 100);
   };
 
-  // Only show second search on hospital pages (hide on homepage)
-  // This is the top search bar that we want to remove from the homepage
-  if (!location.startsWith('/hospitals')) {
+  // Only hide search bar on specific pages where it's not needed
+  // Keep the search bar on most pages including homepage
+  const pagesWithoutSearch = ['/admin', '/pharmacy', '/doctor', '/laboratory', '/delivery', '/chemist'];
+  if (pagesWithoutSearch.some(page => location.startsWith(page))) {
     return null;
   }
 
