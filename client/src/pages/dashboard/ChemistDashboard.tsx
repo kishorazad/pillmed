@@ -1313,6 +1313,9 @@ const ChemistDashboard: React.FC = () => {
                 onMarkPacked={handleMarkPacked}
                 onAssignDelivery={handleAssignDelivery}
                 renderStatusBadge={renderStatusBadge}
+                onMarkAsReviewed={handleMarkAsReviewed}
+                onMarkMedicineChecked={handleMarkMedicineChecked}
+                onConfirmOrder={handleConfirmOrder}
               />
             ))
           ) : (
@@ -1695,6 +1698,10 @@ interface PrescriptionCardProps {
   onMarkPacked: (prescription: Prescription) => void;
   onAssignDelivery: (prescription: Prescription) => void;
   renderStatusBadge: (status: string) => React.ReactNode;
+  // New handlers for the updated workflow
+  onMarkAsReviewed?: (prescription: Prescription) => void;
+  onMarkMedicineChecked?: (prescription: Prescription) => void;
+  onConfirmOrder?: (prescription: Prescription) => void;
 }
 
 const PrescriptionCard: React.FC<PrescriptionCardProps> = ({ 
@@ -1703,7 +1710,10 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
   onMarkNotReadable, 
   onMarkPacked,
   onAssignDelivery,
-  renderStatusBadge
+  renderStatusBadge,
+  onMarkAsReviewed,
+  onMarkMedicineChecked,
+  onConfirmOrder
 }) => {
   const { t } = useLanguage();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
@@ -1756,14 +1766,113 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
             </Button>
             <Button
               variant="outline"
-              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-              onClick={() => onMarkReadable(prescription)}
+              className="bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200"
+              onClick={() => onMarkAsReviewed?.(prescription)}
             >
-              <CheckCircle className="h-4 w-4 mr-1" />
-              {t('readable')}
+              <ClipboardCheck className="h-4 w-4 mr-1" />
+              Mark Reviewed
             </Button>
           </div>
         );
+      
+      case 'reviewed':
+        return (
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline"
+              className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200"
+              onClick={() => onMarkMedicineChecked?.(prescription)}
+            >
+              <ClipboardList className="h-4 w-4 mr-1" />
+              Mark Medicines Checked
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Add to Prescription</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => {
+                  setSelectedPrescription(prescription);
+                  setOpenAddMedicineDialog(true);
+                }}>
+                  <Pill className="mr-2 h-4 w-4" />
+                  <span>Add Medicines</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  setSelectedPrescription(prescription);
+                  setOpenAddEquipmentDialog(true);
+                }}>
+                  <Stethoscope className="mr-2 h-4 w-4" />
+                  <span>Add Medical Equipment</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  setSelectedPrescription(prescription);
+                  setOpenAddServiceDialog(true);
+                }}>
+                  <UserCog className="mr-2 h-4 w-4" />
+                  <span>Request Medical Service</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      
+      case 'medicine_checked':
+        return (
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => onConfirmOrder?.(prescription)}
+            >
+              <CheckSquare className="h-4 w-4 mr-1" />
+              Confirm Order
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Add to Prescription</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => {
+                  setSelectedPrescription(prescription);
+                  setOpenAddMedicineDialog(true);
+                }}>
+                  <Pill className="mr-2 h-4 w-4" />
+                  <span>Add Medicines</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      
+      case 'order_confirmed':
+        return (
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => onMarkPacked(prescription)}>
+              <Package className="h-4 w-4 mr-1" />
+              {t('mark_packed')}
+            </Button>
+          </div>
+        );
+      
+      case 'packed':
+        return (
+          <Button onClick={() => onAssignDelivery(prescription)}>
+            <Truck className="h-4 w-4 mr-1" />
+            {t('assign_delivery')}
+          </Button>
+        );
+        
+      // For backward compatibility
       case 'readable':
         return (
           <div className="flex flex-wrap gap-2">
@@ -1802,25 +1911,11 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
                   <UserCog className="mr-2 h-4 w-4" />
                   <span>Request Medical Service</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => {
-                  setSelectedPrescription(prescription);
-                  setOpenEmergencyServiceDialog(true);
-                }} className="text-red-600">
-                  <Ambulance className="mr-2 h-4 w-4" />
-                  <span>Emergency Services</span>
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         );
-      case 'packed':
-        return (
-          <Button onClick={() => onAssignDelivery(prescription)}>
-            <Truck className="h-4 w-4 mr-1" />
-            {t('assign_delivery')}
-          </Button>
-        );
+          
       default:
         return null;
     }
