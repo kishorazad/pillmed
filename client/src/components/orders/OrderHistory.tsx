@@ -51,8 +51,8 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
     enabled: !!userId, // Only run the query if userId is provided
   });
   
-  // Use sample data or fetched data
-  const orders: Order[] = (userOrders as Order[]) || [
+  // Sample orders data for when no user is logged in
+  const sampleOrders: Order[] = [
     {
       id: 'ORD12345678',
       date: '2025-04-10',
@@ -255,7 +255,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
-        ) : orders.length > 0 ? (
+        ) : ((userId && userOrders) || !userId && sampleOrders)?.length > 0 ? (
           <div 
             ref={scrollContainerRef}
             className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory"
@@ -265,7 +265,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
               WebkitOverflowScrolling: 'touch'
             }}
           >
-            {orders.map((order) => (
+            {(userId && userOrders ? userOrders : sampleOrders).map((order) => (
               <div 
                 key={order.id} 
                 className="snap-start min-w-[300px] md:min-w-[350px] flex-shrink-0 bg-white rounded-lg shadow-sm overflow-hidden flex flex-col"
