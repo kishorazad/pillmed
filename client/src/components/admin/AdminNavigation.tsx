@@ -41,6 +41,11 @@ const AdminNavigation = () => {
       href: '/admin/users'
     },
     {
+      label: 'Customer Management',
+      icon: <Users className="h-5 w-5" />,
+      href: '/admin/customers'
+    },
+    {
       label: 'Medicine Management',
       icon: <ShoppingBag className="h-5 w-5" />,
       href: '/admin/medicines'
@@ -74,6 +79,11 @@ const AdminNavigation = () => {
       label: 'Reports',
       icon: <FilePieChart className="h-5 w-5" />,
       href: '/admin/reports'
+    },
+    {
+      label: 'Courier Tracking',
+      icon: <ShoppingBag className="h-5 w-5" />,
+      href: '/admin/courier'
     },
     {
       label: 'System Settings',

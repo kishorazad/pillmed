@@ -12,6 +12,7 @@ import authRoutes from './auth-routes'; // Authentication routes for social logi
 import emergencyRoutes from './emergency-routes'; // Emergency service request routes
 import passwordResetRoutes from './password-reset-routes'; // Password reset routes
 import adminRoutes from './admin-routes'; // Admin panel routes
+import adminCustomerRoutes from './admin-customer-routes'; // Admin customer management routes
 import { z } from "zod";
 import multer from 'multer';
 import path from 'path';
