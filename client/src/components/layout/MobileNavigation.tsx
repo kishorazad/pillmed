@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Home, Search, ShoppingCart, Clock, User, Bot, Building, Building2 } from 'lucide-react';
+import { Home, Search, ShoppingCart, Clock, User, Bot, Building, Building2, Globe, X } from 'lucide-react';
 import { useStore } from '@/lib/store';
-import { useLanguage } from '@/components/LanguageSwitcher';
+import { useLanguage, LANGUAGES } from '@/components/LanguageSwitcher';
 
 const MobileNavigation: React.FC = () => {
   const [location] = useLocation();
   const { user, cart } = useStore();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   
   // Get the proper dashboard path for the user based on role
   const getDashboardPath = () => {
@@ -58,6 +59,9 @@ const MobileNavigation: React.FC = () => {
       path: getDashboardPath(),
     },
   ];
+  
+  // Currently selected language
+  const currentLanguageName = LANGUAGES[language]?.nativeName || 'English';
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-50 shadow-lg">
