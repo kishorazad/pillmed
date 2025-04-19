@@ -729,6 +729,196 @@ class MongoDBStorage implements IStorage {
 
   // The session methods will be implemented when integrating a SessionStore
 
+  // ---------- Pharmacy Inventory ----------
+
+  async getPharmacyInventory(pharmacyId: number): Promise<any[]> {
+    if (!this.isConnected(this.collections.pharmacyInventory)) {
+      return []; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.pharmacyInventory);
+    if (!collection) return [];
+
+    // Get inventory with product details
+    const inventory = await collection.find({ pharmacyId }).toArray();
+    
+    // Enrich with product details if available
+    const productsCollection = mongoDBService.getCollection(this.collections.products);
+    if (productsCollection) {
+      // Add product details to each inventory item
+      for (const item of inventory) {
+        if (item.productId) {
+          const product = await productsCollection.findOne({ id: item.productId });
+          if (product) {
+            item.product = {
+              name: product.name,
+              price: product.price,
+              imageUrl: product.imageUrl,
+              brand: product.brand,
+              quantity: product.quantity
+            };
+          }
+        }
+      }
+    }
+
+    return inventory;
+  }
+
+  async updatePharmacyInventory(pharmacyId: number, productId: number, updates: any): Promise<any> {
+    if (!this.isConnected(this.collections.pharmacyInventory)) {
+      return null; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.pharmacyInventory);
+    if (!collection) return null;
+
+    // Check if this inventory item exists
+    const existingItem = await collection.findOne({ pharmacyId, productId });
+    
+    if (existingItem) {
+      // Update existing inventory item
+      const result = await collection.findOneAndUpdate(
+        { pharmacyId, productId },
+        { $set: updates },
+        { returnDocument: 'after' }
+      );
+      return result;
+    } else {
+      // Create new inventory item
+      const newItem = {
+        pharmacyId,
+        productId,
+        quantity: updates.quantity || 0,
+        price: updates.price || 0,
+        status: updates.status || 'available',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      const result = await collection.insertOne(newItem);
+      if (result.acknowledged) {
+        return newItem;
+      }
+      return null;
+    }
+  }
+
+  // ---------- Pharmacy Orders ----------
+
+  async getPharmacyOrders(pharmacyId: number): Promise<any[]> {
+    if (!this.isConnected(this.collections.orders)) {
+      return []; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.orders);
+    if (!collection) return [];
+
+    // Get orders assigned to this pharmacy
+    const orders = await collection.find({ pharmacyId }).toArray();
+    
+    // Enrich with customer details
+    const usersCollection = mongoDBService.getCollection(this.collections.users);
+    if (usersCollection) {
+      for (const order of orders) {
+        if (order.customerId) {
+          const customer = await usersCollection.findOne({ id: order.customerId });
+          if (customer) {
+            order.customerName = customer.name || customer.username;
+            order.customerPhone = customer.phone;
+            order.customerAddress = customer.address;
+            order.customerPincode = customer.pincode;
+          }
+        }
+      }
+    }
+    
+    // Get order items
+    const orderItemsCollection = mongoDBService.getCollection('orderItems');
+    if (orderItemsCollection) {
+      for (const order of orders) {
+        const items = await orderItemsCollection.find({ orderId: order.id }).toArray();
+        order.items = items;
+      }
+    }
+
+    return orders;
+  }
+
+  // ---------- Prescriptions ----------
+
+  async getPendingPrescriptions(pharmacyId: number): Promise<any[]> {
+    if (!this.isConnected(this.collections.prescriptions)) {
+      return []; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.prescriptions);
+    if (!collection) return [];
+
+    // Get pending prescriptions for this pharmacy
+    const prescriptions = await collection.find({ 
+      pharmacyId, 
+      status: 'pending'
+    }).toArray();
+    
+    // Enrich with customer details
+    const usersCollection = mongoDBService.getCollection(this.collections.users);
+    if (usersCollection) {
+      for (const prescription of prescriptions) {
+        if (prescription.customerId) {
+          const customer = await usersCollection.findOne({ id: prescription.customerId });
+          if (customer) {
+            prescription.customerName = customer.name || customer.username;
+            prescription.customerPhone = customer.phone;
+          }
+        }
+      }
+    }
+
+    return prescriptions;
+  }
+
+  async updatePrescriptionStatus(prescriptionId: number, status: string, pharmacyId: number): Promise<any> {
+    if (!this.isConnected(this.collections.prescriptions)) {
+      return null; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.prescriptions);
+    if (!collection) return null;
+
+    // Update prescription status
+    const result = await collection.findOneAndUpdate(
+      { id: prescriptionId, pharmacyId },
+      { 
+        $set: { 
+          status,
+          updatedAt: new Date(),
+          verifiedBy: pharmacyId
+        } 
+      },
+      { returnDocument: 'after' }
+    );
+
+    // If prescription is approved and linked to an order, update the order status as well
+    if (status === 'approved' && result && result.orderId) {
+      const ordersCollection = mongoDBService.getCollection(this.collections.orders);
+      if (ordersCollection) {
+        await ordersCollection.updateOne(
+          { id: result.orderId },
+          { 
+            $set: { 
+              prescriptionVerified: true,
+              status: 'processing',
+              updatedAt: new Date()
+            } 
+          }
+        );
+      }
+    }
+
+    return result;
+  }
+
   // Additional methods for other collections will be added as needed
 }
 

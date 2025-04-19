@@ -10,7 +10,10 @@ import {
   FilePieChart,
   FileSpreadsheet,
   Home,
-  LogOut
+  LogOut,
+  Pill,
+  Building,
+  Stethoscope
 } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
 import { useAuth } from "@/lib/auth-provider";
@@ -46,8 +49,18 @@ const AdminNavigation = () => {
       href: '/admin/customers'
     },
     {
+      label: 'Pharmacy Management',
+      icon: <Building className="h-5 w-5" />,
+      href: '/admin/pharmacies'
+    },
+    {
+      label: 'Doctor Management',
+      icon: <Stethoscope className="h-5 w-5" />,
+      href: '/admin/doctors'
+    },
+    {
       label: 'Medicine Management',
-      icon: <ShoppingBag className="h-5 w-5" />,
+      icon: <Pill className="h-5 w-5" />,
       href: '/admin/medicines'
     },
     {
