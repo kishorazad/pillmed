@@ -55,6 +55,8 @@ const registerSchema = loginSchema.extend({
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('profile');
+  // Additional state to track form type (login or register) within the login tab
+  const [formType, setFormType] = useState('login');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -201,20 +203,24 @@ const Profile = () => {
     }
     
     // If user is logged in and tries to navigate to the login tab, redirect to profile tab
-    if (auth.user && (activeTab === 'login' || activeTab === 'register')) {
+    if (auth.user && activeTab === 'login') {
       setActiveTab('profile');
     }
     
     // If user is logged out but tries to view profile or orders tab, redirect to login tab
-    if (!auth.user && activeTab !== 'login' && activeTab !== 'register') {
+    if (!auth.user && activeTab !== 'login') {
       setActiveTab('login');
     }
   }, [userData, auth.user, setUser, activeTab]);
   
-  // Log activeTab changes for debugging
+  // Log state changes for debugging
   useEffect(() => {
     console.log('Active tab changed to:', activeTab);
   }, [activeTab]);
+  
+  useEffect(() => {
+    console.log('Form type changed to:', formType);
+  }, [formType]);
 
   // Scroll to top on page load
   useEffect(() => {
@@ -366,22 +372,28 @@ const Profile = () => {
                     <div className="flex h-9 items-center space-x-1 rounded-md border mb-2">
                       <Button
                         variant="outline"
-                        className={`rounded-none flex-1 ${activeTab === 'login' ? 'bg-primary text-primary-foreground' : ''}`}
-                        onClick={() => setActiveTab('login')}
+                        className={`rounded-none flex-1 ${formType === 'login' ? 'bg-primary text-primary-foreground' : ''}`}
+                        onClick={() => {
+                          setFormType('login');
+                          console.log('Setting formType to login');
+                        }}
                       >
                         Login
                       </Button>
                       <Button
                         variant="outline"
-                        className={`rounded-none flex-1 ${activeTab === 'register' ? 'bg-primary text-primary-foreground' : ''}`}
-                        onClick={() => setActiveTab('register')}
+                        className={`rounded-none flex-1 ${formType === 'register' ? 'bg-primary text-primary-foreground' : ''}`}
+                        onClick={() => {
+                          setFormType('register');
+                          console.log('Setting formType to register');
+                        }}
                       >
                         Register
                       </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {activeTab !== 'register' ? (
+                    {formType === 'login' ? (
                       <Form {...loginForm}>
                         <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                           <FormField
