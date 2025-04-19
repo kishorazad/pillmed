@@ -69,18 +69,29 @@ let pincodeServiceAvailable = false;
 export async function initializePincodeService() {
   try {
     if (!mongoClient) {
+      // Only use MONGODB_URI for MongoDB connections, not DATABASE_URL
+      // DATABASE_URL is for PostgreSQL connections and would cause errors
+      const mongoUrl = process.env.MONGODB_URI;
+      
       // If MongoDB URI is not provided, gracefully fallback to default data
-      if (!process.env.MONGODB_URI) {
+      if (!mongoUrl) {
         console.log('No MongoDB URI provided for pincode service. Using fallback pincode data.');
         pincodeServiceAvailable = false;
         return false;
       }
       
-      const mongoUrl = process.env.MONGODB_URI;
+      // Verify the connection string format to prevent attempted connections with invalid URIs
+      if (!mongoUrl.startsWith('mongodb://') && !mongoUrl.startsWith('mongodb+srv://')) {
+        console.error('Invalid MongoDB connection string format for pincode service. Must start with mongodb:// or mongodb+srv://');
+        console.log('Using fallback pincode data');
+        pincodeServiceAvailable = false;
+        return false;
+      }
+      
       console.log('Pincode service using MongoDB connection:', mongoUrl.replace(/mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/, 'mongodb$1://$2:****@'));
       
       // Explicitly define the database name - extract from connection string or use default
-      const dbName = process.env.MONGODB_URI?.includes('pillnowinfo') ? 'pillnowinfo' : 'pillnow';
+      const dbName = mongoUrl.includes('pillnowinfo') ? 'pillnowinfo' : 'pillnow';
       console.log(`Pincode service using database: ${dbName}`);
       
       // Connect with improved options for better reliability
