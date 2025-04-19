@@ -274,7 +274,7 @@ const UserManagement = () => {
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Roles</SelectItem>
+                <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="subadmin">Subadmin</SelectItem>
                 <SelectItem value="customer">Customer</SelectItem>
@@ -290,7 +290,7 @@ const UserManagement = () => {
               variant="outline" 
               onClick={() => {
                 setSearch("");
-                setRoleFilter("");
+                setRoleFilter("all");
               }}
             >
               <X className="mr-2 h-4 w-4" />
