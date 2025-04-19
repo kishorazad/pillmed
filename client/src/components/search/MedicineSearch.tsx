@@ -136,6 +136,11 @@ const MedicineSearch: React.FC = () => {
     return Math.round(((price - discountedPrice) / price) * 100);
   };
 
+  // Don't render the medicine search component on doctor pages
+  if (isDoctorsPage) {
+    return null;
+  }
+
   return (
     <div className="relative w-full" ref={searchRef}>
       <div className="flex w-full items-center">
