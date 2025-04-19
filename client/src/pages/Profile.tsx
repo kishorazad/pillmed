@@ -489,113 +489,105 @@ const Profile = () => {
                         </form>
                       </Form>
                     ) : (
-                      <Form {...registerForm}>
+                      <div>
                         <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                          <FormField
-                            control={registerForm.control}
-                            name="name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Full Name</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Your name" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
+                          <div className="space-y-2">
+                            <label htmlFor="register-name" className="text-sm font-medium">Full Name</label>
+                            <input 
+                              id="register-name"
+                              type="text" 
+                              placeholder="Your name"
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              {...registerForm.register("name")}
+                            />
+                            {registerForm.formState.errors.name && (
+                              <p className="text-sm text-red-500">{registerForm.formState.errors.name.message}</p>
                             )}
-                          />
+                          </div>
                           
-                          <FormField
-                            control={registerForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Email Address</FormLabel>
-                                <FormControl>
-                                  <Input type="email" placeholder="your-email@example.com" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
+                          <div className="space-y-2">
+                            <label htmlFor="register-email" className="text-sm font-medium">Email Address</label>
+                            <input 
+                              id="register-email"
+                              type="email" 
+                              placeholder="your-email@example.com"
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" 
+                              {...registerForm.register("email")}
+                            />
+                            {registerForm.formState.errors.email && (
+                              <p className="text-sm text-red-500">{registerForm.formState.errors.email.message}</p>
                             )}
-                          />
+                          </div>
                           
-                          <FormField
-                            control={registerForm.control}
-                            name="username"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Username</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Pick a username" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
+                          <div className="space-y-2">
+                            <label htmlFor="register-username" className="text-sm font-medium">Username</label>
+                            <input 
+                              id="register-username"
+                              type="text" 
+                              placeholder="Pick a username"
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" 
+                              {...registerForm.register("username")}
+                            />
+                            {registerForm.formState.errors.username && (
+                              <p className="text-sm text-red-500">{registerForm.formState.errors.username.message}</p>
                             )}
-                          />
+                          </div>
                           
-                          <FormField
-                            control={registerForm.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Password</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <Input 
-                                      type={showRegisterPassword ? "text" : "password"} 
-                                      placeholder="Create a password" 
-                                      {...field} 
-                                    />
-                                    <div 
-                                      className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" 
-                                      onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                                      aria-label={showRegisterPassword ? "Hide password" : "Show password"}
-                                    >
-                                      {showRegisterPassword ? 
-                                        <EyeOff className="h-4 w-4 text-gray-500" /> : 
-                                        <Eye className="h-4 w-4 text-gray-500" />
-                                      }
-                                    </div>
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
+                          <div className="space-y-2">
+                            <label htmlFor="register-password" className="text-sm font-medium">Password</label>
+                            <div className="relative">
+                              <input 
+                                id="register-password"
+                                type={showRegisterPassword ? "text" : "password"} 
+                                placeholder="Create a password" 
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                {...registerForm.register("password")}
+                              />
+                              <div 
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" 
+                                onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                                aria-label={showRegisterPassword ? "Hide password" : "Show password"}
+                              >
+                                {showRegisterPassword ? 
+                                  <EyeOff className="h-4 w-4 text-gray-500" /> : 
+                                  <Eye className="h-4 w-4 text-gray-500" />
+                                }
+                              </div>
+                            </div>
+                            {registerForm.formState.errors.password && (
+                              <p className="text-sm text-red-500">{registerForm.formState.errors.password.message}</p>
                             )}
-                          />
+                          </div>
                           
-                          <FormField
-                            control={registerForm.control}
-                            name="confirmPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Confirm Password</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <Input 
-                                      type={showConfirmPassword ? "text" : "password"} 
-                                      placeholder="Confirm your password" 
-                                      {...field} 
-                                    />
-                                    <div 
-                                      className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" 
-                                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                                    >
-                                      {showConfirmPassword ? 
-                                        <EyeOff className="h-4 w-4 text-gray-500" /> : 
-                                        <Eye className="h-4 w-4 text-gray-500" />
-                                      }
-                                    </div>
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
+                          <div className="space-y-2">
+                            <label htmlFor="register-confirm" className="text-sm font-medium">Confirm Password</label>
+                            <div className="relative">
+                              <input 
+                                id="register-confirm"
+                                type={showConfirmPassword ? "text" : "password"} 
+                                placeholder="Confirm your password" 
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                {...registerForm.register("confirmPassword")}
+                              />
+                              <div 
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" 
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                              >
+                                {showConfirmPassword ? 
+                                  <EyeOff className="h-4 w-4 text-gray-500" /> : 
+                                  <Eye className="h-4 w-4 text-gray-500" />
+                                }
+                              </div>
+                            </div>
+                            {registerForm.formState.errors.confirmPassword && (
+                              <p className="text-sm text-red-500">{registerForm.formState.errors.confirmPassword.message}</p>
                             )}
-                          />
+                          </div>
                           
                           <Button 
                             type="submit" 
-                            className="w-full"
+                            className="w-full mt-6"
                             disabled={registerForm.formState.isSubmitting}
                           >
                             {registerForm.formState.isSubmitting ? (
@@ -609,7 +601,6 @@ const Profile = () => {
                             ) : "Register"}
                           </Button>
                           
-                          {/* Show form errors if any */}
                           {Object.keys(registerForm.formState.errors).length > 0 && (
                             <div className="mt-3 p-3 bg-red-50 text-red-600 rounded-md text-sm">
                               <p className="font-bold">Please fix the following errors:</p>
@@ -621,7 +612,7 @@ const Profile = () => {
                             </div>
                           )}
                         </form>
-                      </Form>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
