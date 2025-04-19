@@ -1,6 +1,29 @@
 import React from 'react';
 import SEOHead from '../SEO/SEOHead';
 
+/**
+ * Default SEO component for pages that don't have specific SEO metadata
+ * This ensures all pages have at least basic SEO metadata
+ */
+export const DefaultSEO = () => {
+  return (
+    <SEOHead
+      title="Online Medicine & Healthcare"
+      description="Get affordable healthcare products, medicines, and expert consultation at PillNow - India's leading online pharmacy with fast delivery and authentic products."
+      keywords={[
+        'online pharmacy',
+        'medicine delivery',
+        'healthcare products',
+        'prescription refill',
+        'doctor consultation',
+        'healthcare services',
+        'medical equipment',
+        'health tests'
+      ]}
+    />
+  );
+};
+
 interface HomeSEOProps {
   featuredProducts?: number;
   featuredCategories?: string[];

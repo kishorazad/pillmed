@@ -7,6 +7,7 @@ import { useStore } from "./lib/store";
 import { LanguageProvider } from "./components/LanguageSwitcher";
 import { AuthProvider, useAuth } from "./lib/auth-provider";
 import { Loader2 } from "lucide-react";
+import { DefaultSEO } from "./components/seo";
 
 // Layout
 import Header from "./components/layout/Header";
