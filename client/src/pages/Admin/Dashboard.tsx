@@ -6,6 +6,7 @@ import UserManagement from '@/components/admin/UserManagement';
 import SystemOverview from '@/components/admin/SystemOverview';
 import ProductManagement from '@/components/admin/ProductManagement';
 import SEODashboard from '@/components/admin/SEODashboard';
+import MongoDBDashboard from '@/components/admin/MongoDBDashboard';
 import { 
   Users, 
   Settings, 
@@ -263,23 +264,7 @@ const AdminDashboard = () => {
         </TabsContent>
         
         <TabsContent value="database">
-          <Card>
-            <CardHeader>
-              <CardTitle>Database Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Database className="h-16 w-16 text-gray-400 mb-4" />
-                <h3 className="text-2xl font-bold mb-2">Database Controls</h3>
-                <p className="text-gray-500 max-w-md">
-                  This panel will provide database metrics, maintenance tools, and backup/restore functionality.
-                </p>
-                <Button className="mt-6">
-                  Manage Database
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <MongoDBDashboard />
         </TabsContent>
       </Tabs>
     </div>

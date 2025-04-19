@@ -77,17 +77,80 @@ router.get('/stats', async (req: Request, res: Response) => {
       { id: 5, name: 'Atorvastatin 40mg', orders: 76 },
     ];
     
-    // Return stats
+    // Get total categories
+    const categories = await storage.getCategories();
+    const totalCategories = categories.length;
+    
+    // Fetch prescription data if available
+    let totalPrescriptions = 0;
+    let recentPrescriptions = [];
+    try {
+      // If getPrescriptions method exists, use it
+      if (typeof storage.getPrescriptions === 'function') {
+        const prescriptions = await storage.getPrescriptions();
+        totalPrescriptions = prescriptions.length;
+        
+        // Get 5 most recent prescriptions
+        recentPrescriptions = prescriptions
+          .sort((a, b) => new Date(b.uploadDate || b.createdAt || 0).getTime() - 
+                         new Date(a.uploadDate || a.createdAt || 0).getTime())
+          .slice(0, 5)
+          .map(p => ({
+            id: p.id,
+            userId: p.userId,
+            userName: p.userName || 'Unknown User',
+            uploadDate: new Date(p.uploadDate || p.createdAt || new Date()).toLocaleDateString(),
+            status: p.status || 'pending',
+            imageUrl: p.imageUrl
+          }));
+      }
+    } catch (error) {
+      console.log('Could not fetch prescriptions, using empty array', error);
+    }
+    
+    // Estimate storage usage
+    // In a real-world scenario, you would query MongoDB for actual storage metrics
+    const estimatedStoragePerUser = 0.05; // MB
+    const estimatedStoragePerProduct = 0.1; // MB
+    const estimatedStoragePerOrder = 0.02; // MB
+    const estimatedStoragePerPrescription = 1.0; // MB (higher because of images)
+    
+    const usedStorage = 
+      (totalUsers * estimatedStoragePerUser) + 
+      (totalProducts * estimatedStoragePerProduct) + 
+      (1452 * estimatedStoragePerOrder) + // Using dummy orders count
+      (totalPrescriptions * estimatedStoragePerPrescription);
+    
+    const totalStorage = 512; // 512 MB for MongoDB Atlas free tier
+    const storagePercentage = (usedStorage / totalStorage) * 100;
+    
+    // Return stats with enhanced MongoDB data
     res.json({
       totalUsers,
       userCounts,
       totalProducts,
+      totalCategories,
       lowStockProducts,
       outOfStockProducts: products.filter(p => p.inStock === false).length,
       recentOrders: ordersWithUserNames,
       topMedicines,
       totalOrders: 1452, // Dummy data
       totalRevenue: 1243540, // Dummy data
+      totalPrescriptions,
+      recentPrescriptions,
+      storageUsage: {
+        used: usedStorage,
+        total: totalStorage,
+        percentage: storagePercentage
+      },
+      databaseName: 'MongoDB Atlas',
+      collections: [
+        { name: 'users', count: totalUsers, size: totalUsers * estimatedStoragePerUser },
+        { name: 'products', count: totalProducts, size: totalProducts * estimatedStoragePerProduct },
+        { name: 'categories', count: totalCategories, size: totalCategories * 0.01 },
+        { name: 'orders', count: 1452, size: 1452 * estimatedStoragePerOrder },
+        { name: 'prescriptions', count: totalPrescriptions, size: totalPrescriptions * estimatedStoragePerPrescription }
+      ]
     });
   } catch (error) {
     console.error('Error getting admin stats:', error);
