@@ -30,7 +30,9 @@ import MedicationTracking from "./pages/MedicationTracking";
 import OrderHistory from "./pages/OrderHistory";
 
 // Admin and Professional Dashboards
-import AdminDashboard from "./pages/Admin/Dashboard";
+import AdminPanel from "./pages/admin";
+import AdminUserManagement from "./pages/admin/users";
+import AdminAnalytics from "./pages/admin/analytics";
 import PharmacyDashboard from "./pages/Pharmacy/Dashboard";
 import DoctorDashboard from "./pages/Doctor/Dashboard";
 import LaboratoryDashboard from "./pages/Laboratory/Dashboard";
@@ -153,7 +155,9 @@ function Router() {
       <Route path="/doctors/:id/prescription" component={EPrescription} />
       
       {/* Admin and Professional Dashboard Routes with Role Protection */}
-      <RoleBasedRoute path="/admin" component={AdminDashboard} allowedRoles={['admin']} />
+      <RoleBasedRoute path="/admin" component={AdminPanel} allowedRoles={['admin', 'subadmin']} />
+      <RoleBasedRoute path="/admin/users" component={AdminUserManagement} allowedRoles={['admin', 'subadmin']} />
+      <RoleBasedRoute path="/admin/analytics" component={AdminAnalytics} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/pharmacy" component={PharmacyDashboard} allowedRoles={['pharmacy']} />
       <RoleBasedRoute path="/doctor" component={DoctorDashboard} allowedRoles={['doctor']} />
       <RoleBasedRoute path="/laboratory" component={LaboratoryDashboard} allowedRoles={['laboratory', 'hospital']} />
