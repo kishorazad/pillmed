@@ -189,6 +189,7 @@ export interface IStorage {
   
   // Prescription related methods
   getPendingPrescriptions(pharmacyId: number): Promise<any[]>;
+  getAllPrescriptions(): Promise<any[]>;
   updatePrescriptionStatus(prescriptionId: number, status: string, pharmacyId: number): Promise<any>;
   
   // User management methods (if not already covered)

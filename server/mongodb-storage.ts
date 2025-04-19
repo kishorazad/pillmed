@@ -909,6 +909,41 @@ class MongoDBStorage implements IStorage {
     return prescriptions;
   }
 
+  async getAllPrescriptions(): Promise<any[]> {
+    if (!this.isConnected(this.collections.prescriptions)) {
+      return []; // Will fall back to in-memory storage
+    }
+    
+    const collection = mongoDBService.getCollection(this.collections.prescriptions);
+    if (!collection) return [];
+    
+    try {
+      // Fetch all prescriptions from MongoDB
+      const prescriptions = await collection.find().sort({ uploadDate: -1 }).toArray();
+      console.log(`Found ${prescriptions.length} prescriptions in MongoDB`);
+      
+      // Enrich with user details
+      const usersCollection = mongoDBService.getCollection(this.collections.users);
+      if (usersCollection) {
+        for (const prescription of prescriptions) {
+          if (prescription.userId) {
+            const user = await usersCollection.findOne({ id: prescription.userId });
+            if (user) {
+              prescription.userFullName = user.name || user.username;
+              prescription.userPhone = user.phone;
+              prescription.userEmail = user.email;
+            }
+          }
+        }
+      }
+      
+      return prescriptions;
+    } catch (error) {
+      console.error('Error fetching prescriptions from MongoDB:', error);
+      return [];
+    }
+  }
+  
   async updatePrescriptionStatus(prescriptionId: number, status: string, pharmacyId: number): Promise<any> {
     if (!this.isConnected(this.collections.prescriptions)) {
       return null; // Will fall back to in-memory storage
