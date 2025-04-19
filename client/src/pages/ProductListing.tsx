@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useParams } from 'wouter';
 import { Helmet } from 'react-helmet';
+import { CategorySEO } from '@/components/seo';
 import ProductCard from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -167,10 +168,22 @@ const ProductListing = () => {
   
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={`Browse our collection of ${(category as any)?.name ? (category as any).name.toLowerCase() : ''} products and medications.`} />
-      </Helmet>
+      {(category as any)?.id ? (
+        <CategorySEO 
+          category={{
+            id: (category as any).id,
+            name: (category as any).name,
+            description: (category as any).description,
+            imageUrl: (category as any).imageUrl
+          }}
+          productsCount={filteredProducts.length}
+        />
+      ) : (
+        <Helmet>
+          <title>{pageTitle}</title>
+          <meta name="description" content={`Browse our collection of ${(category as any)?.name ? (category as any).name.toLowerCase() : ''} products and medications.`} />
+        </Helmet>
+      )}
       
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">

@@ -1,6 +1,8 @@
 import { SitemapStream, streamToPromise } from 'sitemap';
 import { Readable } from 'stream';
 import { db } from '../db';
+import { products, categories } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 /**
  * Generates a sitemap for the entire website
@@ -41,55 +43,70 @@ export async function generateSitemap(baseUrl: string): Promise<Buffer> {
     sitemapEntries.push(...staticPages);
     
     try {
-      // Fetch dynamic products
-      const products = await db.collection('products').find({}, { projection: { _id: 1, updatedAt: 1 } }).toArray();
+      // Fetch dynamic products using Drizzle
+      const productsList = await db.select({
+        id: products.id,
+        updatedAt: products.updatedAt,
+      }).from(products);
       
       // Add product pages
-      products.forEach(product => {
+      productsList.forEach(product => {
         sitemapEntries.push({
-          url: `/products/${product._id}`,
+          url: `/product/${product.id}`,
           priority: 0.8,
           changefreq: 'weekly',
           lastmod: product.updatedAt ? new Date(product.updatedAt).toISOString() : undefined
         });
       });
       
-      // Fetch dynamic categories
-      const categories = await db.collection('categories').find({}, { projection: { name: 1 } }).toArray();
+      // Fetch dynamic categories using Drizzle
+      const categoriesList = await db.select({
+        id: categories.id,
+        name: categories.name,
+      }).from(categories);
       
       // Add category pages
-      categories.forEach(category => {
-        const categorySlug = category.name.toLowerCase().replace(/\s+/g, '-');
+      categoriesList.forEach(category => {
         sitemapEntries.push({
-          url: `/products/category/${categorySlug}`,
+          url: `/products/category/${category.id}`,
           priority: 0.7,
           changefreq: 'weekly'
         });
       });
       
-      // Fetch doctors
-      const doctors = await db.collection('doctors').find({}, { projection: { _id: 1 } }).toArray();
+      // Add doctor pages if the doctors table exists
+      try {
+        const doctors = await db.execute(sql`SELECT id FROM doctors`);
+        if (doctors.rows && doctors.rows.length > 0) {
+          doctors.rows.forEach((doctor: any) => {
+            sitemapEntries.push({
+              url: `/doctors/${doctor.id}`,
+              priority: 0.7,
+              changefreq: 'weekly'
+            });
+          });
+        }
+      } catch (error) {
+        // Table might not exist, continue without doctors
+        console.log('Doctors table not found for sitemap');
+      }
       
-      // Add doctor pages
-      doctors.forEach(doctor => {
-        sitemapEntries.push({
-          url: `/doctors/${doctor._id}`,
-          priority: 0.7,
-          changefreq: 'weekly'
-        });
-      });
-      
-      // Fetch hospitals
-      const hospitals = await db.collection('hospitals').find({}, { projection: { _id: 1 } }).toArray();
-      
-      // Add hospital pages
-      hospitals.forEach(hospital => {
-        sitemapEntries.push({
-          url: `/hospitals/${hospital._id}`,
-          priority: 0.7,
-          changefreq: 'weekly'
-        });
-      });
+      // Add hospital pages if the hospitals table exists
+      try {
+        const hospitals = await db.execute(sql`SELECT id FROM hospitals`);
+        if (hospitals.rows && hospitals.rows.length > 0) {
+          hospitals.rows.forEach((hospital: any) => {
+            sitemapEntries.push({
+              url: `/hospitals/${hospital.id}`,
+              priority: 0.7,
+              changefreq: 'weekly'
+            });
+          });
+        }
+      } catch (error) {
+        // Table might not exist, continue without hospitals
+        console.log('Hospitals table not found for sitemap');
+      }
     } catch (err) {
       console.error('Error fetching dynamic pages for sitemap:', err);
       // Continue with static pages if there's a database error
