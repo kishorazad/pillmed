@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useLocation, Link } from 'wouter';
+import { useLocation, Link, useRoute } from 'wouter';
+import DoctorSEO from '@/components/SEO/DoctorSEO';
 import {
   Calendar,
   Clock,
@@ -169,12 +170,22 @@ const ratingDistribution = [
 
 const DoctorDetail: React.FC = () => {
   const [location, setLocation] = useLocation();
+  const [matched, params] = useRoute('/doctors/:id');
+  const doctorId = matched ? parseInt(params.id) : 1;
+  
   const [selectedDay, setSelectedDay] = useState('Today');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState('overview');
   const [consultationType, setConsultationType] = useState('Video');
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  
+  // In a real application, you would fetch the doctor data based on the doctorId
+  // const { data: doctor } = useQuery({
+  //   queryKey: ['/api/doctors', doctorId],
+  //   queryFn: getQueryFn()
+  // });
+  // For now, we'll use the static data
   
   const displayedReviews = showAllReviews ? doctorDetails.reviews : doctorDetails.reviews.slice(0, 2);
   
@@ -192,6 +203,20 @@ const DoctorDetail: React.FC = () => {
   
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* SEO Component */}
+      <DoctorSEO
+        doctor={{
+          id: doctorDetails.id,
+          name: doctorDetails.name,
+          specialty: doctorDetails.specialty,
+          hospitalName: doctorDetails.hospitalName,
+          location: doctorDetails.location,
+          about: doctorDetails.about,
+          image: doctorDetails.image
+        }}
+        isDetailPage={true}
+      />
+      
       {/* Breadcrumb */}
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
