@@ -22,12 +22,15 @@ class MockEmailService {
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
       // Log the email details to the console instead of actually sending
-      console.log('\n=== MOCK EMAIL SERVICE ===');
-      console.log(`To: ${options.to}`);
-      console.log(`Subject: ${options.subject}`);
-      console.log('Content:');
+      console.log('\n**********************************');
+      console.log('**** MOCK EMAIL SERVICE - MAIL SENT ****');
+      console.log('**********************************');
+      console.log(`TO: ${options.to}`);
+      console.log(`SUBJECT: ${options.subject}`);
+      console.log('------ CONTENT ------');
       console.log(options.text || options.html);
-      console.log('=========================\n');
+      console.log('------ END CONTENT ------');
+      console.log('**********************************\n');
       
       // Simulate a small delay as real email services aren't instantaneous
       await new Promise(resolve => setTimeout(resolve, 200));
