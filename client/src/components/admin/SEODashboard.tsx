@@ -15,86 +15,287 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Loader2, AlertCircle, Check, ExternalLink, FileText, Globe, BarChart, Search, Tag, Settings } from 'lucide-react';
 
 interface SeoSettings {
+  // Basic SEO
   defaultTitle: string;
   defaultDescription: string;
   defaultKeywords: string;
-  ogImage: string;
+  titleSeparator: string;
+  brandName: string;
+  enableIndexing: boolean;
+  
+  // Meta verification
   googleVerification: string;
   bingVerification: string;
-  enableIndexing: boolean;
+  yandexVerification?: string;
+  
+  // Open Graph and social media
+  ogImage: string;
+  socialMediaMetaEnabled: boolean;
+  twitterCardType: "summary" | "summary_large_image" | "app" | "player";
+  facebookAppId?: string;
+  
+  // Technical SEO settings
   sitemapEnabled: boolean;
   robotsTxtEnabled: boolean;
   schemaMarkupEnabled: boolean;
   canonicalUrlEnabled: boolean;
+  ampEnabled: boolean;
   hreflangEnabled: boolean;
-  socialMediaMetaEnabled: boolean;
+  
+  // Advanced SEO features
+  breadcrumbsEnabled: boolean;
+  microDataEnabled: boolean;
+  jsonLdEnabled: boolean;
+  
+  // Pharmacy-specific SEO
+  enableMedicalStructuredData: boolean;
+  enableProductStructuredData: boolean;
+  enablePrescriptionSeo: boolean;
+  enableDoctorSeo: boolean;
+  
+  // Performance SEO
+  lazyLoadImages: boolean;
+  prioritizeMainContent: boolean;
+  
+  // Extended SEO features
+  seoFooterLinks: Array<{
+    title: string;
+    link: string;
+  }>;
+  sitemapChangeFrequency: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
+  sitemapPriority: number;
+  sitemapIncludeImages: boolean;
+  
+  // Monitoring and analysis
+  enableAutomaticSeoReports: boolean;
+  enableKeywordTracking: boolean;
 }
 
 interface SeoAnalytics {
+  // Base metrics
   totalIndexedPages: number;
+  indexCoverage: number; // Percentage of site indexed
+  totalOrganicTraffic: number;
+  averagePosition: number;
+  
+  // Industry-specific metrics (like leading pharmacy platforms)
+  organicConversionRate: number; // % of organic visitors who converted
+  
+  // Top performing content
   topPerformingPages: Array<{
     path: string;
     impressions: number;
     clicks: number;
     position: number;
+    ctr?: number; // Click-through rate
+    conversionRate?: number; // Page-specific conversion rate
   }>;
+  
+  // Keyword data
   topKeywords: Array<{
     keyword: string;
     impressions: number;
     clicks: number;
     position: number;
+    difficulty?: number; // SEO difficulty score
+    searchVolume?: number; // Monthly search volume
+    intent?: 'informational' | 'transactional' | 'navigational' | 'commercial';
   }>;
+  
+  // Mobile performance
+  mobilePerformance: {
+    speedScore: number; // Out of 100
+    usabilityScore: number; // Out of 100
+    mobileTrafficPercentage: number;
+  };
+  
+  // Pharmacy-specific metrics
+  medicinePagePerformance: {
+    averagePosition: number;
+    totalImpressions: number;
+    conversionRate: number;
+  };
+  
+  doctorPagePerformance: {
+    averagePosition: number;
+    totalImpressions: number;
+    appointmentRate: number;
+  };
+  
+  healthContentPerformance: {
+    averagePosition: number;
+    averageTimeOnPage: number;
+    totalImpressions: number;
+  };
+  
+  // Technical SEO issues
   issuesCount: {
     missingTitles: number;
     duplicateTitles: number;
     missingDescriptions: number;
+    duplicateDescriptions: number;
     brokenLinks: number;
     missingAltText: number;
+    slowPageSpeed: number;
+    missingSchema: number;
+    missingCanonical: number;
+    mobileUsabilityIssues: number;
   };
+  
+  // Competitive analysis
+  competitorComparison: Array<{
+    competitor: string;
+    totalKeywords: number;
+    shared: number; // Keywords in common
+    gap: number; // Keywords competitor has that we don't
+    opportunity: number; // Potential keywords to target
+  }>;
+  
+  // Last updated timestamp
+  lastUpdated: string;
 }
 
 const SEODashboard: React.FC = () => {
   const { toast } = useToast();
   const [settings, setSettings] = useState<SeoSettings>({
+    // Basic SEO
     defaultTitle: 'PillNow - India\'s Leading Online Pharmacy & Healthcare Platform',
     defaultDescription: 'Order prescription medicines, OTC products, and health foods online. Enjoy doorstep delivery with amazing discounts. Book lab tests and doctor consultations.',
-    defaultKeywords: 'online pharmacy, medicine delivery, healthcare, prescription drugs, doctor consultation, lab tests',
-    ogImage: 'https://pillnow.com/images/og-image.jpg',
+    defaultKeywords: 'online pharmacy, medicine delivery, healthcare, prescription drugs, doctor consultation, lab tests, medical store, medicine online, buy medicine online, medicine delivery app',
+    titleSeparator: ' | ',
+    brandName: 'PillNow',
+    enableIndexing: true,
+    
+    // Meta verification
     googleVerification: '',
     bingVerification: '',
-    enableIndexing: true,
+    yandexVerification: '',
+    
+    // Open Graph and social media
+    ogImage: 'https://pillnow.com/images/og-image.jpg',
+    socialMediaMetaEnabled: true,
+    twitterCardType: 'summary_large_image',
+    facebookAppId: '',
+    
+    // Technical SEO settings
     sitemapEnabled: true,
     robotsTxtEnabled: true,
     schemaMarkupEnabled: true,
     canonicalUrlEnabled: true,
+    ampEnabled: false,
     hreflangEnabled: false,
-    socialMediaMetaEnabled: true,
+    
+    // Advanced SEO features
+    breadcrumbsEnabled: true,
+    microDataEnabled: true,
+    jsonLdEnabled: true,
+    
+    // Pharmacy-specific SEO
+    enableMedicalStructuredData: true,
+    enableProductStructuredData: true,
+    enablePrescriptionSeo: true,
+    enableDoctorSeo: true,
+    
+    // Performance SEO
+    lazyLoadImages: true,
+    prioritizeMainContent: true,
+    
+    // Extended SEO features
+    seoFooterLinks: [
+      { title: "Online Medicine", link: "/products" },
+      { title: "Healthcare Products", link: "/healthcare-products" },
+      { title: "Doctor Consultation", link: "/doctors" },
+      { title: "Lab Tests", link: "/lab-tests" },
+      { title: "Health Articles", link: "/health-articles" }
+    ],
+    sitemapChangeFrequency: "weekly",
+    sitemapPriority: 0.7,
+    sitemapIncludeImages: true,
+    
+    // Monitoring and analysis
+    enableAutomaticSeoReports: true,
+    enableKeywordTracking: true
   });
 
   // Simulated analytics data (would be fetched from API in production)
   const [analytics, setAnalytics] = useState<SeoAnalytics>({
+    // Base metrics
     totalIndexedPages: 1523,
+    indexCoverage: 94.5, 
+    totalOrganicTraffic: 48720,
+    averagePosition: 4.8,
+    
+    // Industry-specific metrics
+    organicConversionRate: 3.2,
+    
+    // Top performing content
     topPerformingPages: [
-      { path: '/products/category/1', impressions: 12450, clicks: 3240, position: 3.2 },
-      { path: '/products/5', impressions: 8970, clicks: 2160, position: 4.5 },
-      { path: '/health-blog/importance-of-balanced-diet', impressions: 7640, clicks: 1980, position: 5.1 },
-      { path: '/products/category/3', impressions: 6320, clicks: 1540, position: 6.3 },
-      { path: '/products/10', impressions: 5980, clicks: 1320, position: 7.8 },
+      { path: '/products/category/1', impressions: 12450, clicks: 3240, position: 3.2, ctr: 26, conversionRate: 4.8 },
+      { path: '/products/5', impressions: 8970, clicks: 2160, position: 4.5, ctr: 24.1, conversionRate: 5.2 },
+      { path: '/health-blog/importance-of-balanced-diet', impressions: 7640, clicks: 1980, position: 5.1, ctr: 25.9, conversionRate: 2.1 },
+      { path: '/products/category/3', impressions: 6320, clicks: 1540, position: 6.3, ctr: 24.4, conversionRate: 4.2 },
+      { path: '/products/10', impressions: 5980, clicks: 1320, position: 7.8, ctr: 22.1, conversionRate: 3.8 },
     ],
+    
+    // Keyword data
     topKeywords: [
-      { keyword: 'buy medicines online', impressions: 15640, clicks: 4230, position: 2.8 },
-      { keyword: 'online pharmacy delivery', impressions: 12340, clicks: 3120, position: 3.5 },
-      { keyword: 'discount medicine online', impressions: 9870, clicks: 2540, position: 4.2 },
-      { keyword: 'pillnow pharmacy', impressions: 7650, clicks: 2230, position: 1.3 },
-      { keyword: 'medicine home delivery', impressions: 6320, clicks: 1670, position: 5.7 },
+      { keyword: 'buy medicines online', impressions: 15640, clicks: 4230, position: 2.8, difficulty: 68, searchVolume: 22500, intent: 'transactional' },
+      { keyword: 'online pharmacy delivery', impressions: 12340, clicks: 3120, position: 3.5, difficulty: 62, searchVolume: 18300, intent: 'transactional' },
+      { keyword: 'discount medicine online', impressions: 9870, clicks: 2540, position: 4.2, difficulty: 54, searchVolume: 12400, intent: 'commercial' },
+      { keyword: 'pillnow pharmacy', impressions: 7650, clicks: 2230, position: 1.3, difficulty: 18, searchVolume: 5600, intent: 'navigational' },
+      { keyword: 'medicine home delivery', impressions: 6320, clicks: 1670, position: 5.7, difficulty: 58, searchVolume: 14700, intent: 'transactional' },
     ],
+    
+    // Mobile performance
+    mobilePerformance: {
+      speedScore: 87,
+      usabilityScore: 92,
+      mobileTrafficPercentage: 64.3
+    },
+    
+    // Pharmacy-specific metrics
+    medicinePagePerformance: {
+      averagePosition: 4.2,
+      totalImpressions: 235470,
+      conversionRate: 4.8
+    },
+    
+    doctorPagePerformance: {
+      averagePosition: 5.7,
+      totalImpressions: 98240,
+      appointmentRate: 2.1
+    },
+    
+    healthContentPerformance: {
+      averagePosition: 6.5,
+      averageTimeOnPage: 3.4, // minutes
+      totalImpressions: 125680
+    },
+    
+    // Technical SEO issues
     issuesCount: {
       missingTitles: 3,
       duplicateTitles: 12,
       missingDescriptions: 28,
+      duplicateDescriptions: 15,
       brokenLinks: 7,
       missingAltText: 54,
-    }
+      slowPageSpeed: 18,
+      missingSchema: 42,
+      missingCanonical: 6,
+      mobileUsabilityIssues: 24
+    },
+    
+    // Competitive analysis
+    competitorComparison: [
+      { competitor: 'PharmEasy', totalKeywords: 18420, shared: 3450, gap: 10250, opportunity: 650 },
+      { competitor: '1mg', totalKeywords: 19840, shared: 3620, gap: 11410, opportunity: 720 },
+      { competitor: 'Netmeds', totalKeywords: 15760, shared: 2980, gap: 8450, opportunity: 410 },
+      { competitor: 'MedPlus', totalKeywords: 12540, shared: 2240, gap: 6580, opportunity: 380 },
+    ],
+    
+    // Last updated timestamp
+    lastUpdated: new Date().toISOString()
   });
 
   // Fetch settings from API
