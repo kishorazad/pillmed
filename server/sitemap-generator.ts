@@ -84,8 +84,8 @@ async function generateSitemap(req: Request, res: Response) {
       });
     }
     
-    // Get all products
-    const products = await storage.getAllProducts();
+    // Get all products - use getProducts method which is available in storage
+    const products = await storage.getProducts();
     
     for (const product of products) {
       routes.push({

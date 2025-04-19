@@ -1,5 +1,10 @@
 import { Helmet } from 'react-helmet';
 
+interface MetaTag {
+  name: string;
+  content: string;
+}
+
 interface SEOProps {
   title: string;
   description: string;
@@ -8,6 +13,7 @@ interface SEOProps {
   ogType?: 'website' | 'article' | 'product';
   ogImage?: string;
   structuredData?: Record<string, any>;
+  meta?: MetaTag[]; // Optional array of additional meta tags
 }
 
 /**
@@ -22,6 +28,7 @@ const SEO = ({
   ogType = 'website',
   ogImage,
   structuredData,
+  meta = [],
 }: SEOProps) => {
   // Format title to ensure it includes the brand name (like PharmEasy, 1mg do)
   const formattedTitle = !title.includes('PillNow') 
@@ -64,8 +71,15 @@ const SEO = ({
       <meta name="apple-itunes-app" content="app-id=myAppStoreID" />
       <meta name="google-play-app" content="app-id=com.pillnow.android" />
 
-      {/* Robots Meta Tags for Indexing Instructions */}
-      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+      {/* Robots Meta Tags for Indexing Instructions - can be overridden by custom meta tags */}
+      {!meta.some(tag => tag.name === 'robots') && 
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+      }
+      
+      {/* Custom Meta Tags */}
+      {meta.map((tag, index) => (
+        <meta key={`${tag.name}-${index}`} name={tag.name} content={tag.content} />
+      ))}
 
       {/* Structured Data for Rich Results */}
       {structuredData && (
