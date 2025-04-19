@@ -11,6 +11,7 @@ import { getPincodeData, isValidPincodeFormat, isServiceablePincode, getDelivery
 import authRoutes from './auth-routes'; // Authentication routes for social login
 import emergencyRoutes from './emergency-routes'; // Emergency service request routes
 import passwordResetRoutes from './password-reset-routes'; // Password reset routes
+import adminRoutes from './admin-routes'; // Admin panel routes
 import { z } from "zod";
 import multer from 'multer';
 import path from 'path';
@@ -75,6 +76,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount password reset routes
   app.use('/api/password-reset', passwordResetRoutes);
+  
+  // Mount admin routes
+  app.use('/api/admin', adminRoutes);
   
   // Add image upload endpoint
   app.post('/api/upload-image', upload.single('file'), (req: Request, res: Response) => {
