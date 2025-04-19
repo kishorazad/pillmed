@@ -32,6 +32,7 @@ import OrderHistory from "./pages/OrderHistory";
 // Admin and Professional Dashboards
 import AdminPanel from "./pages/admin";
 import AdminUserManagement from "./pages/admin/users";
+import AdminCustomerManagement from "./pages/admin/customers";
 import AdminAnalytics from "./pages/admin/analytics";
 import PharmacyDashboard from "./pages/Pharmacy/Dashboard";
 import DoctorDashboard from "./pages/Doctor/Dashboard";
@@ -157,6 +158,7 @@ function Router() {
       {/* Admin and Professional Dashboard Routes with Role Protection */}
       <RoleBasedRoute path="/admin" component={AdminPanel} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/users" component={AdminUserManagement} allowedRoles={['admin', 'subadmin']} />
+      <RoleBasedRoute path="/admin/customers" component={AdminCustomerManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/analytics" component={AdminAnalytics} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/pharmacy" component={PharmacyDashboard} allowedRoles={['pharmacy']} />
       <RoleBasedRoute path="/doctor" component={DoctorDashboard} allowedRoles={['doctor']} />

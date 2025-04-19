@@ -3,6 +3,7 @@ import { mongoDBStorage } from './mongodb-storage';
 import { IStorage } from './storage';
 import { z } from 'zod';
 import { apiRequest } from './utils/api-util';
+import adminCustomerRoutes from './admin-customer-routes';
 
 const router = express.Router();
 
@@ -504,5 +505,8 @@ router.get('/analytics/inventory-status', async (req: Request, res: Response) =>
 });
 
 // Add more admin routes as needed
+
+// Mount the customer management routes as a sub-router
+router.use('/customers', adminCustomerRoutes);
 
 export default router;

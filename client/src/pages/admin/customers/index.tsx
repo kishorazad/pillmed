@@ -9,7 +9,7 @@ import {
   ShoppingBasket,
   History,
   FileSpreadsheet,
-  Pills
+  Pill
 } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -804,7 +804,7 @@ const CustomerManagement = () => {
                           </Table>
                         ) : (
                           <div className="text-center py-4">
-                            <Pills className="h-12 w-12 mx-auto text-muted-foreground" />
+                            <Pill className="h-12 w-12 mx-auto text-muted-foreground" />
                             <p className="mt-2">No medicine usage data available</p>
                           </div>
                         )}
