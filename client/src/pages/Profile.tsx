@@ -268,7 +268,11 @@ const Profile = () => {
   
   return (
     <>
-      <ProfileSEO />
+      <Helmet>
+        <title>{auth.user ? `${auth.user.name}'s Profile` : 'Sign In'} - PillNow</title>
+        <meta name="description" content="Manage your profile, orders, and account information" />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">{auth.user ? 'Your Account' : 'Sign In or Register'}</h1>
