@@ -909,7 +909,7 @@ const MongoDBDashboard = () => {
                                   'bg-red-100 text-red-800 border-red-200'}
                               `}
                             >
-                              {test.status.charAt(0).toUpperCase() + test.status.slice(1)}
+                              {test.status ? `${test.status.charAt(0).toUpperCase()}${test.status.slice(1)}` : 'N/A'}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right space-x-1">
