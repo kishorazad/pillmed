@@ -111,9 +111,7 @@ const SEODashboard: React.FC = () => {
         // Keep using default settings
         return settings;
       }
-    },
-    // Disable the query in development if the endpoint doesn't exist
-    enabled: false
+    }
   });
 
   // Mutation for saving settings

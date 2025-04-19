@@ -1,4 +1,4 @@
-import { IStorage } from './storage';
+import { IStorage, SeoSettings, SeoAnalytics } from './storage';
 import { mongoDBService } from './services/mongodb-service';
 import { ObjectId } from 'mongodb';
 import {
@@ -920,6 +920,104 @@ class MongoDBStorage implements IStorage {
   }
 
   // Additional methods for other collections will be added as needed
+
+  // SEO related methods
+  async getSeoSettings(): Promise<SeoSettings | undefined> {
+    try {
+      const db = client.db("pillnow");
+      const settingsCollection = db.collection("seo_settings");
+      const settings = await settingsCollection.findOne({ _id: "global" });
+      
+      if (settings) {
+        // Remove _id from the result
+        const { _id, ...seoSettings } = settings;
+        return seoSettings as SeoSettings;
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.error("Error getting SEO settings:", error);
+      return undefined;
+    }
+  }
+
+  async saveSeoSettings(settings: SeoSettings): Promise<SeoSettings> {
+    try {
+      const db = client.db("pillnow");
+      const settingsCollection = db.collection("seo_settings");
+      
+      // Use upsert to create or update document with _id: "global"
+      await settingsCollection.updateOne(
+        { _id: "global" },
+        { $set: settings },
+        { upsert: true }
+      );
+      
+      return settings;
+    } catch (error) {
+      console.error("Error saving SEO settings:", error);
+      throw error;
+    }
+  }
+
+  async getSeoAnalytics(): Promise<SeoAnalytics | undefined> {
+    try {
+      const db = client.db("pillnow");
+      const analyticsCollection = db.collection("seo_analytics");
+      const analytics = await analyticsCollection.findOne({ _id: "latest" });
+      
+      if (analytics) {
+        // Remove _id from the result
+        const { _id, ...seoAnalytics } = analytics;
+        return seoAnalytics as SeoAnalytics;
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.error("Error getting SEO analytics:", error);
+      return undefined;
+    }
+  }
+
+  async saveSeoAnalytics(analytics: SeoAnalytics): Promise<SeoAnalytics> {
+    try {
+      const db = client.db("pillnow");
+      const analyticsCollection = db.collection("seo_analytics");
+      
+      // Save current analytics as historical entry
+      if (await this.getSeoAnalytics()) {
+        const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        await analyticsCollection.updateOne(
+          { _id: "latest" },
+          { $set: { historical_date: currentDate } }
+        );
+        await analyticsCollection.updateOne(
+          { _id: "latest" },
+          { $rename: { '_id': 'id' } }
+        );
+        await analyticsCollection.updateOne(
+          { id: "latest" },
+          { $set: { _id: currentDate } }
+        );
+        await analyticsCollection.updateOne(
+          { _id: currentDate },
+          { $unset: { id: "" } }
+        );
+      }
+      
+      // Save new analytics as latest
+      await analyticsCollection.updateOne(
+        { _id: "latest" },
+        { $set: analytics },
+        { upsert: true }
+      );
+      
+      return analytics;
+    } catch (error) {
+      console.error("Error saving SEO analytics:", error);
+      throw error;
+    }
+  }
 }
 
 // Create and export the MongoDB storage instance
