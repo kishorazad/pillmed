@@ -1,6 +1,5 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider, Auth } from "firebase/auth";
-import { getMessaging, isSupported } from 'firebase/messaging';
 
 // Check if all required Firebase config values are available
 const hasAllRequiredConfig = () => {
@@ -58,15 +57,23 @@ if (hasAllRequiredConfig()) {
   console.warn('Firebase initialization skipped - missing config values');
 }
 
-// Initialize Cloud Messaging if browser supports it
+// Simplified messaging support check that doesn't require importing the messaging module
 export const getMessagingIfSupported = async () => {
   if (!app) return null;
   
+  // Instead of loading messaging directly, we'll handle it with dynamic imports
   try {
-    const isMessagingSupported = await isSupported();
-    if (isMessagingSupported) {
-      return getMessaging(app);
+    // Check if browser environment supports service workers first
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      // Use dynamic import to avoid loading messaging module unnecessarily
+      const { getMessaging, isSupported } = await import('firebase/messaging');
+      
+      const isMessagingSupported = await isSupported();
+      if (isMessagingSupported) {
+        return getMessaging(app);
+      }
     }
+    
     console.log('Firebase Cloud Messaging is not supported in this browser');
     return null;
   } catch (error) {
