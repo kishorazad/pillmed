@@ -11,7 +11,10 @@ import {
 // MongoDB connection URL with additional configuration parameters
 // Use environment variable for MongoDB connection string to avoid hardcoding credentials
 // Fallback to use PostgreSQL instead if MongoDB connection fails
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pillnow';
+const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL;
+if (!MONGODB_URI) {
+  console.log('No database connection URL provided. Using in-memory storage instead.');
+}
 
 // Make sure we specify the database name in the connection string
 // Use 'pillnow' as the database name since that's where our data is stored

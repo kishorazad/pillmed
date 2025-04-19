@@ -9,7 +9,10 @@ import { optimizeDatabaseForLargeDatasets } from './index-optimizer';
 import { connectToDatabase } from './services/mongodb-service';
 
 // Session configuration
-const sessionSecret = process.env.SESSION_SECRET || 'medadock-secret-key';
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+  throw new Error('SESSION_SECRET must be set in environment variables');
+}
 
 // Add TypeScript definitions to global
 declare global {
