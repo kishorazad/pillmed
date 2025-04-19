@@ -71,19 +71,14 @@ export async function getPincodeData(pincode: string): Promise<PincodeData> {
 
 /**
  * Detect user's location based on IP address and set language
+ * Note: This functionality is disabled per requirements
  * @param setLanguage Function to set the language in the app
  * @returns Promise with location data or null
  */
 export async function detectLocationByIP(): Promise<IPLocationData | null> {
-  try {
-    // Use ipapi.co for IP-based geolocation (free tier, 1000 requests/day)
-    // Non-commercial usage falls within free tier limits
-    const response = await axios.get('https://ipapi.co/json/');
-    return response.data;
-  } catch (error) {
-    console.error('Error detecting location:', error);
-    return null;
-  }
+  // We don't use this functionality anymore - disabled for privacy reasons
+  // English is now the default language for all users
+  return null;
 }
 
 /**
@@ -92,18 +87,14 @@ export async function detectLocationByIP(): Promise<IPLocationData | null> {
  */
 export async function setLanguageBasedOnLocation(setLanguage: (lang: string) => void): Promise<void> {
   try {
-    const locationData = await detectLocationByIP();
+    // Always set English as default language regardless of location
+    setLanguage('en');
+    console.log('Default language set to English');
     
-    if (locationData && locationData.country_code) {
-      const countryCode = locationData.country_code;
-      const language = COUNTRY_LANGUAGE_MAP[countryCode] || 'en';
-      
-      // Set the language in the app
-      setLanguage(language);
-      console.log(`Set language to ${language} based on location (${locationData.country_name})`);
-    }
+    // The IP-based location detection is disabled as per requirements
+    // English will be the default for both mobile and desktop
   } catch (error) {
-    console.error('Error setting language by location:', error);
+    console.error('Error setting language:', error);
   }
 }
 

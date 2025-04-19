@@ -1028,13 +1028,8 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 // Create provider
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Try to get language from localStorage, default to English
-  const [language, setLanguageState] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('language') || 'en';
-    }
-    return 'en';
-  });
+  // Always default to English as per requirements
+  const [language, setLanguageState] = useState<string>('en');
 
   // Set language and save to localStorage
   const setLanguage = (lang: string) => {
