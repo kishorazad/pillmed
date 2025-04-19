@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import UserManagement from '@/components/admin/UserManagement';
 import SystemOverview from '@/components/admin/SystemOverview';
 import ProductManagement from '@/components/admin/ProductManagement';
+import SEODashboard from '@/components/admin/SEODashboard';
 import { 
   Users, 
   Settings, 
@@ -18,7 +19,8 @@ import {
   Shield,
   UserPlus,
   Database as DatabaseIcon,
-  ShoppingBag
+  ShoppingBag,
+  Globe
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -190,6 +192,10 @@ const AdminDashboard = () => {
             <Settings className="mr-2 h-4 w-4" /> 
             Settings
           </TabsTrigger>
+          <TabsTrigger value="seo">
+            <Globe className="mr-2 h-4 w-4" /> 
+            SEO
+          </TabsTrigger>
           <TabsTrigger value="integrations">
             <Layers className="mr-2 h-4 w-4" /> 
             Integrations
@@ -230,6 +236,10 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="seo">
+          <SEODashboard />
         </TabsContent>
         
         <TabsContent value="integrations">
