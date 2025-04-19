@@ -255,7 +255,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
-        ) : ((userId && userOrders) || !userId && sampleOrders)?.length > 0 ? (
+        ) : (userId ? (userOrders || []) : sampleOrders).length > 0 ? (
           <div 
             ref={scrollContainerRef}
             className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory"

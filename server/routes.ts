@@ -8,6 +8,7 @@ import { sendNotificationToUser, sendNotificationToAllUsers } from './notificati
 import cacheService from './cache-service'; // Cache service for reducing database load
 import { getPincodeData, isValidPincodeFormat, isServiceablePincode, getDeliveryEstimate, initializePincodeService } from './pincode-service';
 import authRoutes from './auth-routes'; // Authentication routes for social login
+import emergencyRoutes from './emergency-routes'; // Emergency service request routes
 import { z } from "zod";
 import multer from 'multer';
 import path from 'path';
@@ -66,6 +67,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount authentication routes
   app.use('/api/auth', authRoutes);
+  
+  // Mount emergency request routes
+  app.use('/api/emergency-requests', emergencyRoutes);
   
   // Add image upload endpoint
   app.post('/api/upload-image', upload.single('file'), (req: Request, res: Response) => {
