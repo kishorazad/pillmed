@@ -24,22 +24,27 @@ declare global {
   try {
     // Use the MongoDB connection from mongodb-service.ts
     const isMongoConnected = await mongoDBService.connect();
-    global.useMongoStorage = isMongoConnected;
     
+    // Force MongoDB storage to be used if connected
     if (isMongoConnected) {
+      global.useMongoStorage = true;
+      console.log('Using MongoDB for database operations');
+      
       // Optimize database for large datasets (up to 700,000 products)
       try {
         await optimizeDatabaseForLargeDatasets();
         console.log('Database optimized for large datasets (up to 700,000 products)');
       } catch (optimizationError) {
-        console.warn('MongoDB not connected, skipping optimization');
+        console.error('Failed to optimize MongoDB:', optimizationError.message);
       }
     } else {
+      global.useMongoStorage = false;
       console.log('Using in-memory storage for database operations');
     }
   } catch (error) {
-    console.log('Using in-memory storage for database operations');
     global.useMongoStorage = false;
+    console.error('MongoDB connection error:', error);
+    console.log('Using in-memory storage for database operations');
   }
   
   // Import data regardless of MongoDB connection status
