@@ -189,14 +189,27 @@ const hospitals = [
   { value: 'medanta', label: 'Medanta' }
 ];
 
+import DoctorSEO from '@/components/SEO/DoctorSEO';
+
 const DoctorSearch: React.FC = () => {
   const [, navigate] = useLocation();
   
+  // Get URL parameters for SEO and initial filter settings
+  const searchParams = typeof window !== 'undefined' 
+    ? new URLSearchParams(window.location.search) 
+    : new URLSearchParams();
+    
+  const initialSpecialty = searchParams.get('specialty') || 'all';
+  const initialCondition = searchParams.get('condition') || '';
+  const initialLocation = searchParams.get('location') || 'all';
+  
   // Search and filter states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('all');
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [searchQuery, setSearchQuery] = useState(initialCondition);
+  const [selectedSpecialty, setSelectedSpecialty] = useState(initialSpecialty);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(
+    initialCondition ? [initialCondition] : []
+  );
+  const [selectedLocation, setSelectedLocation] = useState(initialLocation);
   const [selectedHospital, setSelectedHospital] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 2000]);
   const [experienceRange, setExperienceRange] = useState([0, 20]);
@@ -209,6 +222,11 @@ const DoctorSearch: React.FC = () => {
   
   // Filtered doctors based on search and filters
   const [filteredDoctors, setFilteredDoctors] = useState(doctorsData);
+  
+  // Map to convert from URL specialty parameter to display name
+  const specialtyDisplayName = specialties.find(s => 
+    s.value.toLowerCase() === selectedSpecialty.toLowerCase()
+  )?.label || 'All Specialties';
   
   // Function to handle symptom selection
   const toggleSymptom = (value: string) => {
@@ -366,8 +384,107 @@ const DoctorSearch: React.FC = () => {
     navigate(`/doctors/${doctorId}/book`);
   };
   
+  // Update URL when filters change
+  useEffect(() => {
+    // Don't update during initial render
+    if (typeof window === 'undefined') return;
+    
+    // Build new URL with current filter state
+    const params = new URLSearchParams();
+    if (selectedSpecialty !== 'all') params.set('specialty', selectedSpecialty);
+    if (searchQuery && searchQuery.trim() !== '') params.set('condition', searchQuery);
+    if (selectedLocation !== 'all') params.set('location', selectedLocation);
+    
+    // Update browser URL without page refresh
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+    window.history.replaceState({}, '', newUrl);
+  }, [selectedSpecialty, searchQuery, selectedLocation]);
+  
+  // Function to handle search + automatic specialty selection 
+  // Like PharmEasy, Netmeds, 1mg
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    
+    // Automatically map search query to specialty
+    if (query) {
+      // Common condition to specialty mappings
+      const conditionMap: Record<string, string> = {
+        // Heart conditions
+        'heart': 'cardiologist',
+        'chest pain': 'cardiologist',
+        'blood pressure': 'cardiologist',
+        'hypertension': 'cardiologist',
+        'cholesterol': 'cardiologist',
+        
+        // Brain conditions
+        'headache': 'neurologist',
+        'migraine': 'neurologist',
+        'seizure': 'neurologist',
+        'epilepsy': 'neurologist',
+        'stroke': 'neurologist',
+        'brain': 'neurologist',
+        
+        // Skin conditions
+        'skin': 'dermatologist',
+        'acne': 'dermatologist',
+        'rash': 'dermatologist',
+        'allergy': 'dermatologist',
+        
+        // Children's conditions
+        'child': 'pediatrician',
+        'fever': 'pediatrician',
+        'children': 'pediatrician',
+        'growth': 'pediatrician',
+        
+        // Women's health
+        'pregnancy': 'gynecologist',
+        'period': 'gynecologist',
+        'menstrual': 'gynecologist',
+        'gynecology': 'gynecologist',
+        'gynecological': 'gynecologist',
+        'women': 'gynecologist',
+        
+        // Bone and joint issues
+        'bone': 'orthopedic',
+        'joint': 'orthopedic',
+        'fracture': 'orthopedic',
+        'arthritis': 'orthopedic',
+        
+        // Eye problems
+        'eye': 'ophthalmologist',
+        'vision': 'ophthalmologist',
+        'glasses': 'ophthalmologist',
+        
+        // ENT issues
+        'ear': 'ent',
+        'nose': 'ent',
+        'throat': 'ent',
+        'hearing': 'ent',
+        'sinus': 'ent',
+      };
+      
+      // Check if search contains any mapped condition
+      const lowerQuery = query.toLowerCase();
+      for (const [condition, specialty] of Object.entries(conditionMap)) {
+        if (lowerQuery.includes(condition)) {
+          setSelectedSpecialty(specialty);
+          break;
+        }
+      }
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* SEO Component */}
+      <DoctorSEO
+        specialty={specialtyDisplayName !== 'All Specialties' ? specialtyDisplayName : undefined}
+        condition={searchQuery || undefined}
+        location={selectedLocation !== 'all' ? 
+          locations.find(l => l.value === selectedLocation)?.label : undefined}
+        isSearchPage={true}
+      />
+      
       {/* Breadcrumb */}
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
@@ -392,14 +509,33 @@ const DoctorSearch: React.FC = () => {
       <Card className="mb-8">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search doctors, specialties, conditions..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="relative flex">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search doctors, specialties, conditions..."
+                  className="pl-10 rounded-r-none"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="rounded-l-none bg-orange-500 hover:bg-orange-600 text-white font-medium px-6"
+                onClick={() => {
+                  // Update URL with search params and filter doctors based on current input
+                  const params = new URLSearchParams();
+                  if (selectedSpecialty !== 'all') params.set('specialty', selectedSpecialty);
+                  if (searchQuery && searchQuery.trim() !== '') params.set('condition', searchQuery);
+                  if (selectedLocation !== 'all') params.set('location', selectedLocation);
+                  
+                  // Update URL without page refresh
+                  const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+                  window.history.replaceState({}, '', newUrl);
+                }}
+              >
+                Search
+              </Button>
             </div>
             
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
