@@ -207,8 +207,15 @@ class MongoDBStorage implements IStorage {
       const lastUser = await collection.find().sort({ id: -1 }).limit(1).toArray();
       const id = lastUser.length > 0 ? lastUser[0].id + 1 : 1;
       console.log(`Generated ID: ${id} for user ${user.username}`);
+      
+      // Make sure role is set, default to 'customer' if not specified
+      const userData = { ...user };
+      if (!userData.role) {
+        console.log(`Setting default role 'customer' for user ${user.username}`);
+        userData.role = 'customer';
+      }
 
-      const newUser = { ...user, id };
+      const newUser = { ...userData, id };
       
       console.log(`Inserting new user into MongoDB: ${JSON.stringify(newUser)}`);
       const result = await collection.insertOne(newUser);
