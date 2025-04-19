@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getMessaging, getToken, onMessage, Messaging } from "firebase/messaging";
 import { app } from '@/lib/firebase';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
@@ -29,15 +29,27 @@ interface FirebaseMessage {
 const NotificationHandler = ({ userId }: NotificationHandlerProps) => {
   const [permissionStatus, setPermissionStatus] = useState<'default' | 'granted' | 'denied'>('default');
   const [fcmToken, setFcmToken] = useState<string | null>(null);
-  const messaging = useRef(getMessaging(app));
+  const messaging = useRef<Messaging | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const [isFirebaseAvailable, setIsFirebaseAvailable] = useState<boolean>(false);
 
-  // Check and request notification permission
+  // Check if Firebase is available
   useEffect(() => {
-    // Function to initialize FCM
-    const initializeFCM = async () => {
+    const checkFirebaseAvailability = async () => {
       try {
+        // Check if app is defined (from firebase.ts) and initialized
+        if (!app) {
+          console.log('Firebase app is not initialized - skipping notifications');
+          setIsFirebaseAvailable(false);
+          return;
+        }
+
+        // Initialize messaging reference
+        const messagingInstance = getMessaging(app);
+        messaging.current = messagingInstance;
+        setIsFirebaseAvailable(true);
+        
         // Check if notifications are supported in this browser
         if (!('Notification' in window)) {
           console.log('This browser does not support notifications');
@@ -54,45 +66,60 @@ const NotificationHandler = ({ userId }: NotificationHandlerProps) => {
         }
       } catch (error) {
         console.error('FCM initialization error:', error);
+        setIsFirebaseAvailable(false);
       }
     };
 
-    initializeFCM();
+    checkFirebaseAvailability();
   }, []);
 
   // Listen for incoming messages when app is in foreground
   useEffect(() => {
-    // Only set up listener if permission is granted
-    if (permissionStatus === 'granted') {
-      const unsubscribe = onMessage(messaging.current, (payload) => {
-        console.log('Message received in foreground:', payload);
-        
-        // Show toast notification
-        toast({
-          title: payload.notification?.title || t('new_notification'),
-          description: payload.notification?.body || '',
-          duration: 5000,
+    // Only set up listener if Firebase is available and permission is granted
+    if (isFirebaseAvailable && messaging.current && permissionStatus === 'granted') {
+      try {
+        const unsubscribe = onMessage(messaging.current, (payload: any) => {
+          console.log('Message received in foreground:', payload);
+          
+          // Show toast notification
+          toast({
+            title: payload.notification?.title || t('new_notification'),
+            description: payload.notification?.body || '',
+            duration: 5000,
+          });
+          
+          // You can also show a system notification here if needed
+          showLocalNotification(payload.notification);
         });
         
-        // You can also show a system notification here if needed
-        showLocalNotification(payload.notification);
-      });
-      
-      // Clean up listener on unmount
-      return () => unsubscribe();
+        // Clean up listener on unmount
+        return () => {
+          if (typeof unsubscribe === 'function') {
+            unsubscribe();
+          }
+        };
+      } catch (error) {
+        console.error('Error setting up message listener:', error);
+      }
     }
-  }, [permissionStatus, toast, t]);
+  }, [isFirebaseAvailable, permissionStatus, toast, t]);
 
   // Function to get FCM token
   const getFCMToken = async () => {
+    if (!isFirebaseAvailable || !messaging.current) {
+      console.log('Firebase messaging not available - cannot get token');
+      return;
+    }
+    
     try {
-      const currentToken = await getToken(messaging.current, {
-        vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY
-      });
+      const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+      const options = vapidKey ? { vapidKey } : undefined;
+      
+      const currentToken = await getToken(messaging.current, options);
       
       if (currentToken) {
         setFcmToken(currentToken);
-        console.log('FCM Token:', currentToken);
+        console.log('FCM Token received');
         
         // If userId is provided, associate token with user
         if (userId) {
@@ -121,6 +148,15 @@ const NotificationHandler = ({ userId }: NotificationHandlerProps) => {
 
   // Request notification permission from user
   const requestPermission = async () => {
+    if (!isFirebaseAvailable) {
+      toast({
+        title: 'Notifications not available',
+        description: 'Push notifications feature is currently not available',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     try {
       const permission = await Notification.requestPermission();
       setPermissionStatus(permission as 'default' | 'granted' | 'denied');
@@ -165,8 +201,8 @@ const NotificationHandler = ({ userId }: NotificationHandlerProps) => {
     }
   };
 
-  // Only render enable button if permission is not granted
-  if (permissionStatus !== 'granted') {
+  // Only render enable button if Firebase is available and permission is not granted
+  if (isFirebaseAvailable && permissionStatus !== 'granted') {
     return (
       <button 
         onClick={requestPermission}
@@ -179,7 +215,7 @@ const NotificationHandler = ({ userId }: NotificationHandlerProps) => {
     );
   }
 
-  // Return null if already enabled (component is invisible but functional)
+  // Return null if Firebase is not available or notifications are already enabled
   return null;
 };
 
