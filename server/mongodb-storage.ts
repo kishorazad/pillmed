@@ -68,7 +68,12 @@ class MongoDBStorage implements IStorage {
 
   // Helper to check MongoDB connection and log appropriately
   private isConnected(collectionName: string): boolean {
+    console.log(`Checking MongoDB connection for collection: ${collectionName}`);
+    console.log(`Current global.useMongoStorage value: ${global.useMongoStorage}`);
+    
     const isConnected = mongoDBService.isConnectedToDb();
+    console.log(`MongoDB service reports connection status: ${isConnected}`);
+    
     if (!isConnected) {
       console.warn(`MongoDB not connected. Falling back to in-memory storage for ${collectionName} operation.`);
     }

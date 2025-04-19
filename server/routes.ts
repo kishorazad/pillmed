@@ -645,12 +645,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Generated password hash for new user (salt length: ${salt.length})`);
         
         // Create the user with hashed password
-        const newUser = await dbStorage.createUser({
+        console.log(`About to create user with data:`, {
           ...validUserData,
-          password: hashedPassword
+          password: "***hidden***",
         });
+        console.log(`Using storage: ${global.useMongoStorage ? 'MongoDB' : 'Memory'}`);
         
-        console.log(`User created successfully with ID: ${newUser.id}`);
+        let newUser;
+        try {
+          if (global.useMongoStorage) {
+            console.log('Creating user directly with MongoDB storage');
+            newUser = await mongoDBStorage.createUser({
+              ...validUserData,
+              password: hashedPassword
+            });
+          } else {
+            console.log('Creating user with Memory storage');
+            newUser = await memStorage.createUser({
+              ...validUserData,
+              password: hashedPassword
+            });
+          }
+          console.log(`User created successfully with ID: ${newUser.id}`);
+        } catch (createError) {
+          console.error('Error creating user:', createError);
+          throw createError;
+        }
         
         // Set user in session
         (req.session as any).user = newUser;
