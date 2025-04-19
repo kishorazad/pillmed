@@ -257,16 +257,46 @@ const ForgotPasswordForm = ({ onSuccess }: { onSuccess: () => void }) => {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={verifyOtpMutation.isPending}>
-                {verifyOtpMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  'Verify OTP'
-                )}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button type="submit" className="w-full" disabled={verifyOtpMutation.isPending}>
+                  {verifyOtpMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    'Verify OTP'
+                  )}
+                </Button>
+                <div className="flex justify-between items-center mt-2">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setStep('request')}
+                    className="text-xs"
+                  >
+                    Change Email
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    size="sm" 
+                    onClick={() => requestResetMutation.mutate({ email })}
+                    disabled={requestResetMutation.isPending}
+                    className="text-xs"
+                  >
+                    {requestResetMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        Resending...
+                      </>
+                    ) : (
+                      'Resend OTP'
+                    )}
+                  </Button>
+                </div>
+              </div>
             </form>
           </Form>
         )}
@@ -326,16 +356,27 @@ const ForgotPasswordForm = ({ onSuccess }: { onSuccess: () => void }) => {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={resetPasswordMutation.isPending}>
-                {resetPasswordMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Resetting...
-                  </>
-                ) : (
-                  'Reset Password'
-                )}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button type="submit" className="w-full" disabled={resetPasswordMutation.isPending}>
+                  {resetPasswordMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Resetting...
+                    </>
+                  ) : (
+                    'Reset Password'
+                  )}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setStep('verify')}
+                  className="text-xs mt-2"
+                >
+                  Back to OTP Verification
+                </Button>
+              </div>
             </form>
           </Form>
         )}
