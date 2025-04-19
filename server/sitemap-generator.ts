@@ -13,24 +13,101 @@ export function setupSeoRoutes(router: Router) {
   // Sitemap route
   router.get('/sitemap.xml', generateSitemap);
   
-  // Robots.txt route
-  router.get('/robots.txt', (req: Request, res: Response) => {
+  // Enhanced robots.txt route with industry-leading configurations
+  router.get('/robots.txt', async (req: Request, res: Response) => {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const storage: IStorage = global.useMongoStorage 
+      ? mongoDBStorage
+      : req.app.locals.storage;
     
-    // Create a robots.txt file with references to sitemap
-    // This helps search engines discover content efficiently
-    const robotsTxt = `
+    // Try to get SEO settings
+    let enableIndexing = true;
+    try {
+      if (typeof storage.getSeoSettings === 'function') {
+        const settings = await storage.getSeoSettings();
+        enableIndexing = settings?.enableIndexing !== undefined ? settings.enableIndexing : true;
+      }
+    } catch (error) {
+      console.log('Error fetching SEO settings for robots.txt, using defaults:', error);
+    }
+    
+    // Create an enhanced robots.txt file with detailed rules
+    // Based on best practices from top pharmacy websites
+    let robotsTxt = '';
+    
+    if (enableIndexing) {
+      robotsTxt = `
+# Website: PillNow - India's Leading Online Pharmacy & Healthcare Platform
+# Updated: ${new Date().toISOString().split('T')[0]}
+
+# Allow all crawlers (default)
 User-agent: *
 Allow: /
+Allow: /products/
+Allow: /products/category/
+Allow: /doctors/
+Allow: /health-articles/
+Allow: /services/
+Allow: /about-us/
+Allow: /contact-us/
+Allow: /faq/
+
+# Disallow private or sensitive areas
 Disallow: /admin/
 Disallow: /api/
 Disallow: /checkout/
 Disallow: /cart/
 Disallow: /profile/
+Disallow: /orders/
+Disallow: /prescriptions/
+Disallow: /*?*order=
+Disallow: /*?*password=
+Disallow: /*?*token=
 
-# Sitemap
+# Optimize crawl budget for large pharmacy catalog
+# Slower crawl rate for Googlebot to prevent server overload with 10 lakh+ products
+User-agent: Googlebot
+Crawl-delay: 1
+
+# Prevent media files from being indexed directly
+User-agent: Googlebot-Image
+Disallow: /uploads/prescriptions/
+Allow: /uploads/products/
+Allow: /uploads/categories/
+
+# Prevent mobile-specific duplicates
+User-agent: Googlebot-Mobile
+Allow: /
+
+# Special rules for AI website indexing models
+User-agent: GPTBot
+Disallow: /user-generated-content/
+Disallow: /prescriptions/
+Allow: /health-articles/
+Allow: /medicine-information/
+Allow: /products/
+Allow: /disease-conditions/
+
+# Sitemap references - comprehensive set for large pharmacy catalog
 Sitemap: ${baseUrl}/sitemap.xml
-    `.trim();
+Sitemap: ${baseUrl}/sitemaps/products-sitemap.xml
+Sitemap: ${baseUrl}/sitemaps/categories-sitemap.xml
+Sitemap: ${baseUrl}/sitemaps/health-articles-sitemap.xml
+Sitemap: ${baseUrl}/sitemaps/doctors-sitemap.xml
+
+# Host directive to specify canonical hostname
+Host: ${req.get('host')}
+      `.trim();
+    } else {
+      // If indexing is disabled in settings, disallow all bots
+      robotsTxt = `
+# Website: PillNow - India's Leading Online Pharmacy & Healthcare Platform
+# Indexing currently disabled
+
+User-agent: *
+Disallow: /
+      `.trim();
+    }
     
     res.header('Content-Type', 'text/plain');
     res.send(robotsTxt);
@@ -176,12 +253,80 @@ async function generateSitemap(req: Request, res: Response) {
       console.log('Skipping doctor routes in sitemap');
     }
     
-    // Create a sitemap stream
-    const stream = new SitemapStream({ hostname: baseUrl });
+    // Enhanced sitemap generation with additional format support
+    // Create a sitemap stream with extended options (follows best practices from top pharmacy sites)
+    const stream = new SitemapStream({ 
+      hostname: baseUrl,
+      xmlns: {
+        // Default namespaces
+        news: true,       // Adds support for Google News
+        xhtml: true,      // Adds support for alternate language pages
+        image: true,      // Adds support for image sitemaps
+        video: true,      // Adds support for video sitemaps
+        // Custom namespaces for additional functionality
+        custom: [
+          {
+            name: 'mobile',
+            url: 'http://www.google.com/schemas/sitemap-mobile/1.0'
+          },
+          {
+            name: 'codesearch',
+            url: 'http://www.google.com/schemas/sitemap-codesearch/1.0'
+          }
+        ]
+      }
+    });
     
-    // Add all routes to the sitemap
+    // Try to get SEO settings from storage
+    let settings;
+    try {
+      if (typeof storage.getSeoSettings === 'function') {
+        settings = await storage.getSeoSettings();
+      }
+    } catch (error) {
+      console.log('Error fetching SEO settings, using defaults:', error);
+    }
+
+    // Set defaults if settings not found
+    const sitemapIncludeImages = settings?.sitemapIncludeImages !== undefined ? 
+      settings.sitemapIncludeImages : true;
+    
+    // Process routes to add image information for products
+    // This significantly improves image SEO and discovery
+    const enhancedRoutes = routes.map(route => {
+      // If this is a product page and we want to include images
+      if (route.url.startsWith('/products/') && sitemapIncludeImages) {
+        const productId = route.url.split('/').pop();
+        const product = products.find(p => p.id.toString() === productId);
+        
+        if (product && product.imageUrl) {
+          return {
+            ...route,
+            img: [
+              {
+                url: product.imageUrl,
+                caption: product.name,
+                title: product.name,
+                geoLocation: 'India',
+                license: 'https://pillnow.com/image-license'
+              }
+            ],
+            // Add mobile specific tag for better mobile indexing
+            mobile: true,
+            // Add language alternatives if needed
+            links: [
+              { lang: 'en', url: `${baseUrl}${route.url}` },
+              { lang: 'hi', url: `${baseUrl}/hi${route.url}` }
+            ]
+          };
+        }
+      }
+      return route;
+    });
+    
+    // Add all enhanced routes to the sitemap
     const sitemapData = await streamToPromise(
-      Readable.from(routes).pipe(stream)
+      Readable.from(enhancedRoutes).pipe(stream)
     );
     
     // Set headers
