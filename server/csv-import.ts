@@ -2,21 +2,26 @@ import fs from 'fs';
 import path from 'path';
 import csv from 'csv-parser';
 import { storage } from './storage';
+import { mongoDBStorage } from './mongodb-storage';
 
 // This function parses the CSV file and adds the medicines to the storage
 export async function importMedicinesFromCSV() {
   try {
     console.log("Starting CSV import process...");
     
+    // Use the appropriate storage based on MongoDB connection
+    const storageService = global.useMongoStorage ? mongoDBStorage : storage;
+    console.log(`Using ${global.useMongoStorage ? 'MongoDB' : 'in-memory'} storage for importing`);
+    
     // Check how many products we already have
-    const existingProducts = await storage.getProducts();
+    const existingProducts = await storageService.getProducts();
     if (existingProducts.length > 6) {
       console.log(`Already have ${existingProducts.length} products in database. Skipping import.`);
       return;
     }
     
     // Get all categories first
-    const categories = await storage.getCategories();
+    const categories = await storageService.getCategories();
     const categoryMap = new Map();
     
     categories.forEach(cat => {

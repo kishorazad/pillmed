@@ -14,7 +14,8 @@ import {
   orders, type Order, type InsertOrder,
   orderItems, type OrderItem, type InsertOrderItem,
   healthTips, type HealthTip, type InsertHealthTip,
-  notificationTokens, type NotificationToken, type InsertNotificationToken
+  notificationTokens, type NotificationToken, type InsertNotificationToken,
+  type OTPRecord, type Session
 } from "@shared/schema";
 
 export interface IStorage {
@@ -131,6 +132,12 @@ export interface IStorage {
   createHealthTip(healthTip: InsertHealthTip): Promise<HealthTip>;
   updateHealthTip(id: number, healthTip: Partial<InsertHealthTip>): Promise<HealthTip | undefined>;
   deleteHealthTip(id: number): Promise<boolean>;
+  
+  // OTP Record related methods
+  createOtpRecord(email: string, otp: string, expiresAt: Date): Promise<void>;
+  getOtpRecord(email: string): Promise<OTPRecord | undefined>;
+  updateOtpRecord(email: string, updates: Partial<OTPRecord>): Promise<boolean>;
+  deleteOtpRecord(email: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -150,6 +157,7 @@ export class MemStorage implements IStorage {
   private orderItems: Map<number, OrderItem>;
   private healthTips: Map<number, HealthTip>;
   private notificationTokens: Map<number, NotificationToken>;
+  private otpRecords: Map<string, OTPRecord>;
   
   currentUserId: number;
   currentProductId: number;
@@ -185,6 +193,7 @@ export class MemStorage implements IStorage {
     this.orderItems = new Map();
     this.healthTips = new Map();
     this.notificationTokens = new Map();
+    this.otpRecords = new Map();
     
     this.currentUserId = 1;
     this.currentProductId = 1;

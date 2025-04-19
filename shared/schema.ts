@@ -363,3 +363,20 @@ export const insertHealthTipSchema = createInsertSchema(healthTips).pick({
 
 export type InsertHealthTip = z.infer<typeof insertHealthTipSchema>;
 export type HealthTip = typeof healthTips.$inferSelect;
+
+// OTP Records for password reset and verification
+export interface OTPRecord {
+  email: string;
+  otp: string;
+  expiresAt: Date;
+  verified: boolean;
+}
+
+// Session record for authentication
+export interface Session {
+  id: string;
+  userId: number;
+  createdAt: Date | null;
+  expiresAt: Date | null;
+  data: any;
+}

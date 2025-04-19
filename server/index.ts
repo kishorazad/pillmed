@@ -6,7 +6,7 @@ import { importMedicinesFromExcel } from "./excel-import";
 import { mongoDBStorage } from './mongodb-storage';
 import session from 'express-session';
 import { optimizeDatabaseForLargeDatasets } from './index-optimizer';
-import { connectToDatabase } from './services/mongodb-service';
+import { mongoDBService } from './services/mongodb-service';
 
 // Session configuration
 const sessionSecret = process.env.SESSION_SECRET;
@@ -23,7 +23,7 @@ declare global {
 (async () => {
   try {
     // Use the MongoDB connection from mongodb-service.ts
-    const isMongoConnected = await connectToDatabase();
+    const isMongoConnected = await mongoDBService.connect();
     global.useMongoStorage = isMongoConnected;
     
     if (isMongoConnected) {

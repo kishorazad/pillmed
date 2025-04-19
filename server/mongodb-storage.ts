@@ -1,1375 +1,247 @@
-import mongoose from 'mongoose';
 import { IStorage } from './storage';
-import { storage as memStorage } from './storage';
-import { 
-  User, 
-  Category, 
-  Product, 
-  CartItem, 
-  Article,
-  Testimonial,
-  LabTest,
-  Doctor,
-  Pharmacy,
-  Laboratory,
-  Appointment,
-  LabBooking,
-  Order,
-  OrderItem,
-  HealthTip
-} from './models';
-import { 
-  User as UserType,
-  Category as CategoryType,
-  Product as ProductType,
-  CartItem as CartItemType,
-  Article as ArticleType,
-  Testimonial as TestimonialType,
-  LabTest as LabTestType,
-  Doctor as DoctorType,
-  Pharmacy as PharmacyType,
-  Laboratory as LaboratoryType,
-  Appointment as AppointmentType,
-  LabBooking as LabBookingType,
-  Order as OrderType,
-  OrderItem as OrderItemType,
-  HealthTip as HealthTipType,
-  InsertUser,
-  InsertCategory,
-  InsertProduct,
-  InsertCartItem,
-  InsertArticle,
-  InsertTestimonial,
-  InsertLabTest,
-  InsertDoctor,
-  InsertPharmacy,
-  InsertLaboratory,
-  InsertAppointment,
-  InsertLabBooking,
-  InsertOrder,
-  InsertOrderItem,
-  InsertHealthTip
+import { mongoDBService } from './services/mongodb-service';
+import { ObjectId } from 'mongodb';
+import {
+  User, Category, Product, CartItem, Order, Article, 
+  Testimonial, HealthPackage, LabTest, HealthTip, FAQ,
+  Prescription, OTPRecord, Session, Review, Address,
+  Device, RecentSearch, WishlistItem, DoctorInfo, Hospital,
+  HealthQuery, PaymentMethod, Notification, Coupon,
+  MedicineReminder, HealthRecord, Appointment, RefillRequest,
+  EmergencyContact, HealthInsurance, ReferralCode, DeliveryTimeSlot
 } from '@shared/schema';
-import { initializeDatabase } from './services/mongodb-service';
 
-export class MongoDBStorage implements IStorage {
-  // Implemented methods for notificationTokens
-  async saveNotificationToken(token: any): Promise<any> {
-    // Fallback to memory storage for now
-    return memStorage.saveNotificationToken(token);
-  }
-  
-  async getNotificationTokensByUserId(userId: number): Promise<any[]> {
-    // Fallback to memory storage for now
-    return memStorage.getNotificationTokensByUserId(userId);
-  }
-  
-  async deleteNotificationToken(token: string): Promise<boolean> {
-    // Fallback to memory storage for now
-    return memStorage.deleteNotificationToken(token);
-  }
-  
-  // Implement getUsers method required by IStorage
-  async getUsers(): Promise<UserType[]> {
-    try {
-      const users = await User.find().lean();
-      return users.map(user => this.convertToUserType(user));
-    } catch (error) {
-      console.error('Error getting all users:', error);
-      return [];
-    }
-  }
-  
-  // Implement transferCartItems method required by IStorage
-  async transferCartItems(fromUserId: number, toUserId: number): Promise<boolean> {
-    try {
-      const fromCartItems = await CartItem.find({ userId: fromUserId }).lean();
-      
-      // Add each item to the target user's cart
-      for (const item of fromCartItems) {
-        const newItem = {
-          userId: toUserId,
-          productId: item.productId,
-          quantity: item.quantity
-        };
-        await this.addToCart(newItem);
-      }
-      
-      // Clear the source user's cart
-      await this.clearCart(fromUserId);
-      
-      return true;
-    } catch (error) {
-      console.error('Error transferring cart items:', error);
-      return false;
-    }
-  }
-  
+/**
+ * MongoDB implementation of storage service
+ * Stores all data in MongoDB collections
+ */
+class MongoDBStorage implements IStorage {
+  private readonly collections = {
+    users: 'users',
+    categories: 'categories',
+    products: 'products',
+    cartItems: 'cartItems',
+    orders: 'orders',
+    articles: 'articles',
+    testimonials: 'testimonials',
+    healthPackages: 'healthPackages',
+    labTests: 'labTests',
+    healthTips: 'healthTips',
+    faqs: 'faqs',
+    prescriptions: 'prescriptions',
+    otpRecords: 'otpRecords',
+    sessions: 'sessions',
+    reviews: 'reviews',
+    addresses: 'addresses',
+    devices: 'devices',
+    recentSearches: 'recentSearches',
+    wishlistItems: 'wishlistItems',
+    doctorInfo: 'doctorInfo',
+    hospitals: 'hospitals',
+    healthQueries: 'healthQueries',
+    paymentMethods: 'paymentMethods',
+    notifications: 'notifications',
+    coupons: 'coupons',
+    medicineReminders: 'medicineReminders',
+    healthRecords: 'healthRecords',
+    appointments: 'appointments',
+    refillRequests: 'refillRequests',
+    emergencyContacts: 'emergencyContacts',
+    healthInsurance: 'healthInsurance',
+    referralCodes: 'referralCodes',
+    deliveryTimeSlots: 'deliveryTimeSlots'
+  };
+
   constructor() {
-    // Connect to MongoDB and initialize database
-    this.initialize();
+    this.initializeConnection();
   }
 
-  private async initialize() {
+  // Initialize MongoDB connection
+  private async initializeConnection() {
     try {
-      await initializeDatabase();
+      await mongoDBService.connect();
     } catch (error) {
-      console.log('Failed to initialize MongoDB database, using in-memory storage');
+      console.error('Failed to initialize MongoDB connection:', error);
+      console.warn('Falling back to in-memory storage');
     }
   }
 
-  // User methods
-  async getUser(id: number): Promise<UserType | undefined> {
-    try {
-      // Try to find by _id field first (which could be MongoDB's ObjectId)
-      let user = await User.findById(id).lean();
-      
-      // If not found, try to find a user where id field matches
-      if (!user) {
-        user = await User.findOne({ id }).lean();
-      }
-      
-      return user ? this.convertToUserType(user) : undefined;
-    } catch (error) {
-      console.error('Error getting user:', error);
-      return undefined;
-    }
-  }
-
-  async getUserByUsername(username: string): Promise<UserType | undefined> {
-    try {
-      // Create an index on username for faster lookups if needed
-      await User.collection.createIndex({ username: 1 }, { background: true });
-      
-      // Optimized lean query for better performance
-      let user = await User.findOne({ username }, { lean: { virtuals: true } }).exec();
-      
-      if (!user) {
-        return undefined;
-      }
-      
-      // Convert the user document to a plain object
-      const userObj = user.toObject ? user.toObject() : user;
-      
-      // Check for numericId field and update if needed
-      const convertedUser = this.convertToUserType(userObj);
-      
-      if (!userObj.numericId && convertedUser.id) {
-        // Add the numericId field if missing - do this asynchronously without waiting
-        User.updateOne(
-          { _id: userObj._id },
-          { $set: { numericId: convertedUser.id } }
-        ).then(() => {
-          console.log(`Added numericId ${convertedUser.id} to user ${username}`);
-        }).catch(err => {
-          console.error(`Failed to add numericId to user ${username}:`, err);
-        });
-      }
-      
-      return convertedUser;
-    } catch (error) {
-      console.error('Error getting user by username:', error);
-      return undefined;
-    }
-  }
-  
-  async getUserByEmail(email: string): Promise<UserType | undefined> {
-    try {
-      // Create an index on email for faster lookups if needed
-      await User.collection.createIndex({ email: 1 }, { background: true });
-      
-      // Optimized lean query for better performance
-      let user = await User.findOne({ email }, { lean: { virtuals: true } }).exec();
-      
-      if (!user) {
-        return undefined;
-      }
-      
-      // Convert the user document to a plain object
-      const userObj = user.toObject ? user.toObject() : user;
-      
-      // Check for numericId field and update if needed
-      const convertedUser = this.convertToUserType(userObj);
-      
-      if (!userObj.numericId && convertedUser.id) {
-        // Add the numericId field if missing - do this asynchronously without waiting
-        User.updateOne(
-          { _id: userObj._id },
-          { $set: { numericId: convertedUser.id } }
-        ).then(() => {
-          console.log(`Added numericId ${convertedUser.id} to user with email ${email}`);
-        }).catch(err => {
-          console.error(`Failed to add numericId to user with email ${email}:`, err);
-        });
-      }
-      
-      return convertedUser;
-    } catch (error) {
-      console.error('Error getting user by email:', error);
-      return undefined;
-    }
-  }
-
-  async createUser(user: InsertUser): Promise<UserType> {
-    try {
-      console.log('MongoDB storage: Creating user with data:', JSON.stringify(user));
-      const newUser = new User(user);
-      console.log('MongoDB storage: Created user model instance');
-      const savedUser = await newUser.save();
-      console.log('MongoDB storage: User saved to database, document ID:', savedUser._id);
-      const convertedUser = this.convertToUserType(savedUser.toObject());
-      console.log('MongoDB storage: Converted user data:', JSON.stringify(convertedUser));
-      return convertedUser;
-    } catch (error) {
-      console.error('Error creating user in MongoDB:', error);
-      // Fall back to memory storage if MongoDB save fails
-      console.log('Falling back to memory storage for user creation');
-      return memStorage.createUser(user);
-    }
-  }
-
-  async getUsersByRole(role: string): Promise<UserType[]> {
-    try {
-      const users = await User.find({ role }).lean();
-      return users.map(user => this.convertToUserType(user));
-    } catch (error) {
-      console.error('Error getting users by role:', error);
-      return [];
-    }
-  }
-
-  async updateUser(id: number, user: Partial<InsertUser>): Promise<UserType | undefined> {
-    try {
-      // Use findOneAndUpdate with numeric ID stored as custom field instead of MongoDB's _id
-      const updatedUser = await User.findOneAndUpdate(
-        { numericId: id }, // Look up by numericId instead of _id
-        user, 
-        { new: true }
-      ).lean();
-      
-      if (!updatedUser) {
-        console.log(`No user found with numericId: ${id}, trying to find by other criteria`);
-        
-        // Fallback: Find by username if present in the update
-        if (user.username) {
-          const userByUsername = await User.findOneAndUpdate(
-            { username: user.username },
-            { ...user, numericId: id }, // Also set the numericId
-            { new: true }
-          ).lean();
-          
-          return userByUsername ? this.convertToUserType(userByUsername) : undefined;
-        }
-      }
-      
-      return updatedUser ? this.convertToUserType(updatedUser) : undefined;
-    } catch (error) {
-      console.error('Error updating user:', error);
-      return undefined;
-    }
-  }
-
-  // Product methods
-  async getProducts(): Promise<ProductType[]> {
-    try {
-      const products = await Product.find().lean();
-      return products.map(product => this.convertToProductType(product));
-    } catch (error) {
-      console.error('Error getting products:', error);
-      return [];
-    }
-  }
-
-  async getProductById(id: number): Promise<ProductType | undefined> {
-    try {
-      const product = await Product.findById(id).lean();
-      return product ? this.convertToProductType(product) : undefined;
-    } catch (error) {
-      console.error('Error getting product by ID:', error);
-      return undefined;
-    }
-  }
-
-  async getProductsByCategory(categoryId: number): Promise<ProductType[]> {
-    try {
-      const products = await Product.find({ categoryId }).lean();
-      return products.map(product => this.convertToProductType(product));
-    } catch (error) {
-      console.error('Error getting products by category:', error);
-      return [];
-    }
-  }
-
-  async getFeaturedProducts(): Promise<ProductType[]> {
-    try {
-      const products = await Product.find({ isFeatured: true }).lean();
-      return products.map(product => this.convertToProductType(product));
-    } catch (error) {
-      console.error('Error getting featured products:', error);
-      return [];
-    }
-  }
-
-  async createProduct(product: InsertProduct): Promise<ProductType> {
-    try {
-      const newProduct = new Product(product);
-      const savedProduct = await newProduct.save();
-      return this.convertToProductType(savedProduct.toObject());
-    } catch (error) {
-      console.error('Error creating product:', error);
-      throw error;
-    }
-  }
-
-  async updateProduct(id: number, product: Partial<InsertProduct>): Promise<ProductType | undefined> {
-    try {
-      const updatedProduct = await Product.findByIdAndUpdate(id, product, { new: true }).lean();
-      return updatedProduct ? this.convertToProductType(updatedProduct) : undefined;
-    } catch (error) {
-      console.error('Error updating product:', error);
-      return undefined;
-    }
-  }
-
-  async deleteProduct(id: number): Promise<boolean> {
-    try {
-      const result = await Product.findByIdAndDelete(id);
-      return !!result;
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      return false;
-    }
-  }
-
-  // Category methods
-  async getCategories(): Promise<CategoryType[]> {
-    try {
-      const categories = await Category.find().lean();
-      return categories.map(category => this.convertToCategoryType(category));
-    } catch (error) {
-      console.error('Error getting categories:', error);
-      return [];
-    }
-  }
-
-  async getCategoryById(id: number): Promise<CategoryType | undefined> {
-    try {
-      const category = await Category.findById(id).lean();
-      return category ? this.convertToCategoryType(category) : undefined;
-    } catch (error) {
-      console.error('Error getting category by ID:', error);
-      return undefined;
-    }
-  }
-
-  async createCategory(category: InsertCategory): Promise<CategoryType> {
-    try {
-      const newCategory = new Category(category);
-      const savedCategory = await newCategory.save();
-      return this.convertToCategoryType(savedCategory.toObject());
-    } catch (error) {
-      console.error('Error creating category:', error);
-      throw error;
-    }
-  }
-
-  async updateCategory(id: number, category: Partial<InsertCategory>): Promise<CategoryType | undefined> {
-    try {
-      const updatedCategory = await Category.findByIdAndUpdate(id, category, { new: true }).lean();
-      return updatedCategory ? this.convertToCategoryType(updatedCategory) : undefined;
-    } catch (error) {
-      console.error('Error updating category:', error);
-      return undefined;
-    }
-  }
-
-  async deleteCategory(id: number): Promise<boolean> {
-    try {
-      const result = await Category.findByIdAndDelete(id);
-      return !!result;
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      return false;
-    }
-  }
-
-  // Cart methods
-  async getCartItems(userId: number): Promise<CartItemType[]> {
-    try {
-      const cartItems = await CartItem.find({ userId }).lean();
-      return cartItems.map(item => this.convertToCartItemType(item));
-    } catch (error) {
-      console.error('Error getting cart items:', error);
-      return [];
-    }
-  }
-
-  async getCartItemWithProductDetails(userId: number): Promise<any[]> {
-    try {
-      const cartItems = await CartItem.find({ userId }).lean();
-      return Promise.all(cartItems.map(async (item) => {
-        const product = await Product.findById(item.productId).lean();
-        return {
-          ...this.convertToCartItemType(item),
-          product: product ? this.convertToProductType(product) : null
-        };
-      }));
-    } catch (error) {
-      console.error('Error getting cart items with product details:', error);
-      return [];
-    }
-  }
-
-  async addToCart(cartItem: InsertCartItem): Promise<CartItemType> {
-    try {
-      // Check if this product is already in the cart
-      const existingItem = await CartItem.findOne({
-        userId: cartItem.userId,
-        productId: cartItem.productId
-      }).lean();
-
-      if (existingItem) {
-        // Update the quantity instead of adding a new item
-        const updatedItem = await CartItem.findByIdAndUpdate(
-          existingItem._id,
-          { $inc: { quantity: cartItem.quantity } },
-          { new: true }
-        ).lean();
-        return this.convertToCartItemType(updatedItem);
-      }
-
-      // Add new item to cart
-      const newCartItem = new CartItem(cartItem);
-      const savedCartItem = await newCartItem.save();
-      return this.convertToCartItemType(savedCartItem.toObject());
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      throw error;
-    }
-  }
-
-  async updateCartItem(id: number, quantity: number): Promise<CartItemType | undefined> {
-    try {
-      const updatedCartItem = await CartItem.findByIdAndUpdate(
-        id,
-        { quantity },
-        { new: true }
-      ).lean();
-      return updatedCartItem ? this.convertToCartItemType(updatedCartItem) : undefined;
-    } catch (error) {
-      console.error('Error updating cart item:', error);
-      return undefined;
-    }
-  }
-
-  async removeFromCart(id: number): Promise<boolean> {
-    try {
-      const result = await CartItem.findByIdAndDelete(id);
-      return !!result;
-    } catch (error) {
-      console.error('Error removing from cart:', error);
-      return false;
-    }
-  }
-
-  async clearCart(userId: number): Promise<boolean> {
-    try {
-      const result = await CartItem.deleteMany({ userId });
-      return result.deletedCount > 0;
-    } catch (error) {
-      console.error('Error clearing cart:', error);
-      return false;
-    }
-  }
-
-  // Article methods
-  async getArticles(): Promise<ArticleType[]> {
-    try {
-      const articles = await Article.find().lean();
-      return articles.map(article => this.convertToArticleType(article));
-    } catch (error) {
-      console.error('Error getting articles:', error);
-      return [];
-    }
-  }
-
-  async createArticle(article: InsertArticle): Promise<ArticleType> {
-    try {
-      const newArticle = new Article(article);
-      const savedArticle = await newArticle.save();
-      return this.convertToArticleType(savedArticle.toObject());
-    } catch (error) {
-      console.error('Error creating article:', error);
-      throw error;
-    }
-  }
-
-  async updateArticle(id: number, article: Partial<InsertArticle>): Promise<ArticleType | undefined> {
-    try {
-      const updatedArticle = await Article.findByIdAndUpdate(id, article, { new: true }).lean();
-      return updatedArticle ? this.convertToArticleType(updatedArticle) : undefined;
-    } catch (error) {
-      console.error('Error updating article:', error);
-      return undefined;
-    }
-  }
-
-  async deleteArticle(id: number): Promise<boolean> {
-    try {
-      const result = await Article.findByIdAndDelete(id);
-      return !!result;
-    } catch (error) {
-      console.error('Error deleting article:', error);
-      return false;
-    }
-  }
-
-  // Testimonial methods
-  async getTestimonials(): Promise<TestimonialType[]> {
-    try {
-      const testimonials = await Testimonial.find().lean();
-      return testimonials.map(testimonial => this.convertToTestimonialType(testimonial));
-    } catch (error) {
-      console.error('Error getting testimonials:', error);
-      return [];
-    }
-  }
-
-  async createTestimonial(testimonial: InsertTestimonial): Promise<TestimonialType> {
-    try {
-      const newTestimonial = new Testimonial(testimonial);
-      const savedTestimonial = await newTestimonial.save();
-      return this.convertToTestimonialType(savedTestimonial.toObject());
-    } catch (error) {
-      console.error('Error creating testimonial:', error);
-      throw error;
-    }
-  }
-
-  // Lab test methods
-  async getLabTests(): Promise<LabTestType[]> {
-    try {
-      const labTests = await LabTest.find().lean();
-      return labTests.map(labTest => this.convertToLabTestType(labTest));
-    } catch (error) {
-      console.error('Error getting lab tests:', error);
-      return [];
-    }
-  }
-
-  async createLabTest(labTest: InsertLabTest): Promise<LabTestType> {
-    try {
-      const newLabTest = new LabTest(labTest);
-      const savedLabTest = await newLabTest.save();
-      return this.convertToLabTestType(savedLabTest.toObject());
-    } catch (error) {
-      console.error('Error creating lab test:', error);
-      throw error;
-    }
-  }
-
-  async updateLabTest(id: number, labTest: Partial<InsertLabTest>): Promise<LabTestType | undefined> {
-    try {
-      const updatedLabTest = await LabTest.findByIdAndUpdate(id, labTest, { new: true }).lean();
-      return updatedLabTest ? this.convertToLabTestType(updatedLabTest) : undefined;
-    } catch (error) {
-      console.error('Error updating lab test:', error);
-      return undefined;
-    }
-  }
-
-  async deleteLabTest(id: number): Promise<boolean> {
-    try {
-      const result = await LabTest.findByIdAndDelete(id);
-      return !!result;
-    } catch (error) {
-      console.error('Error deleting lab test:', error);
-      return false;
-    }
-  }
-
-  // Doctor methods
-  async getDoctors(): Promise<DoctorType[]> {
-    try {
-      const doctors = await Doctor.find().lean();
-      return doctors.map(doctor => this.convertToDoctorType(doctor));
-    } catch (error) {
-      console.error('Error getting doctors:', error);
-      return [];
-    }
-  }
-
-  async getDoctorById(id: number): Promise<DoctorType | undefined> {
-    try {
-      const doctor = await Doctor.findById(id).lean();
-      return doctor ? this.convertToDoctorType(doctor) : undefined;
-    } catch (error) {
-      console.error('Error getting doctor by ID:', error);
-      return undefined;
-    }
-  }
-
-  async getDoctorWithUserDetails(id: number): Promise<any | undefined> {
-    try {
-      const doctor = await Doctor.findById(id).lean();
-      if (!doctor) return undefined;
-      
-      const user = await User.findById(doctor.userId).lean();
-      return {
-        ...this.convertToDoctorType(doctor),
-        user: user ? this.convertToUserType(user) : null
-      };
-    } catch (error) {
-      console.error('Error getting doctor with user details:', error);
-      return undefined;
-    }
-  }
-
-  async getAllDoctorsWithUserDetails(): Promise<any[]> {
-    try {
-      const doctors = await Doctor.find().lean();
-      return Promise.all(doctors.map(async (doctor) => {
-        const user = await User.findById(doctor.userId).lean();
-        return {
-          ...this.convertToDoctorType(doctor),
-          user: user ? this.convertToUserType(user) : null
-        };
-      }));
-    } catch (error) {
-      console.error('Error getting all doctors with user details:', error);
-      return [];
-    }
-  }
-
-  async createDoctor(doctor: InsertDoctor): Promise<DoctorType> {
-    try {
-      const newDoctor = new Doctor(doctor);
-      const savedDoctor = await newDoctor.save();
-      return this.convertToDoctorType(savedDoctor.toObject());
-    } catch (error) {
-      console.error('Error creating doctor:', error);
-      throw error;
-    }
-  }
-
-  async updateDoctor(id: number, doctor: Partial<InsertDoctor>): Promise<DoctorType | undefined> {
-    try {
-      const updatedDoctor = await Doctor.findByIdAndUpdate(id, doctor, { new: true }).lean();
-      return updatedDoctor ? this.convertToDoctorType(updatedDoctor) : undefined;
-    } catch (error) {
-      console.error('Error updating doctor:', error);
-      return undefined;
-    }
-  }
-
-  // Pharmacy methods
-  async getPharmacies(): Promise<PharmacyType[]> {
-    try {
-      const pharmacies = await Pharmacy.find().lean();
-      return pharmacies.map(pharmacy => this.convertToPharmacyType(pharmacy));
-    } catch (error) {
-      console.error('Error getting pharmacies:', error);
-      return [];
-    }
-  }
-
-  async getPharmacyById(id: number): Promise<PharmacyType | undefined> {
-    try {
-      const pharmacy = await Pharmacy.findById(id).lean();
-      return pharmacy ? this.convertToPharmacyType(pharmacy) : undefined;
-    } catch (error) {
-      console.error('Error getting pharmacy by ID:', error);
-      return undefined;
-    }
-  }
-
-  async getPharmacyWithUserDetails(id: number): Promise<any | undefined> {
-    try {
-      const pharmacy = await Pharmacy.findById(id).lean();
-      if (!pharmacy) return undefined;
-      
-      const user = await User.findById(pharmacy.userId).lean();
-      return {
-        ...this.convertToPharmacyType(pharmacy),
-        user: user ? this.convertToUserType(user) : null
-      };
-    } catch (error) {
-      console.error('Error getting pharmacy with user details:', error);
-      return undefined;
-    }
-  }
-
-  async getAllPharmaciesWithUserDetails(): Promise<any[]> {
-    try {
-      const pharmacies = await Pharmacy.find().lean();
-      return Promise.all(pharmacies.map(async (pharmacy) => {
-        const user = await User.findById(pharmacy.userId).lean();
-        return {
-          ...this.convertToPharmacyType(pharmacy),
-          user: user ? this.convertToUserType(user) : null
-        };
-      }));
-    } catch (error) {
-      console.error('Error getting all pharmacies with user details:', error);
-      return [];
-    }
-  }
-
-  async createPharmacy(pharmacy: InsertPharmacy): Promise<PharmacyType> {
-    try {
-      const newPharmacy = new Pharmacy(pharmacy);
-      const savedPharmacy = await newPharmacy.save();
-      return this.convertToPharmacyType(savedPharmacy.toObject());
-    } catch (error) {
-      console.error('Error creating pharmacy:', error);
-      throw error;
-    }
-  }
-
-  async updatePharmacy(id: number, pharmacy: Partial<InsertPharmacy>): Promise<PharmacyType | undefined> {
-    try {
-      const updatedPharmacy = await Pharmacy.findByIdAndUpdate(id, pharmacy, { new: true }).lean();
-      return updatedPharmacy ? this.convertToPharmacyType(updatedPharmacy) : undefined;
-    } catch (error) {
-      console.error('Error updating pharmacy:', error);
-      return undefined;
-    }
-  }
-
-  // Laboratory methods
-  async getLaboratories(): Promise<LaboratoryType[]> {
-    try {
-      const laboratories = await Laboratory.find().lean();
-      return laboratories.map(laboratory => this.convertToLaboratoryType(laboratory));
-    } catch (error) {
-      console.error('Error getting laboratories:', error);
-      return [];
-    }
-  }
-
-  async getLaboratoryById(id: number): Promise<LaboratoryType | undefined> {
-    try {
-      const laboratory = await Laboratory.findById(id).lean();
-      return laboratory ? this.convertToLaboratoryType(laboratory) : undefined;
-    } catch (error) {
-      console.error('Error getting laboratory by ID:', error);
-      return undefined;
-    }
-  }
-
-  async getLaboratoryWithUserDetails(id: number): Promise<any | undefined> {
-    try {
-      const laboratory = await Laboratory.findById(id).lean();
-      if (!laboratory) return undefined;
-      
-      const user = await User.findById(laboratory.userId).lean();
-      return {
-        ...this.convertToLaboratoryType(laboratory),
-        user: user ? this.convertToUserType(user) : null
-      };
-    } catch (error) {
-      console.error('Error getting laboratory with user details:', error);
-      return undefined;
-    }
-  }
-
-  async getAllLaboratoriesWithUserDetails(): Promise<any[]> {
-    try {
-      const laboratories = await Laboratory.find().lean();
-      return Promise.all(laboratories.map(async (laboratory) => {
-        const user = await User.findById(laboratory.userId).lean();
-        return {
-          ...this.convertToLaboratoryType(laboratory),
-          user: user ? this.convertToUserType(user) : null
-        };
-      }));
-    } catch (error) {
-      console.error('Error getting all laboratories with user details:', error);
-      return [];
-    }
-  }
-
-  async createLaboratory(laboratory: InsertLaboratory): Promise<LaboratoryType> {
-    try {
-      const newLaboratory = new Laboratory(laboratory);
-      const savedLaboratory = await newLaboratory.save();
-      return this.convertToLaboratoryType(savedLaboratory.toObject());
-    } catch (error) {
-      console.error('Error creating laboratory:', error);
-      throw error;
-    }
-  }
-
-  async updateLaboratory(id: number, laboratory: Partial<InsertLaboratory>): Promise<LaboratoryType | undefined> {
-    try {
-      const updatedLaboratory = await Laboratory.findByIdAndUpdate(id, laboratory, { new: true }).lean();
-      return updatedLaboratory ? this.convertToLaboratoryType(updatedLaboratory) : undefined;
-    } catch (error) {
-      console.error('Error updating laboratory:', error);
-      return undefined;
-    }
-  }
-
-  // Appointment methods
-  async getAppointments(): Promise<AppointmentType[]> {
-    try {
-      const appointments = await Appointment.find().lean();
-      return appointments.map(appointment => this.convertToAppointmentType(appointment));
-    } catch (error) {
-      console.error('Error getting appointments:', error);
-      return [];
-    }
-  }
-
-  async getAppointmentById(id: number): Promise<AppointmentType | undefined> {
-    try {
-      const appointment = await Appointment.findById(id).lean();
-      return appointment ? this.convertToAppointmentType(appointment) : undefined;
-    } catch (error) {
-      console.error('Error getting appointment by ID:', error);
-      return undefined;
-    }
-  }
-
-  async getAppointmentsByUser(userId: number): Promise<AppointmentType[]> {
-    try {
-      const appointments = await Appointment.find({ userId }).lean();
-      return appointments.map(appointment => this.convertToAppointmentType(appointment));
-    } catch (error) {
-      console.error('Error getting appointments by user:', error);
-      return [];
-    }
-  }
-
-  async getAppointmentsByDoctor(doctorId: number): Promise<AppointmentType[]> {
-    try {
-      const appointments = await Appointment.find({ doctorId }).lean();
-      return appointments.map(appointment => this.convertToAppointmentType(appointment));
-    } catch (error) {
-      console.error('Error getting appointments by doctor:', error);
-      return [];
-    }
-  }
-
-  async createAppointment(appointment: InsertAppointment): Promise<AppointmentType> {
-    try {
-      const newAppointment = new Appointment(appointment);
-      const savedAppointment = await newAppointment.save();
-      return this.convertToAppointmentType(savedAppointment.toObject());
-    } catch (error) {
-      console.error('Error creating appointment:', error);
-      throw error;
-    }
-  }
-
-  async updateAppointmentStatus(id: number, status: string): Promise<AppointmentType | undefined> {
-    try {
-      const updatedAppointment = await Appointment.findByIdAndUpdate(id, { status }, { new: true }).lean();
-      return updatedAppointment ? this.convertToAppointmentType(updatedAppointment) : undefined;
-    } catch (error) {
-      console.error('Error updating appointment status:', error);
-      return undefined;
-    }
-  }
-
-  // Lab Booking methods
-  async getLabBookings(): Promise<LabBookingType[]> {
-    try {
-      const labBookings = await LabBooking.find().lean();
-      return labBookings.map(labBooking => this.convertToLabBookingType(labBooking));
-    } catch (error) {
-      console.error('Error getting lab bookings:', error);
-      return [];
-    }
-  }
-
-  async getLabBookingById(id: number): Promise<LabBookingType | undefined> {
-    try {
-      const labBooking = await LabBooking.findById(id).lean();
-      return labBooking ? this.convertToLabBookingType(labBooking) : undefined;
-    } catch (error) {
-      console.error('Error getting lab booking by ID:', error);
-      return undefined;
-    }
-  }
-
-  async getLabBookingsByUser(userId: number): Promise<LabBookingType[]> {
-    try {
-      const labBookings = await LabBooking.find({ userId }).lean();
-      return labBookings.map(labBooking => this.convertToLabBookingType(labBooking));
-    } catch (error) {
-      console.error('Error getting lab bookings by user:', error);
-      return [];
-    }
-  }
-
-  async getLabBookingsByLaboratory(laboratoryId: number): Promise<LabBookingType[]> {
-    try {
-      const labBookings = await LabBooking.find({ laboratoryId }).lean();
-      return labBookings.map(labBooking => this.convertToLabBookingType(labBooking));
-    } catch (error) {
-      console.error('Error getting lab bookings by laboratory:', error);
-      return [];
-    }
-  }
-
-  async createLabBooking(labBooking: InsertLabBooking): Promise<LabBookingType> {
-    try {
-      const newLabBooking = new LabBooking(labBooking);
-      const savedLabBooking = await newLabBooking.save();
-      return this.convertToLabBookingType(savedLabBooking.toObject());
-    } catch (error) {
-      console.error('Error creating lab booking:', error);
-      throw error;
-    }
-  }
-
-  async updateLabBookingStatus(id: number, status: string): Promise<LabBookingType | undefined> {
-    try {
-      const updatedLabBooking = await LabBooking.findByIdAndUpdate(id, { status }, { new: true }).lean();
-      return updatedLabBooking ? this.convertToLabBookingType(updatedLabBooking) : undefined;
-    } catch (error) {
-      console.error('Error updating lab booking status:', error);
-      return undefined;
+  // Helper to check MongoDB connection and log appropriately
+  private isConnected(collectionName: string): boolean {
+    const isConnected = mongoDBService.isConnectedToDb();
+    if (!isConnected) {
+      console.warn(`MongoDB not connected. Falling back to in-memory storage for ${collectionName} operation.`);
     }
+    return isConnected;
   }
 
-  // Order methods
-  async getOrders(): Promise<OrderType[]> {
-    try {
-      const orders = await Order.find().lean();
-      return orders.map(order => this.convertToOrderType(order));
-    } catch (error) {
-      console.error('Error getting orders:', error);
-      return [];
-    }
-  }
+  // ---------- User Management ----------
 
-  async getOrderById(id: number): Promise<OrderType | undefined> {
-    try {
-      const order = await Order.findById(id).lean();
-      return order ? this.convertToOrderType(order) : undefined;
-    } catch (error) {
-      console.error('Error getting order by ID:', error);
-      return undefined;
+  async getUser(id: number): Promise<User | undefined> {
+    if (!this.isConnected(this.collections.users)) {
+      return undefined; // Will fall back to in-memory storage
     }
-  }
 
-  async getOrdersByUser(userId: number): Promise<OrderType[]> {
-    try {
-      const orders = await Order.find({ userId }).lean();
-      return orders.map(order => this.convertToOrderType(order));
-    } catch (error) {
-      console.error('Error getting orders by user:', error);
-      return [];
-    }
-  }
+    const collection = mongoDBService.getCollection(this.collections.users);
+    if (!collection) return undefined;
 
-  async createOrder(order: InsertOrder): Promise<OrderType> {
-    try {
-      const newOrder = new Order(order);
-      const savedOrder = await newOrder.save();
-      return this.convertToOrderType(savedOrder.toObject());
-    } catch (error) {
-      console.error('Error creating order:', error);
-      throw error;
-    }
+    const user = await collection.findOne({ id: id });
+    return user as User | undefined;
   }
 
-  async updateOrderStatus(id: number, status: string): Promise<OrderType | undefined> {
-    try {
-      const updatedOrder = await Order.findByIdAndUpdate(id, { status }, { new: true }).lean();
-      return updatedOrder ? this.convertToOrderType(updatedOrder) : undefined;
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      return undefined;
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    if (!this.isConnected(this.collections.users)) {
+      return undefined; // Will fall back to in-memory storage
     }
-  }
 
-  // Order Item methods
-  async getOrderItems(orderId: number): Promise<OrderItemType[]> {
-    try {
-      const orderItems = await OrderItem.find({ orderId }).lean();
-      return orderItems.map(orderItem => this.convertToOrderItemType(orderItem));
-    } catch (error) {
-      console.error('Error getting order items:', error);
-      return [];
-    }
-  }
+    const collection = mongoDBService.getCollection(this.collections.users);
+    if (!collection) return undefined;
 
-  async createOrderItem(orderItem: InsertOrderItem): Promise<OrderItemType> {
-    try {
-      const newOrderItem = new OrderItem(orderItem);
-      const savedOrderItem = await newOrderItem.save();
-      return this.convertToOrderItemType(savedOrderItem.toObject());
-    } catch (error) {
-      console.error('Error creating order item:', error);
-      throw error;
-    }
+    const user = await collection.findOne({ username: username });
+    return user as User | undefined;
   }
 
-  // Health Tips methods
-  async getHealthTips(): Promise<HealthTipType[]> {
-    try {
-      const healthTips = await HealthTip.find().lean();
-      return healthTips.map(healthTip => this.convertToHealthTipType(healthTip));
-    } catch (error) {
-      console.error('Error getting health tips:', error);
-      return [];
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    if (!this.isConnected(this.collections.users)) {
+      return undefined; // Will fall back to in-memory storage
     }
-  }
 
-  async getHealthTipById(id: number): Promise<HealthTipType | undefined> {
-    try {
-      const healthTip = await HealthTip.findById(id).lean();
-      return healthTip ? this.convertToHealthTipType(healthTip) : undefined;
-    } catch (error) {
-      console.error('Error getting health tip by ID:', error);
-      return undefined;
-    }
-  }
+    const collection = mongoDBService.getCollection(this.collections.users);
+    if (!collection) return undefined;
 
-  async getRandomHealthTip(): Promise<HealthTipType | undefined> {
-    try {
-      const count = await HealthTip.countDocuments();
-      if (count === 0) return undefined;
-      
-      const random = Math.floor(Math.random() * count);
-      const healthTip = await HealthTip.findOne().skip(random).lean();
-      return healthTip ? this.convertToHealthTipType(healthTip) : undefined;
-    } catch (error) {
-      console.error('Error getting random health tip:', error);
-      return undefined;
-    }
+    const user = await collection.findOne({ email: email });
+    return user as User | undefined;
   }
 
-  async createHealthTip(healthTip: InsertHealthTip): Promise<HealthTipType> {
-    try {
-      const newHealthTip = new HealthTip(healthTip);
-      const savedHealthTip = await newHealthTip.save();
-      return this.convertToHealthTipType(savedHealthTip.toObject());
-    } catch (error) {
-      console.error('Error creating health tip:', error);
-      throw error;
+  async createUser(user: Omit<User, 'id'>): Promise<User> {
+    if (!this.isConnected(this.collections.users)) {
+      throw new Error('MongoDB not connected for user creation'); // Will fall back to in-memory storage
     }
-  }
 
-  async updateHealthTip(id: number, healthTip: Partial<InsertHealthTip>): Promise<HealthTipType | undefined> {
-    try {
-      const updatedHealthTip = await HealthTip.findByIdAndUpdate(id, healthTip, { new: true }).lean();
-      return updatedHealthTip ? this.convertToHealthTipType(updatedHealthTip) : undefined;
-    } catch (error) {
-      console.error('Error updating health tip:', error);
-      return undefined;
-    }
-  }
+    const collection = mongoDBService.getCollection(this.collections.users);
+    if (!collection) throw new Error('Failed to get users collection');
 
-  async deleteHealthTip(id: number): Promise<boolean> {
-    try {
-      const result = await HealthTip.findByIdAndDelete(id);
-      return !!result;
-    } catch (error) {
-      console.error('Error deleting health tip:', error);
-      return false;
-    }
-  }
+    // Generate a numeric ID for compatibility with in-memory storage
+    const lastUser = await collection.find().sort({ id: -1 }).limit(1).toArray();
+    const id = lastUser.length > 0 ? lastUser[0].id + 1 : 1;
 
-  // Helper methods to convert MongoDB documents to our schema types
-  private convertToUserType(user: any): UserType {
-    // Make sure MongoDB documents are properly converted
-    if (!user) return null;
+    const newUser = { ...user, id };
     
-    // Handle numeric IDs consistently
-    // Priority: 1. numericId (specifically for our app), 2. id, 3. _id converted to number if possible
-    let numericId = null;
-    
-    if (user.numericId) {
-      // Use explicit numericId if available
-      numericId = Number(user.numericId);
-    } else if (user.id && !isNaN(Number(user.id))) {
-      // Try using the id field if it's a number
-      numericId = Number(user.id);
-    } else if (user._id) {
-      // If we have a MongoDB ObjectId, use the timestamp part as a numeric ID
-      // This ensures we have a numeric value that can be used in place of serial IDs
-      if (typeof user._id === 'object' && user._id.getTimestamp) {
-        // MongoDB ObjectId - use timestamp in milliseconds as a numeric ID
-        numericId = user._id.getTimestamp().getTime();
-      } else if (!isNaN(Number(user._id))) {
-        // If _id is numeric, use it directly
-        numericId = Number(user._id);
-      } else if (typeof user._id === 'string') {
-        // If _id is a string (like a hex string), get the last 4 digits
-        // and convert to number - this is just a fallback
-        const idStr = user._id.toString();
-        numericId = parseInt(idStr.slice(-4), 16);
-      }
+    await collection.insertOne(newUser);
+    return newUser as User;
+  }
+
+  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+    if (!this.isConnected(this.collections.users)) {
+      return undefined; // Will fall back to in-memory storage
     }
-    
-    // Ensure we have a valid numeric ID
-    if (!numericId || isNaN(numericId)) {
-      // Generate a numeric ID based on username hash as last resort
-      numericId = Math.abs(user.username.split('').reduce((a, b) => {
-        a = ((a << 5) - a) + b.charCodeAt(0);
-        return a & a;
-      }, 0)) % 1000000; // Limit to 6 digits
-      
-      console.warn(`Generated numeric ID ${numericId} for user ${user.username} as fallback`);
+
+    const collection = mongoDBService.getCollection(this.collections.users);
+    if (!collection) return undefined;
+
+    const result = await collection.findOneAndUpdate(
+      { id: id },
+      { $set: userData },
+      { returnDocument: 'after' }
+    );
+
+    return result as User | undefined;
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    if (!this.isConnected(this.collections.users)) {
+      return false; // Will fall back to in-memory storage
     }
-    
-    return {
-      id: numericId,
-      username: user.username,
-      email: user.email,
-      password: user.password,
-      name: user.name,
-      phone: user.phone || null,
-      address: user.address || null,
-      pincode: user.pincode || null,
-      role: user.role || 'customer',
-      profileImageUrl: user.profileImageUrl || null
-    };
+
+    const collection = mongoDBService.getCollection(this.collections.users);
+    if (!collection) return false;
+
+    const result = await collection.deleteOne({ id: id });
+    return result.deletedCount === 1;
   }
 
-  private convertToProductType(product: any): ProductType {
-    if (!product) return null;
-    
-    // Handle numeric IDs consistently - similar approach as in convertToUserType
-    let numericId = null;
-    
-    if (product.numericId) {
-      numericId = Number(product.numericId);
-    } else if (product.id && !isNaN(Number(product.id))) {
-      numericId = Number(product.id);
-    } else if (product._id) {
-      if (typeof product._id === 'object' && product._id.getTimestamp) {
-        numericId = product._id.getTimestamp().getTime() % 1000000;
-      } else if (!isNaN(Number(product._id))) {
-        numericId = Number(product._id);
-      } else if (typeof product._id === 'string') {
-        const idStr = product._id.toString();
-        numericId = parseInt(idStr.slice(-6), 16) % 1000000;
-      }
+  async getAllUsers(): Promise<User[]> {
+    if (!this.isConnected(this.collections.users)) {
+      return []; // Will fall back to in-memory storage
     }
-    
-    // Ensure we have a valid numeric ID
-    if (!numericId || isNaN(numericId)) {
-      // Generate a numeric ID based on product name hash as last resort
-      numericId = Math.abs(product.name.split('').reduce((a, b) => {
-        a = ((a << 5) - a) + b.charCodeAt(0);
-        return a & a;
-      }, 0)) % 1000000; // Limit to 6 digits
+
+    const collection = mongoDBService.getCollection(this.collections.users);
+    if (!collection) return [];
+
+    const users = await collection.find().toArray();
+    return users as User[];
+  }
+
+  // ---------- OTP Records ----------
+
+  async createOtpRecord(email: string, otp: string, expiresAt: Date): Promise<void> {
+    if (!this.isConnected(this.collections.otpRecords)) {
+      return; // Will fall back to in-memory storage
     }
-    
-    // Handle categoryId which might be ObjectId or Number
-    let categoryIdNum = null;
-    if (product.categoryId) {
-      if (typeof product.categoryId === 'number') {
-        categoryIdNum = product.categoryId;
-      } else if (typeof product.categoryId === 'string' && !isNaN(Number(product.categoryId))) {
-        categoryIdNum = Number(product.categoryId);
-      } else if (typeof product.categoryId === 'object' && product.categoryId._id) {
-        // Handle nested object with _id
-        categoryIdNum = Number(product.categoryId._id);
-      } else {
-        // Default to category 1 if we can't parse a valid number
-        categoryIdNum = 1;
-      }
-    } else {
-      // Default to category 1 if not specified
-      categoryIdNum = 1;
+
+    const collection = mongoDBService.getCollection(this.collections.otpRecords);
+    if (!collection) return;
+
+    // First, delete any existing OTP records for this email
+    await collection.deleteMany({ email: email });
+
+    // Then create a new OTP record
+    const otpRecord: OTPRecord = {
+      email: email,
+      otp: otp,
+      expiresAt: expiresAt,
+      verified: false
+    };
+
+    await collection.insertOne(otpRecord);
+  }
+
+  async getOtpRecord(email: string): Promise<OTPRecord | undefined> {
+    if (!this.isConnected(this.collections.otpRecords)) {
+      return undefined; // Will fall back to in-memory storage
     }
-    
-    return {
-      id: numericId,
-      name: product.name,
-      description: product.description || null,
-      price: product.price,
-      discountedPrice: product.discountedPrice || null,
-      imageUrl: product.imageUrl || null,
-      categoryId: categoryIdNum,
-      brand: product.brand || null,
-      inStock: product.inStock !== undefined ? product.inStock : true,
-      quantity: product.quantity,
-      rating: product.rating || null,
-      ratingCount: product.ratingCount || null,
-      isFeatured: product.isFeatured !== undefined ? product.isFeatured : false,
-      // Include medicine-specific fields
-      composition: product.composition || null,
-      uses: product.uses || null,
-      sideEffects: product.sideEffects || null,
-      contraindications: product.contraindications || null,
-      manufacturer: product.manufacturer || null,
-      packSize: product.packSize || null
-    };
+
+    const collection = mongoDBService.getCollection(this.collections.otpRecords);
+    if (!collection) return undefined;
+
+    const otpRecord = await collection.findOne({ email: email });
+    return otpRecord as OTPRecord | undefined;
   }
 
-  private convertToCategoryType(category: any): CategoryType {
-    return {
-      id: category._id.toString(),
-      name: category.name,
-      description: category.description,
-      imageUrl: category.imageUrl
-    };
+  async updateOtpRecord(email: string, updates: Partial<OTPRecord>): Promise<boolean> {
+    if (!this.isConnected(this.collections.otpRecords)) {
+      return false; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.otpRecords);
+    if (!collection) return false;
+
+    const result = await collection.updateOne(
+      { email: email },
+      { $set: updates }
+    );
+
+    return result.modifiedCount === 1;
   }
 
-  private convertToCartItemType(cartItem: any): CartItemType {
-    return {
-      id: cartItem._id.toString(),
-      userId: cartItem.userId.toString(),
-      productId: cartItem.productId.toString(),
-      quantity: cartItem.quantity
-    };
+  async deleteOtpRecord(email: string): Promise<boolean> {
+    if (!this.isConnected(this.collections.otpRecords)) {
+      return false; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.otpRecords);
+    if (!collection) return false;
+
+    const result = await collection.deleteOne({ email: email });
+    return result.deletedCount === 1;
   }
 
-  private convertToArticleType(article: any): ArticleType {
-    return {
-      id: article._id.toString(),
-      title: article.title,
-      content: article.content,
-      imageUrl: article.imageUrl,
-      createdAt: article.createdAt
-    };
-  }
+  // ---------- Sessions ----------
 
-  private convertToTestimonialType(testimonial: any): TestimonialType {
-    return {
-      id: testimonial._id.toString(),
-      name: testimonial.name,
-      content: testimonial.content,
-      rating: testimonial.rating,
-      initials: testimonial.initials
-    };
-  }
+  // The session methods will be implemented when integrating a SessionStore
 
-  private convertToLabTestType(labTest: any): LabTestType {
-    return {
-      id: labTest._id.toString(),
-      name: labTest.name,
-      description: labTest.description,
-      price: labTest.price,
-      discountedPrice: labTest.discountedPrice,
-      testCount: labTest.testCount
-    };
-  }
-
-  private convertToDoctorType(doctor: any): DoctorType {
-    return {
-      id: doctor._id.toString(),
-      userId: doctor.userId.toString(),
-      specialization: doctor.specialization,
-      experience: doctor.experience,
-      qualification: doctor.qualification,
-      bio: doctor.bio,
-      availableDays: doctor.availableDays,
-      availableTimeStart: doctor.availableTimeStart,
-      availableTimeEnd: doctor.availableTimeEnd,
-      consultationFee: doctor.consultationFee,
-      rating: doctor.rating,
-      ratingCount: doctor.ratingCount,
-      isAvailable: doctor.isAvailable
-    };
-  }
-
-  private convertToPharmacyType(pharmacy: any): PharmacyType {
-    return {
-      id: pharmacy._id.toString(),
-      userId: pharmacy.userId.toString(),
-      license: pharmacy.license,
-      address: pharmacy.address,
-      city: pharmacy.city,
-      state: pharmacy.state,
-      pincode: pharmacy.pincode,
-      phone: pharmacy.phone,
-      openingTime: pharmacy.openingTime,
-      closingTime: pharmacy.closingTime,
-      isOpen: pharmacy.isOpen,
-      rating: pharmacy.rating,
-      ratingCount: pharmacy.ratingCount
-    };
-  }
-
-  private convertToLaboratoryType(laboratory: any): LaboratoryType {
-    return {
-      id: laboratory._id.toString(),
-      userId: laboratory.userId.toString(),
-      license: laboratory.license,
-      address: laboratory.address,
-      city: laboratory.city,
-      state: laboratory.state,
-      pincode: laboratory.pincode,
-      phone: laboratory.phone,
-      openingTime: laboratory.openingTime,
-      closingTime: laboratory.closingTime,
-      isOpen: laboratory.isOpen,
-      rating: laboratory.rating,
-      ratingCount: laboratory.ratingCount
-    };
-  }
-
-  private convertToAppointmentType(appointment: any): AppointmentType {
-    return {
-      id: appointment._id.toString(),
-      userId: appointment.userId.toString(),
-      doctorId: appointment.doctorId.toString(),
-      appointmentDate: appointment.appointmentDate,
-      appointmentTime: appointment.appointmentTime,
-      status: appointment.status,
-      symptoms: appointment.symptoms,
-      notes: appointment.notes,
-      prescriptionUrl: appointment.prescriptionUrl,
-      createdAt: appointment.createdAt
-    };
-  }
-
-  private convertToLabBookingType(labBooking: any): LabBookingType {
-    return {
-      id: labBooking._id.toString(),
-      userId: labBooking.userId.toString(),
-      laboratoryId: labBooking.laboratoryId.toString(),
-      labTestId: labBooking.labTestId.toString(),
-      bookingDate: labBooking.bookingDate,
-      bookingTime: labBooking.bookingTime,
-      status: labBooking.status,
-      notes: labBooking.notes,
-      reportUrl: labBooking.reportUrl,
-      createdAt: labBooking.createdAt
-    };
-  }
-
-  private convertToOrderType(order: any): OrderType {
-    return {
-      id: order._id.toString(),
-      userId: order.userId.toString(),
-      totalAmount: order.totalAmount,
-      status: order.status,
-      shippingAddress: order.shippingAddress,
-      paymentMethod: order.paymentMethod,
-      paymentStatus: order.paymentStatus,
-      createdAt: order.createdAt
-    };
-  }
-
-  private convertToOrderItemType(orderItem: any): OrderItemType {
-    return {
-      id: orderItem._id.toString(),
-      orderId: orderItem.orderId.toString(),
-      productId: orderItem.productId.toString(),
-      quantity: orderItem.quantity,
-      price: orderItem.price
-    };
-  }
-
-  private convertToHealthTipType(healthTip: any): HealthTipType {
-    return {
-      id: healthTip._id.toString(),
-      title: healthTip.title,
-      content: healthTip.content,
-      category: healthTip.category,
-      imageUrl: healthTip.imageUrl,
-      createdAt: healthTip.createdAt
-    };
-  }
+  // Additional methods for other collections will be added as needed
 }
 
+// Create and export the MongoDB storage instance
 export const mongoDBStorage = new MongoDBStorage();
