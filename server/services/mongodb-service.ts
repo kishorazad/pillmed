@@ -10,10 +10,10 @@ import {
 
 // MongoDB connection URL with additional configuration parameters
 // Use environment variable for MongoDB connection string to avoid hardcoding credentials
-// Fallback to use PostgreSQL instead if MongoDB connection fails
-const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL;
+// IMPORTANT: Only use MONGODB_URI for MongoDB connections; DATABASE_URL is for PostgreSQL
+const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
-  console.log('No database connection URL provided. Using in-memory storage instead.');
+  console.log('No MongoDB connection URL provided. Using in-memory storage instead.');
 }
 
 // Make sure we specify the database name in the connection string
@@ -29,12 +29,20 @@ let mongoDbAvailable = false;
 export const connectToDatabase = async (retries = 5) => {
   console.log('Attempting to connect to MongoDB...');
 
-  // Support both DATABASE_URL and MONGODB_URI environment variables
-  const connectionString = process.env.MONGODB_URI || process.env.DATABASE_URL;
+  // Only use MONGODB_URI for MongoDB connections, not DATABASE_URL 
+  // DATABASE_URL is for PostgreSQL connections and will cause errors if used with MongoDB
+  const connectionString = process.env.MONGODB_URI;
 
-  // If there's no database connection string, gracefully fallback to in-memory storage
+  // If there's no MongoDB connection string, gracefully fallback to in-memory storage
   if (!connectionString) {
-    console.log('No database connection URL provided. Using in-memory storage instead.');
+    console.log('No MongoDB URI provided. Using in-memory storage instead.');
+    return false;
+  }
+
+  // Verify the connection string format to prevent attempted connections with invalid URIs
+  if (!connectionString.startsWith('mongodb://') && !connectionString.startsWith('mongodb+srv://')) {
+    console.error('Invalid MongoDB connection string format. Must start with mongodb:// or mongodb+srv://');
+    console.log('Using in-memory storage for database operations');
     return false;
   }
 
@@ -77,7 +85,7 @@ export const connectToDatabase = async (retries = 5) => {
 
       if (attempt === retries) {
         console.error('MongoDB connection error: Cannot connect to MongoDB - using in-memory storage');
-        console.log('Using in-memory storage instead of MongoDB');
+        console.log('Using in-memory storage for database operations');
         mongoDbAvailable = false;
         return false;
       }
