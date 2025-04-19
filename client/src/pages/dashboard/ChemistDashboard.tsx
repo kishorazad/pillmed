@@ -8,7 +8,7 @@ import {
   CheckCircle, AlertTriangle, Package, Truck, Clock, FileText, XCircle, 
   MapPin, User, Phone, Plus, Pill, Upload, Search, Filter, MoreVertical, 
   PlusCircle, UploadCloud, RefreshCw, Pencil, Loader2, Stethoscope,
-  UserCog, Ambulance, FilterX
+  UserCog, Ambulance, FilterX, ClipboardCheck, ClipboardList, CheckSquare
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -345,7 +345,7 @@ const ChemistDashboard: React.FC = () => {
       customerAddress: '456 Park Avenue, Andheri East, Mumbai',
       customerPhone: '+91 8765432109',
       prescriptionImage: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef',
-      status: 'readable',
+      status: 'reviewed',
       uploadDate: '2025-04-17T10:15:00',
       doctorId: 201,
       doctorName: 'Dr. Raj Kumar',
@@ -1334,6 +1334,9 @@ const ChemistDashboard: React.FC = () => {
                 onMarkPacked={handleMarkPacked}
                 onAssignDelivery={handleAssignDelivery}
                 renderStatusBadge={renderStatusBadge}
+                onMarkAsReviewed={handleMarkAsReviewed}
+                onMarkMedicineChecked={handleMarkMedicineChecked}
+                onConfirmOrder={handleConfirmOrder}
               />
             ))
           ) : (
@@ -1352,6 +1355,9 @@ const ChemistDashboard: React.FC = () => {
                 onMarkPacked={handleMarkPacked}
                 onAssignDelivery={handleAssignDelivery}
                 renderStatusBadge={renderStatusBadge}
+                onMarkAsReviewed={handleMarkAsReviewed}
+                onMarkMedicineChecked={handleMarkMedicineChecked}
+                onConfirmOrder={handleConfirmOrder}
               />
             ))
           ) : (
@@ -1370,6 +1376,9 @@ const ChemistDashboard: React.FC = () => {
                 onMarkPacked={handleMarkPacked}
                 onAssignDelivery={handleAssignDelivery}
                 renderStatusBadge={renderStatusBadge}
+                onMarkAsReviewed={handleMarkAsReviewed}
+                onMarkMedicineChecked={handleMarkMedicineChecked}
+                onConfirmOrder={handleConfirmOrder}
               />
             ))
           ) : (
@@ -1388,6 +1397,9 @@ const ChemistDashboard: React.FC = () => {
                 onMarkPacked={handleMarkPacked}
                 onAssignDelivery={handleAssignDelivery}
                 renderStatusBadge={renderStatusBadge}
+                onMarkAsReviewed={handleMarkAsReviewed}
+                onMarkMedicineChecked={handleMarkMedicineChecked}
+                onConfirmOrder={handleConfirmOrder}
               />
             ))
           ) : (
@@ -1405,6 +1417,9 @@ const ChemistDashboard: React.FC = () => {
               onMarkPacked={handleMarkPacked}
               onAssignDelivery={handleAssignDelivery}
               renderStatusBadge={renderStatusBadge}
+              onMarkAsReviewed={handleMarkAsReviewed}
+              onMarkMedicineChecked={handleMarkMedicineChecked}
+              onConfirmOrder={handleConfirmOrder}
             />
           ))}
         </TabsContent>
