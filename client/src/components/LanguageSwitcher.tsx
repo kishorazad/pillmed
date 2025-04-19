@@ -275,6 +275,8 @@ export const translations: Record<string, Record<string, string>> = {
     'add_relative_number': 'रिश्तेदार का नंबर जोड़ें',
     'open_emergency_contacts': 'आपातकालीन संपर्क खोलें',
     'close_emergency_contacts': 'आपातकालीन संपर्क बंद करें',
+    'emergency': 'आपातकालीन',
+    'emergency_medical_services': 'आपातकालीन चिकित्सा सेवाएं',
     'logout': 'लॉगआउट',
     'register': 'रजिस्टर',
     'add_to_cart': 'कार्ट में जोड़ें',
