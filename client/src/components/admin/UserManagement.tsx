@@ -390,16 +390,15 @@ const UserManagement = () => {
       return;
     }
     
-    // Submit the form
+    // Submit the form with all required fields
     const userData = {
-      name: newUser.name,
-      username: newUser.username,
-      email: newUser.email,
+      name: newUser.name.trim(),
+      username: newUser.username.trim(),
+      email: newUser.email.trim(),
       password: newUser.password,
-      phone: newUser.phone,
+      phone: newUser.phone || null, // Ensure nullable fields are properly handled
       role: newUser.role,
-      active: newUser.active, // Send active flag to server
-      // Server will convert this to a status value based on this flag
+      status: newUser.active ? 'active' : 'pending' // Directly use the status field
     };
     
     // Log the data being sent for debugging

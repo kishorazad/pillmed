@@ -198,15 +198,36 @@ class MongoDBStorage implements IStorage {
         ]
       });
       
+      // Log incoming user data for debugging
+      console.log('Raw user data before processing:', {
+        ...user,
+        password: '[REDACTED]'
+      });
+      
       // Set proper status based on active flag if provided
       if ('active' in user && typeof user.active === 'boolean') {
+        console.log(`Converting 'active' flag (${user.active}) to status value`);
         user.status = user.active ? 'active' : 'pending';
         // Remove the active flag as it's not part of our User schema
         delete (user as any).active;
       } else if (!user.status) {
         // Default status if neither active nor status is provided
+        console.log('No status or active flag provided, setting default status to active');
+        user.status = 'active';
+      } else {
+        console.log(`Using provided status value: ${user.status}`);
+      }
+      
+      // Ensure status is a valid value
+      if (!['active', 'pending', 'suspended'].includes(user.status)) {
+        console.log(`Invalid status value: ${user.status}, setting to default 'active'`);
         user.status = 'active';
       }
+      
+      console.log('Final user data after status processing:', {
+        ...user,
+        password: '[REDACTED]'
+      });
       
       if (existingUser) {
         console.log(`User already exists in MongoDB: ${JSON.stringify(existingUser)}`);

@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   address: text("address"),
   pincode: text("pincode"),
   role: text("role").default("customer"), // customer, admin, pharmacy, doctor, laboratory
+  status: text("status").default("active"), // active, pending, suspended
   profileImageUrl: text("profile_image_url"),
 });
 
@@ -24,6 +25,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   address: true,
   pincode: true,
   role: true,
+  status: true,
   profileImageUrl: true,
 });
 

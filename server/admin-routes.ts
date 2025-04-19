@@ -182,6 +182,9 @@ router.post('/users', async (req: Request, res: Response) => {
   try {
     const storage: IStorage = global.useMongoStorage ? mongoDBStorage : req.app.locals.storage;
     
+    // Log raw request body for debugging
+    console.log('Raw request body for user creation:', JSON.stringify(req.body));
+    
     // Validate request body
     const userSchema = z.object({
       username: z.string().min(3, { message: "Username must be at least 3 characters" }),
@@ -189,13 +192,15 @@ router.post('/users', async (req: Request, res: Response) => {
       email: z.string().email({ message: "Please enter a valid email address" }),
       password: z.string().min(6, { message: "Password must be at least 6 characters" }),
       role: z.string().nonempty({ message: "Please select a role" }),
-      phone: z.string().optional(),
-      address: z.string().optional(),
-      pincode: z.string().optional(),
+      phone: z.string().optional().nullable(),
+      address: z.string().optional().nullable(),
+      pincode: z.string().optional().nullable(),
       // The active flag can be sent from the client to determine the initial status
       active: z.boolean().optional(),
       // Or the status can be sent directly
       status: z.enum(['active', 'pending', 'suspended']).optional(),
+      // Common fields that might come from the front-end form
+      confirmPassword: z.string().optional(), // Not stored, just for validation
     });
     
     const validatedData = userSchema.parse(req.body);
