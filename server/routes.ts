@@ -760,6 +760,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Update user profile
+  app.put("/api/user", async (req: Request, res: Response) => {
+    try {
+      // Check if user is authenticated
+      const sessionUser = (req.session as any)?.user;
+      
+      if (!sessionUser) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      console.log(`Updating profile for user ID: ${sessionUser.id}`);
+      console.log("Profile data received:", {
+        ...req.body,
+        password: req.body.password ? "***hidden***" : undefined
+      });
+      
+      const {
+        name,
+        email,
+        phone,
+        address,
+        pincode,
+        profileImageUrl
+      } = req.body;
+      
+      // Only update provided fields
+      const updateData: Partial<User> = {};
+      if (name !== undefined) updateData.name = name;
+      if (email !== undefined) updateData.email = email;
+      if (phone !== undefined) updateData.phone = phone;
+      if (address !== undefined) updateData.address = address;
+      if (pincode !== undefined) updateData.pincode = pincode;
+      if (profileImageUrl !== undefined) updateData.profileImageUrl = profileImageUrl;
+      
+      console.log("Using storage:", global.useMongoStorage ? "MongoDB" : "Memory");
+      console.log("Update data:", updateData);
+      
+      // Update user in the appropriate storage
+      let updatedUser;
+      if (global.useMongoStorage) {
+        console.log(`Updating user in MongoDB for user ID: ${sessionUser.id}`);
+        updatedUser = await mongoDBStorage.updateUser(sessionUser.id, updateData);
+      } else {
+        console.log(`Updating user in memory storage for user ID: ${sessionUser.id}`);
+        updatedUser = await memStorage.updateUser(sessionUser.id, updateData);
+      }
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Update the session with the new user data
+      (req.session as any).user = updatedUser;
+      console.log(`Updated session for user ${updatedUser.id}`);
+      
+      // Don't return the password
+      const { password, ...userWithoutPassword } = updatedUser;
+      return res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      return res.status(500).json({ message: "Error updating user profile" });
+    }
+  });
+  
   // Add session check endpoint for debugging authentication issues
   app.get("/api/session-check", (req: Request, res: Response) => {
     try {

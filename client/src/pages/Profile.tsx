@@ -124,13 +124,30 @@ const Profile = () => {
   // Handle profile update
   const onProfileSubmit = async (data: z.infer<typeof profileSchema>) => {
     try {
-      // In a real app, you would send this data to the server
-      // For now, just update the local state
+      console.log('Submitting profile data:', data);
+      
       if (auth.user) {
-        setUser({
-          ...auth.user,
-          ...data,
+        // Send data to the server via API endpoint
+        const response = await fetch('/api/user', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+          credentials: 'include', // Important for session cookies
         });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update profile');
+        }
+        
+        const updatedUser = await response.json();
+        
+        // Update local state with the server response
+        setUser(updatedUser);
+        
+        // Invalidate user query to refresh data
+        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
         
         toast({
           title: "Profile updated",
@@ -138,9 +155,10 @@ const Profile = () => {
         });
       }
     } catch (error) {
+      console.error('Profile update error:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: error instanceof Error ? error.message : "Failed to update profile",
         variant: "destructive",
       });
     }
