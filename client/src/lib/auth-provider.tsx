@@ -159,19 +159,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Register mutation
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
+      console.log('Registering user with data:', {
+        ...userData,
+        password: '***hidden***' // Don't log the actual password
+      });
+      
+      // Get the temp user ID to transfer cart
+      const { tempUserId } = useStore.getState();
+      
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
+        body: JSON.stringify({
+          ...userData,
+          tempUserId // Include tempUserId for cart transfer
+        }),
         credentials: 'include' // Important for cookies
       });
       
+      console.log('Register response status:', response.status);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Registration error response:', errorData);
         throw new Error(errorData.message || 'Registration failed');
       }
       
       const newUser = await response.json();
+      console.log('Registration successful, user data:', {
+        id: newUser.id,
+        username: newUser.username,
+        role: newUser.role
+      });
+      
       return newUser;
     },
     onSuccess: (userData: User) => {
@@ -185,8 +205,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registration successful",
         description: `Welcome, ${userData.name}!`,
       });
+      
+      // Redirect based on user role
+      if (userData.role) {
+        const role = userData.role.toLowerCase();
+        
+        // Small delay to ensure session is properly saved
+        setTimeout(() => {
+          switch (role) {
+            case 'admin':
+              window.location.href = '/admin';
+              break;
+            case 'doctor':
+              window.location.href = '/doctor';
+              break;
+            case 'chemist':
+              window.location.href = '/chemist';
+              break;
+            case 'pharmacy':
+              window.location.href = '/pharmacy';
+              break;
+            case 'hospital':
+            case 'laboratory':
+              window.location.href = '/laboratory';
+              break;
+            case 'delivery':
+              window.location.href = '/delivery';
+              break;
+            default:
+              window.location.href = '/profile';
+          }
+        }, 500);
+      }
     },
     onError: (error: Error) => {
+      console.error('Register mutation error:', error);
       toast({
         title: "Registration failed",
         description: error.message,

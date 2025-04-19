@@ -573,37 +573,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User registration
   app.post("/api/register", async (req: Request, res: Response) => {
     try {
+      console.log("Registration request received:", {
+        ...req.body, 
+        password: req.body.password ? "***hidden***" : undefined
+      });
+      
       const { tempUserId, ...userData } = req.body;
-      const validUserData = insertUserSchema.parse(userData);
       
-      // Check if user with the username already exists
-      const existingUser = await dbStorage.getUserByUsername(validUserData.username);
-      if (existingUser) {
-        return res.status(409).json({ message: "Username already exists" });
+      // Manually validate data before parsing with Zod
+      if (!userData.username || userData.username.length < 4) {
+        return res.status(400).json({ 
+          message: "Invalid username", 
+          detail: "Username must be at least 4 characters long" 
+        });
       }
       
-      const newUser = await dbStorage.createUser(validUserData);
+      if (!userData.password || userData.password.length < 6) {
+        return res.status(400).json({ 
+          message: "Invalid password", 
+          detail: "Password must be at least 6 characters long" 
+        });
+      }
       
-      // Set user in session
-      (req.session as any).user = newUser;
+      if (!userData.name || userData.name.length < 2) {
+        return res.status(400).json({ 
+          message: "Invalid name", 
+          detail: "Name must be at least 2 characters long" 
+        });
+      }
       
-      // Transfer cart items from temp user to the newly registered user
-      if (tempUserId && tempUserId !== newUser.id) {
-        console.log(`Transferring cart items from temp user ${tempUserId} to new user ${newUser.id}`);
-        try {
-          await dbStorage.transferCartItems(tempUserId, newUser.id);
-        } catch (err) {
-          console.error("Error transferring cart items during registration:", err);
+      if (!userData.email || !userData.email.includes('@')) {
+        return res.status(400).json({ 
+          message: "Invalid email", 
+          detail: "Please provide a valid email address" 
+        });
+      }
+      
+      try {
+        // Now try Zod parsing
+        const validUserData = insertUserSchema.parse(userData);
+        console.log("Zod validation passed for user data");
+        
+        // Check if user with the username already exists
+        const existingUserByUsername = await dbStorage.getUserByUsername(validUserData.username);
+        if (existingUserByUsername) {
+          console.log(`Registration failed: Username ${validUserData.username} already exists`);
+          return res.status(409).json({ message: "Username already exists" });
         }
+        
+        // Check if user with the email already exists
+        const existingUserByEmail = await dbStorage.getUserByEmail(validUserData.email);
+        if (existingUserByEmail) {
+          console.log(`Registration failed: Email ${validUserData.email} already exists`);
+          return res.status(409).json({ message: "Email already exists" });
+        }
+        
+        // Hash the password before storing
+        const crypto = await import('crypto');
+        const salt = crypto.randomBytes(16).toString('hex');
+        const hash = crypto.scryptSync(validUserData.password, salt, 64).toString('hex');
+        const hashedPassword = `${hash}.${salt}`;
+        
+        console.log(`Generated password hash for new user (salt length: ${salt.length})`);
+        
+        // Create the user with hashed password
+        const newUser = await dbStorage.createUser({
+          ...validUserData,
+          password: hashedPassword
+        });
+        
+        console.log(`User created successfully with ID: ${newUser.id}`);
+        
+        // Set user in session
+        (req.session as any).user = newUser;
+        console.log(`User ${newUser.id} added to session`);
+        
+        // Transfer cart items from temp user to the newly registered user
+        if (tempUserId && tempUserId !== newUser.id) {
+          console.log(`Transferring cart items from temp user ${tempUserId} to new user ${newUser.id}`);
+          try {
+            await dbStorage.transferCartItems(tempUserId, newUser.id);
+          } catch (err) {
+            console.error("Error transferring cart items during registration:", err);
+          }
+        }
+        
+        // Don't return the password
+        const { password, ...userWithoutPassword } = newUser;
+        console.log(`Registration complete, returning user data for ID: ${newUser.id}`);
+        res.status(201).json(userWithoutPassword);
+      } catch (zodError) {
+        if (zodError instanceof z.ZodError) {
+          console.error("Zod validation error:", zodError.format());
+          return res.status(400).json({ 
+            message: "Invalid user data", 
+            errors: zodError.format() 
+          });
+        }
+        throw zodError;
       }
-      
-      // Don't return the password
-      const { password, ...userWithoutPassword } = newUser;
-      res.status(201).json(userWithoutPassword);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid user data", errors: error.format() });
-      }
+      console.error("Registration error:", error);
       res.status(500).json({ message: "Failed to register user" });
     }
   });
