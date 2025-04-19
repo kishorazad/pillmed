@@ -92,9 +92,12 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Email and OTP are required' });
     }
     
+    // Get the appropriate storage service
+    const storageService = getStorageService();
+    
     // Check if the user exists
     try {
-      const user = await storage.getUserByEmail(email);
+      const user = await storageService.getUserByEmail(email);
       if (!user) {
         console.log(`OTP verification attempted for non-existent email: ${email}`);
         console.log(`DEVELOPMENT MODE: Allowing OTP verification for non-existent email: ${email}`);
@@ -106,16 +109,23 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
       // Continue with OTP verification even if database lookup fails
     }
     
-    // Clean up expired OTPs
-    cleanupExpiredOtps();
+    // Find OTP record from storage
+    const otpRecord = await storageService.getOtpRecord(email);
     
-    // Find OTP record
-    const otpRecord = otpStore.find(record => record.email === email && record.otp === otp);
-    
-    if (!otpRecord) {
+    if (!otpRecord || otpRecord.otp !== otp) {
       console.log(`Invalid OTP attempt for ${email}: ${otp}`);
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
     }
+    
+    // Check if OTP is expired
+    const now = new Date();
+    if (otpRecord.expiresAt < now) {
+      console.log(`Expired OTP used for ${email}: ${otp}`);
+      return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
+    }
+    
+    // Mark the OTP as verified
+    await storageService.updateOtpRecord(email, { verified: true });
     
     console.log(`OTP verified successfully for ${email}`);
     return res.json({ success: true, message: 'OTP verified successfully' });
@@ -134,10 +144,13 @@ router.post('/reset', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Email, OTP, and new password are required' });
     }
     
+    // Get the appropriate storage service
+    const storageService = getStorageService();
+    
     // Check if the user exists
     let user;
     try {
-      user = await storage.getUserByEmail(email);
+      user = await storageService.getUserByEmail(email);
       if (!user) {
         console.log(`Password reset attempted for non-existent email: ${email}`);
         console.log(`DEVELOPMENT MODE: Creating temporary user account for: ${email}`);
@@ -162,15 +175,19 @@ router.post('/reset', async (req: Request, res: Response) => {
       return res.status(500).json({ success: false, message: 'Database error occurred' });
     }
     
-    // Clean up expired OTPs
-    cleanupExpiredOtps();
+    // Find OTP record from storage
+    const otpRecord = await storageService.getOtpRecord(email);
     
-    // Find OTP record
-    const otpRecord = otpStore.find(record => record.email === email && record.otp === otp);
-    
-    if (!otpRecord) {
+    if (!otpRecord || otpRecord.otp !== otp) {
       console.log(`Invalid OTP provided for password reset: ${email}, OTP: ${otp}`);
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+    }
+    
+    // Check if OTP is expired
+    const now = new Date();
+    if (otpRecord.expiresAt < now) {
+      console.log(`Expired OTP used for password reset: ${email}, OTP: ${otp}`);
+      return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
     }
     
     // Hash the new password
@@ -181,15 +198,17 @@ router.post('/reset', async (req: Request, res: Response) => {
       // For a temporary user (non-existent in the DB), just log success
       console.log(`DEVELOPMENT MODE: Password reset simulated for temporary user: ${email}`);
     } else {
-      // Update real user's password in the database
-      await storage.updateUserPassword(user.id, hashedPassword);
+      // Update real user's password in the database using the appropriate storage service
+      try {
+        await storageService.updateUser(user.id, { password: hashedPassword });
+      } catch (error) {
+        console.error(`Error updating user password: ${error}`);
+        return res.status(500).json({ success: false, message: 'Failed to update password' });
+      }
     }
     
-    // Remove OTP record
-    const otpIndex = otpStore.findIndex(record => record.email === email);
-    if (otpIndex !== -1) {
-      otpStore.splice(otpIndex, 1);
-    }
+    // Delete the OTP record from storage
+    await storageService.deleteOtpRecord(email);
     
     console.log(`Password reset successful for user: ${email}`);
     
