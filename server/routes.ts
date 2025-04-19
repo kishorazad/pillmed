@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Current global.useMongoStorage value:', global.useMongoStorage);
       
       if (global.useMongoStorage) {
-        const isConnected = await mongoDBService.isConnected();
+        const isConnected = mongoDBService.isConnectedToDb();
         console.log(`MongoDB connection status check - isConnected flag: ${isConnected}`);
         
         if (!isConnected) {
@@ -261,14 +261,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Current global.useMongoStorage value:', global.useMongoStorage);
       
       if (global.useMongoStorage) {
-        const isConnected = await mongoDBService.isConnected();
+        const isConnected = mongoDBService.isConnectedToDb();
         console.log(`MongoDB connection status check - isConnected flag: ${isConnected}`);
-        console.log(`MongoDB client exists: ${mongoDBService.clientExists()}`);
-        console.log(`MongoDB database exists: ${mongoDBService.dbExists()}`);
         
         // Check if we can access the collection
         const collection = mongoDBService.getCollection('prescriptions');
-        console.log('MongoDB service reports connection status:', mongoDBService.isConnectedToDb());
         if (!collection) {
           console.error('Unable to access prescriptions collection');
         } else {
