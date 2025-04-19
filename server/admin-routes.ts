@@ -469,19 +469,33 @@ router.get('/analytics/inventory-status', async (req: Request, res: Response) =>
     const inStock = products.filter(p => p.inStock !== false).length;
     const outOfStock = products.filter(p => p.inStock === false).length;
     
-    // For now, we don't have granular stock quantity data
-    // so we'll add some dummy values for low stock and on order
-    const lowStock = Math.floor(inStock * 0.05); // Assume 5% of in-stock items are low
-    const onOrder = Math.floor(outOfStock * 0.65); // Assume 65% of out-of-stock items are on order
+    // For low stock, we'll identify products with stock < 10 (if stockQuantity exists)
+    const lowStockProducts = products
+      .filter(p => p.inStock !== false && (p.stockQuantity !== undefined && p.stockQuantity < 10))
+      .map(p => ({
+        id: p.id,
+        name: p.name,
+        sku: `SKU-${p.id}`, // Generate a mock SKU
+        category: p.category || 'General',
+        stock: p.stockQuantity || 'Low',
+        price: p.price
+      }))
+      .slice(0, 10); // Only return top 10 for the UI
+    
+    // Create status distribution for pie chart
+    const statusDistribution = [
+      { status: 'In Stock', count: inStock - lowStockProducts.length },
+      { status: 'Low Stock', count: lowStockProducts.length },
+      { status: 'Out of Stock', count: outOfStock }
+    ];
     
     res.json({
-      data: {
-        inStock,
-        lowStock,
-        outOfStock,
-        onOrder,
-        totalProducts: products.length,
-      }
+      lowStockProducts,
+      lowStockCount: lowStockProducts.length,
+      outOfStockCount: outOfStock,
+      inStockCount: inStock - lowStockProducts.length,
+      totalProducts: products.length,
+      statusDistribution
     });
   } catch (error) {
     console.error('Error getting inventory status:', error);
