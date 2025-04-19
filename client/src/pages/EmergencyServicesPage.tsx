@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet';
-import MainLayout from '@/components/layout/MainLayout';
+import { Link } from 'wouter';
 import { EmergencyServices } from '@/components/emergency/EmergencyServices';
 import { useLanguage } from '@/components/LanguageSwitcher';
 import { ChevronRight } from 'lucide-react';
@@ -8,7 +8,7 @@ export default function EmergencyServicesPage() {
   const { t } = useLanguage();
 
   return (
-    <MainLayout>
+    <>
       <Helmet>
         <title>Emergency Medical Services | PillNow</title>
         <meta name="description" content="Access emergency medical services including ambulance, doctor home visits, nursing care, and scheduled consultations." />
@@ -16,9 +16,9 @@ export default function EmergencyServicesPage() {
 
       <section className="container mx-auto py-4 px-4 md:px-6">
         <div className="flex items-center text-sm text-gray-500 mb-4">
-          <a href="/" className="hover:text-primary transition-colors">
+          <Link href="/" className="hover:text-primary transition-colors">
             {t('home')}
-          </a>
+          </Link>
           <ChevronRight className="h-4 w-4 mx-1" />
           <span>{t('emergency_medical_services')}</span>
         </div>
@@ -64,6 +64,6 @@ export default function EmergencyServicesPage() {
           </div>
         </div>
       </section>
-    </MainLayout>
+    </>
   );
 }

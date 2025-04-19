@@ -47,6 +47,7 @@ import ServicesPage from "./pages/services";
 import MedicalEquipment from "./pages/services/MedicalEquipment";
 import MedicalServices from "./pages/services/MedicalServices";
 import AmbulanceRequest from "./pages/services/AmbulanceRequest";
+import EmergencyServicesPage from "./pages/EmergencyServicesPage";
 
 // Doctors
 import DoctorSearch from "./pages/doctors/DoctorSearch";
@@ -141,6 +142,7 @@ function Router() {
       <Route path="/services/medical-equipment" component={MedicalEquipment} />
       <Route path="/services/medical-services" component={MedicalServices} />
       <Route path="/services/ambulance-request" component={AmbulanceRequest} />
+      <Route path="/services/emergency" component={EmergencyServicesPage} />
       
       {/* Doctor Routes */}
       <Route path="/doctors" component={DoctorSearch} />
