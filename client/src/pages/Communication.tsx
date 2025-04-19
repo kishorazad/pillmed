@@ -4,12 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import ChatInterface from '@/components/chat/ChatInterface';
 import VideoCallInterface from '@/components/video/VideoCallInterface';
 import TaskManager from '@/components/tasks/TaskManager';
+import { CommunicationSEO } from '@/components/seo';
 
 const CommunicationPage = () => {
   const [activeTab, setActiveTab] = useState('chat');
 
   return (
     <div className="container mx-auto p-4 pt-16">
+      <CommunicationSEO />
       <h1 className="text-3xl font-bold mb-6">Communication Center</h1>
       
       <Tabs defaultValue="chat" onValueChange={setActiveTab as any} className="mb-8">
