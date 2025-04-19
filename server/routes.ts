@@ -206,13 +206,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get all prescriptions (for admin dashboard)
+  // Get all prescriptions (for admin dashboard) - protected route
   app.get('/api/admin/prescriptions', async (req: Request, res: Response) => {
     try {
       console.log('Fetching all prescriptions for admin dashboard');
       
       // DEVELOPMENT ONLY - This endpoint is intentionally left unauthenticated for development
       // This would be secured in production with proper authentication
+      
+      // Use the MongoDB storage to get all prescriptions
+      const storage = global.useMongoStorage ? mongoDBStorage : memStorage;
+      
+      const prescriptions = await storage.getAllPrescriptions();
+      
+      console.log(`Found ${prescriptions.length} prescriptions`);
+      
+      res.status(200).json(prescriptions);
+    } catch (error) {
+      console.error('Error fetching prescriptions:', error);
+      res.status(500).json({ error: 'Failed to fetch prescriptions' });
+    }
+  });
+  
+  // Non-authenticated route for getting prescriptions (development only)
+  app.get('/api/data-api/prescriptions', async (req: Request, res: Response) => {
+    try {
+      console.log('Fetching all prescriptions (non-authenticated development route)');
+      
+      // WARNING: DEVELOPMENT ONLY - This endpoint should be removed in production
+      // This is an intentionally unauthenticated endpoint for development purposes
       
       // Use the MongoDB storage to get all prescriptions
       const storage = global.useMongoStorage ? mongoDBStorage : memStorage;

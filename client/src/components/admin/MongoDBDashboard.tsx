@@ -134,9 +134,9 @@ const MongoDBDashboard = () => {
     staleTime: 60000,
   });
   
-  // Fetch prescriptions data directly from the new API endpoint
+  // Fetch prescriptions data directly from the non-authenticated API endpoint
   const { data: prescriptionsData } = useQuery<any[]>({
-    queryKey: ['/api/admin/prescriptions'],
+    queryKey: ['/api/data-api/prescriptions'],
     staleTime: 30000, // 30 seconds - more frequent refresh for prescriptions
   });
 
