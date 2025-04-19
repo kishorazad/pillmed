@@ -41,7 +41,7 @@ export async function importMedicinesFromCSV() {
       ];
       
       for (const catDef of categoryDefinitions) {
-        const newCategory = await storage.createCategory(catDef);
+        const newCategory = await storageService.createCategory(catDef);
         categoryMap.set(newCategory.name, newCategory.id);
       }
     }
@@ -140,7 +140,7 @@ export async function importMedicinesFromCSV() {
             
             for (const medicine of medicineData) {
               try {
-                await storage.createProduct(medicine);
+                await storageService.createProduct(medicine);
               } catch (error) {
                 console.error(`Error importing medicine ${medicine.name}:`, error);
               }

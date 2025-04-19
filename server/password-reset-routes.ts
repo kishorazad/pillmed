@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { storage } from './storage';
+import { mongoDBStorage } from './mongodb-storage';
 import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
 import { mockEmailService } from './mock-email-service';
@@ -7,22 +8,9 @@ import { mockEmailService } from './mock-email-service';
 const router = Router();
 const scryptAsync = promisify(scrypt);
 
-// Store OTPs with expiration times
-interface OtpRecord {
-  email: string;
-  otp: string;
-  expiresAt: number; // Timestamp in milliseconds
-}
-
-// In-memory OTP storage (in a real app, this would be in a database)
-const otpStore: OtpRecord[] = [];
-
-// Helper to clean up expired OTPs
-function cleanupExpiredOtps() {
-  const now = Date.now();
-  const validOtps = otpStore.filter(record => record.expiresAt > now);
-  otpStore.length = 0;
-  otpStore.push(...validOtps);
+// Helper to get the appropriate storage service
+function getStorageService() {
+  return global.useMongoStorage ? mongoDBStorage : storage;
 }
 
 // Hash password using scrypt
@@ -47,9 +35,9 @@ router.post('/request', async (req: Request, res: Response) => {
     }
     
     // Find user by email
-    // Try to find user by email
+    const storageService = getStorageService();
     try {
-      const user = await storage.getUserByEmail(email);
+      const user = await storageService.getUserByEmail(email);
       if (!user) {
         console.log(`Password reset requested for non-existent email: ${email}`);
         
@@ -63,23 +51,25 @@ router.post('/request', async (req: Request, res: Response) => {
       // Continue with OTP generation even if database lookup fails
     }
     
-    // Clean up expired OTPs
-    cleanupExpiredOtps();
-    
     // Generate OTP
     const otp = generateOtp();
     
-    // Store OTP with 10-minute expiration
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    // Store OTP with 10-minute expiration (10 minutes from now)
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     
-    // Remove any existing OTPs for this email
-    const existingIndex = otpStore.findIndex(record => record.email === email);
-    if (existingIndex !== -1) {
-      otpStore.splice(existingIndex, 1);
+    // First check if we already have an OTP record for this email
+    const existingOtpRecord = await storageService.getOtpRecord(email);
+    
+    if (existingOtpRecord) {
+      // Update the existing OTP record
+      await storageService.updateOtpRecord(email, { 
+        otp, 
+        expiresAt 
+      });
+    } else {
+      // Create a new OTP record
+      await storageService.createOtpRecord(email, otp, expiresAt);
     }
-    
-    // Store new OTP
-    otpStore.push({ email, otp, expiresAt });
     
     console.log(`Generated OTP ${otp} for ${email} with expiration at ${new Date(expiresAt).toLocaleString()}`);
     

@@ -2,6 +2,7 @@ import { read, utils } from 'xlsx';
 import path from 'path';
 import fs from 'fs';
 import { storage } from './storage';
+import { mongoDBStorage } from './mongodb-storage';
 import { InsertProduct } from '@shared/schema';
 
 interface MedicineData {
@@ -29,12 +30,16 @@ export async function importMedicinesFromExcel(): Promise<boolean> {
   try {
     console.log("Starting Excel import process...");
     
+    // Use the appropriate storage based on MongoDB connection
+    const storageService = global.useMongoStorage ? mongoDBStorage : storage;
+    console.log(`Using ${global.useMongoStorage ? 'MongoDB' : 'in-memory'} storage for Excel importing`);
+    
     // Check how many products we already have
     // For handling large datasets (10 lakh+ products) like PharmEasy, we'd use:
     // 1. Batch processing with pagination
     // 2. Database count vs full retrieval
     // 3. Incremental imports with change tracking
-    const existingProducts = await storage.getProducts();
+    const existingProducts = await storageService.getProducts();
     if (existingProducts.length > 1000) {
       console.log(`Already have ${existingProducts.length} products in storage. Skipping import.`);
       return true;
@@ -81,7 +86,7 @@ export async function importMedicinesFromExcel(): Promise<boolean> {
     console.log(`Excel parsing complete. Found ${results.length} medicines.`);
     
     // Get all categories
-    const categories = await storage.getCategories();
+    const categories = await storageService.getCategories();
     const categoryMap = new Map<string, number>();
     
     categories.forEach(cat => {
@@ -193,7 +198,7 @@ export async function importMedicinesFromExcel(): Promise<boolean> {
     
     for (const medicine of medicineData) {
       try {
-        await storage.createProduct(medicine as InsertProduct);
+        await storageService.createProduct(medicine as InsertProduct);
         console.log(`Imported ${medicine.name}`);
       } catch (error) {
         console.error(`Error importing medicine ${medicine.name}:`, error);
