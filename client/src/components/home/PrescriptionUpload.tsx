@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, FilePlus, Check, Mic, MicOff } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 const PrescriptionUpload = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [fileName, setFileName] = useState<string>('');
+  const [fileObj, setFileObj] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -18,7 +20,13 @@ const PrescriptionUpload = () => {
   const [voiceSearchResults, setVoiceSearchResults] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [notes, setNotes] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   // Initialize speech recognition
@@ -119,12 +127,14 @@ const PrescriptionUpload = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFileName(e.target.files[0].name);
+      const file = e.target.files[0];
+      setFileName(file.name);
+      setFileObj(file);
     }
   };
 
-  const handleUpload = () => {
-    if (!fileName) {
+  const handleUpload = async () => {
+    if (!fileObj) {
       toast({
         title: "No file selected",
         description: "Please select a valid prescription file first.",
@@ -135,22 +145,60 @@ const PrescriptionUpload = () => {
     
     setIsUploading(true);
     
-    // Simulate file upload
-    setTimeout(() => {
+    try {
+      // Create form data for upload
+      const formData = new FormData();
+      formData.append('prescription', fileObj);
+      formData.append('userName', name || 'Guest User');
+      formData.append('notes', notes || '');
+      
+      // Send to the backend API
+      console.log('Uploading prescription...');
+      const response = await fetch('/api/prescriptions/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Prescription upload response:', data);
+      
       setIsUploading(false);
       setIsSuccess(true);
       
-      // Reset success state after 3 seconds
+      // Reset form state after successful upload
       setTimeout(() => {
         setIsSuccess(false);
         setFileName('');
+        setFileObj(null);
+        setName('');
+        setPhone('');
+        setAddress('');
+        setNotes('');
         setIsDialogOpen(false);
+        
+        // Invalidate prescription queries to ensure fresh data
+        queryClient.invalidateQueries({ queryKey: ['prescriptions'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+        
         toast({
           title: "Prescription uploaded successfully",
           description: "Our pharmacist will review your prescription and contact you soon.",
         });
       }, 1500);
-    }, 1500);
+    } catch (error) {
+      console.error('Error uploading prescription:', error);
+      setIsUploading(false);
+      
+      toast({
+        title: "Upload failed",
+        description: `There was a problem uploading your prescription. Please try again. ${error instanceof Error ? error.message : ''}`,
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -269,7 +317,10 @@ const PrescriptionUpload = () => {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => setFileName('')} 
+                    onClick={() => {
+                      setFileName('');
+                      setFileObj(null);
+                    }} 
                     className="mt-2 text-red-500 hover:text-red-700"
                   >
                     Remove
@@ -295,11 +346,21 @@ const PrescriptionUpload = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="Enter your full name" />
+                <Input 
+                  id="name" 
+                  placeholder="Enter your full name" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" placeholder="Enter your contact number" />
+                <Input 
+                  id="phone" 
+                  placeholder="Enter your contact number" 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
               </div>
             </div>
             
@@ -310,6 +371,8 @@ const PrescriptionUpload = () => {
                 placeholder="Enter your complete delivery address with pincode"
                 className="resize-none"
                 rows={3}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
               />
             </div>
             
@@ -320,6 +383,8 @@ const PrescriptionUpload = () => {
                 placeholder="Any specific instructions for the pharmacist"
                 className="resize-none"
                 rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
               />
             </div>
           </div>

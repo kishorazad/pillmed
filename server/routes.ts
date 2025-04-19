@@ -36,14 +36,23 @@ console.log(`Using ${global.useMongoStorage ? 'MongoDB' : 'in-memory'} storage f
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup uploads directory
   const uploadsDir = path.join(process.cwd(), 'uploads');
+  const prescriptionsDir = path.join(uploadsDir, 'prescriptions');
   if (!fs.existsSync(uploadsDir)){
     fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  if (!fs.existsSync(prescriptionsDir)){
+    fs.mkdirSync(prescriptionsDir, { recursive: true });
   }
   
   // Configure multer storage
   const multerStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, uploadsDir);
+      // Check if this is a prescription upload
+      if (req.path === '/api/prescriptions/upload') {
+        cb(null, prescriptionsDir);
+      } else {
+        cb(null, uploadsDir);
+      }
     },
     filename: (req, file, cb) => {
       // Generate a unique filename to avoid collisions
@@ -59,8 +68,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fileSize: 5 * 1024 * 1024, // 5MB max file size
     },
     fileFilter: (req, file, cb) => {
-      // Accept only image files
-      if (file.mimetype.startsWith('image/')) {
+      // Accept only image files and PDFs for prescriptions
+      if (req.path === '/api/prescriptions/upload') {
+        if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+          cb(null, true);
+        } else {
+          cb(new Error('Only image or PDF files are allowed for prescriptions') as any);
+        }
+      } else if (file.mimetype.startsWith('image/')) {
         cb(null, true);
       } else {
         cb(new Error('Only image files are allowed') as any);
@@ -110,6 +125,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Image upload error:', error);
       res.status(500).json({ error: 'Failed to upload image' });
+    }
+  });
+  
+  // Add prescription upload endpoint that saves to MongoDB
+  app.post('/api/prescriptions/upload', upload.single('prescription'), async (req: Request, res: Response) => {
+    try {
+      console.log('Prescription upload request received');
+      if (!req.file) {
+        return res.status(400).json({ error: 'No prescription file uploaded' });
+      }
+      
+      // Generate URL for the uploaded file
+      const imageUrl = `/uploads/prescriptions/${req.file.filename}`;
+      
+      // Get user ID from the request (or default to 1 if not authenticated)
+      const userId = req.body.userId || (req.user?.id || 1);
+      const userName = req.body.userName || req.user?.username || 'Guest User';
+      
+      // Create a new prescription record in MongoDB
+      const storage = global.useMongoStorage ? mongoDBStorage : memStorage;
+      
+      console.log('Checking MongoDB connection for prescriptions collection');
+      if (global.useMongoStorage) {
+        const isConnected = await mongoDBService.isConnected();
+        console.log(`MongoDB connection status check - isConnected flag: ${isConnected}`);
+        
+        if (!isConnected) {
+          console.log('MongoDB not connected, attempting to connect...');
+          await mongoDBService.connect();
+        }
+        
+        console.log('Creating prescription in MongoDB');
+        const collection = mongoDBService.getCollection('prescriptions');
+        if (!collection) {
+          console.error('Prescriptions collection not available');
+          return res.status(500).json({ error: 'Database collection not available' });
+        }
+        
+        // Generate a new prescription ID
+        const lastPrescription = await collection.findOne({}, { sort: { id: -1 } });
+        const newId = (lastPrescription?.id || 0) + 1;
+        
+        // Create prescription document
+        const prescription = {
+          id: newId,
+          userId: parseInt(userId.toString()),
+          userName: userName,
+          uploadDate: new Date(),
+          status: 'pending',
+          imageUrl: imageUrl,
+          fileName: req.file.originalname,
+          fileSize: req.file.size,
+          fileType: req.file.mimetype,
+          notes: req.body.notes || ''
+        };
+        
+        // Insert the prescription into MongoDB
+        await collection.insertOne(prescription);
+        console.log(`Prescription ${newId} saved to MongoDB successfully`);
+        
+        // Return success response
+        res.status(201).json({
+          id: newId,
+          imageUrl,
+          message: 'Prescription uploaded successfully',
+          status: 'pending'
+        });
+      } else {
+        console.log('Using in-memory storage for prescription');
+        res.status(201).json({ 
+          imageUrl,
+          message: 'Prescription upload simulation successful (in-memory storage)',
+          status: 'pending'
+        });
+      }
+    } catch (error) {
+      console.error('Prescription upload error:', error);
+      res.status(500).json({ error: 'Failed to upload prescription' });
     }
   });
   
