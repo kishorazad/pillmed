@@ -57,6 +57,12 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('profile');
   // Additional state to track form type (login or register) within the login tab
   const [formType, setFormType] = useState('login');
+  
+  // Reset form error states when switching between forms
+  const resetFormErrors = () => {
+    loginForm.clearErrors();
+    registerForm.clearErrors();
+  };
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -375,6 +381,8 @@ const Profile = () => {
                         className={`rounded-none flex-1 ${formType === 'login' ? 'bg-primary text-primary-foreground' : ''}`}
                         onClick={() => {
                           setFormType('login');
+                          resetFormErrors();
+                          loginForm.reset();
                           console.log('Setting formType to login');
                         }}
                       >
@@ -385,6 +393,8 @@ const Profile = () => {
                         className={`rounded-none flex-1 ${formType === 'register' ? 'bg-primary text-primary-foreground' : ''}`}
                         onClick={() => {
                           setFormType('register');
+                          resetFormErrors();
+                          registerForm.reset();
                           console.log('Setting formType to register');
                         }}
                       >
