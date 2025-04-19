@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useLocation, Redirect } from 'wouter';
 import AdminNavigation from './AdminNavigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Clock } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 
 interface AdminLayoutProps {
