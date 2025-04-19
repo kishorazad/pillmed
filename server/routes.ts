@@ -18,7 +18,7 @@ import multer from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
-import { setupSeoRoutes } from './sitemap-generator';
+import { setupSeoRoutes } from './sitemap-generator'; // SEO-related routes
 import mongoose from 'mongoose';
 import { Product } from './models'; // Import Product model directly
 
@@ -80,6 +80,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount admin routes
   app.use('/api/admin', adminRoutes);
+  
+  // Setup SEO routes for better search engine visibility
+  setupSeoRoutes(app);
   
   // Add image upload endpoint
   app.post('/api/upload-image', upload.single('file'), (req: Request, res: Response) => {
