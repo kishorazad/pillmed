@@ -28,6 +28,7 @@ class MongoDBStorage implements IStorage {
     labTests: 'labTests',
     healthTips: 'healthTips',
     faqs: 'faqs',
+    pharmacyInventory: 'pharmacyInventory',
     prescriptions: 'prescriptions',
     otpRecords: 'otpRecords',
     sessions: 'sessions',

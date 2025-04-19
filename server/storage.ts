@@ -138,6 +138,20 @@ export interface IStorage {
   getOtpRecord(email: string): Promise<OTPRecord | undefined>;
   updateOtpRecord(email: string, updates: Partial<OTPRecord>): Promise<boolean>;
   deleteOtpRecord(email: string): Promise<boolean>;
+
+  // Pharmacy inventory related methods
+  getPharmacyInventory(pharmacyId: number): Promise<any[]>;
+  updatePharmacyInventory(pharmacyId: number, productId: number, updates: any): Promise<any>;
+  
+  // Pharmacy orders related methods
+  getPharmacyOrders(pharmacyId: number): Promise<any[]>;
+  
+  // Prescription related methods
+  getPendingPrescriptions(pharmacyId: number): Promise<any[]>;
+  updatePrescriptionStatus(prescriptionId: number, status: string, pharmacyId: number): Promise<any>;
+  
+  // User management methods (if not already covered)
+  deleteUser(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -1000,6 +1014,140 @@ export class MemStorage implements IStorage {
       }
     }
     return false;
+  }
+  
+  // OTP Record methods
+  async createOtpRecord(email: string, otp: string, expiresAt: Date): Promise<void> {
+    this.otpRecords.set(email, { email, otp, expiresAt, createdAt: new Date(), verified: false });
+  }
+
+  async getOtpRecord(email: string): Promise<OTPRecord | undefined> {
+    return this.otpRecords.get(email);
+  }
+
+  async updateOtpRecord(email: string, updates: Partial<OTPRecord>): Promise<boolean> {
+    const record = await this.getOtpRecord(email);
+    if (!record) return false;
+    this.otpRecords.set(email, { ...record, ...updates });
+    return true;
+  }
+
+  async deleteOtpRecord(email: string): Promise<boolean> {
+    return this.otpRecords.delete(email);
+  }
+  
+  // Pharmacy inventory related methods - Memory implementation
+  async getPharmacyInventory(pharmacyId: number): Promise<any[]> {
+    // In memory implementation, we'll create a dummy inventory for testing
+    return [
+      { id: 1, pharmacyId, productId: 1, product: { name: '1 AL AX 5mg/75mg Capsule', price: 320 }, quantity: 100, price: 280, status: 'available' },
+      { id: 2, pharmacyId, productId: 2, product: { name: '1 Nvp Tablet', price: 220 }, quantity: 50, price: 185, status: 'available' },
+      { id: 3, pharmacyId, productId: 3, product: { name: '1 Oxytime + Ointment', price: 250 }, quantity: 20, price: 199, status: 'low_stock' },
+      { id: 4, pharmacyId, productId: 4, product: { name: '10 D 10% Injection', price: 899 }, quantity: 5, price: 799, status: 'low_stock' },
+      { id: 5, pharmacyId, productId: 5, product: { name: '10 LI 20 Tablet', price: 429 }, quantity: 0, price: 299, status: 'out_of_stock' },
+    ];
+  }
+
+  async updatePharmacyInventory(pharmacyId: number, productId: number, updates: any): Promise<any> {
+    // Simulation for memory storage
+    const inventory = await this.getPharmacyInventory(pharmacyId);
+    const item = inventory.find(item => item.productId === productId);
+    if (!item) return null;
+    
+    const updatedItem = { ...item, ...updates };
+    return updatedItem;
+  }
+  
+  // Pharmacy orders related methods - Memory implementation
+  async getPharmacyOrders(pharmacyId: number): Promise<any[]> {
+    // In memory implementation with dummy orders
+    return [
+      { 
+        id: 1, 
+        pharmacyId, 
+        customerId: 1, 
+        customerName: 'Test User',
+        totalAmount: 560,
+        status: 'pending',
+        date: new Date('2025-04-15'),
+        items: [
+          { productId: 1, name: '1 AL AX 5mg/75mg Capsule', quantity: 2, price: 280 }
+        ],
+        prescriptionRequired: false
+      },
+      { 
+        id: 2, 
+        pharmacyId, 
+        customerId: 1, 
+        customerName: 'Test User',
+        totalAmount: 984,
+        status: 'processing',
+        date: new Date('2025-04-14'),
+        items: [
+          { productId: 3, name: '1 Oxytime + Ointment', quantity: 1, price: 199 },
+          { productId: 7, name: '1000 Para Tablet', quantity: 2, price: 120 },
+          { productId: 10, name: '2 Clav 500mg/125mg Tablet', quantity: 1, price: 280 }
+        ],
+        prescriptionRequired: true,
+        prescriptionVerified: true
+      },
+      { 
+        id: 3, 
+        pharmacyId, 
+        customerId: 1, 
+        customerName: 'Test User',
+        totalAmount: 249,
+        status: 'delivered',
+        date: new Date('2025-04-10'),
+        items: [
+          { productId: 6, name: '10 PM Tablet', quantity: 1, price: 249 }
+        ],
+        prescriptionRequired: true,
+        prescriptionVerified: true
+      }
+    ];
+  }
+  
+  // Prescription related methods - Memory implementation
+  async getPendingPrescriptions(pharmacyId: number): Promise<any[]> {
+    // In memory implementation with dummy pending prescriptions
+    return [
+      {
+        id: 1,
+        pharmacyId,
+        customerId: 1,
+        customerName: 'Test User',
+        imageUrl: 'https://images.unsplash.com/photo-1617817705453-2b5929d01517',
+        uploadDate: new Date('2025-04-18'),
+        status: 'pending',
+        orderId: 1
+      },
+      {
+        id: 2,
+        pharmacyId,
+        customerId: 1,
+        customerName: 'Test User',
+        imageUrl: 'https://images.unsplash.com/photo-1617817705453-2b5929d01517',
+        uploadDate: new Date('2025-04-17'),
+        status: 'pending',
+        orderId: 2
+      }
+    ];
+  }
+
+  async updatePrescriptionStatus(prescriptionId: number, status: string, pharmacyId: number): Promise<any> {
+    // Simulation for memory storage
+    const prescriptions = await this.getPendingPrescriptions(pharmacyId);
+    const prescription = prescriptions.find(p => p.id === prescriptionId);
+    if (!prescription) return null;
+    
+    const updatedPrescription = { ...prescription, status };
+    return updatedPrescription;
+  }
+  
+  // User management methods
+  async deleteUser(id: number): Promise<boolean> {
+    return this.users.delete(id);
   }
 }
 
