@@ -1,0 +1,41 @@
+User and Pharmacy Management – View, verify, and manage users, pharmacies, and delivery agents.
+Order and Payment Tracking – Monitor transactions and order fulfillment status.
+Complaint and Query Handling – Manage customer feedback, complaints, and support requests.
+Push Notifications and Alerts – Send promotional offers and order updates to users.
+Content and Information Management – Admin can update terms and conditions, FAQs, and privacy policiesMarketing and Promotions Management – Create discount codes, referral programs, and loyalty rewards.
+Multi-Currency and Multi-Language Support – For businesses operating in different regions.
+Dynamic Commission and Revenue Tracking – Adjust commission rates for different pharmacies.
+Subscription and Membership Management – Admin can create premium plans for users.Automated Fraud Detection – Identifies suspicious activities in payments and prescription uploads.
+Predictive Analytics for Business Growth – AI analyzes sales trends to suggest business strategies.
+Customer Retention Insights – AI tracks user behavior to recommend personalized marketing campaigns.
+Smart Inventory Optimization – AI predicts seasonal demand changes and recommends stock adjustments.Delivery Partner Panel Features (For Delivery Agents)
+Basic Features of the Delivery Partner (For Delivery Agents)
+Profile Registration and Verification – Drivers can sign up, upload ID proof, and get verified.
+Order Pickup and Delivery Status – View assigned orders, update pickup, and confirm delivery.
+Navigation and Route Optimization – GPS-powered routes for fast and efficient deliveries.
+Earnings and Payout Tracking – Drivers can view earnings and request payouts.
+Advanced Features of the Delivery Partner (For Delivery Agents)
+Multiple Order Handling – Drivers can pick up and deliver multiple orders in one trip.
+Live Chat with Pharmacies and Customers – Enables communication for better coordination.
+Delivery Scheduling – Drivers can schedule their availability in advance.
+Proof of Delivery with Digital Signature – Customers sign digitally to confirm order receipt.
+AI-Powered Features of the Delivery Partner (For Delivery Agents)
+AI-Based Route Optimization – Suggests the fastest delivery routes based on traffic and order priority.
+Smart Order Allocation – Assigns deliveries based on location and driver availability to reduce delays.
+Real-Time Delivery Tracking and ETA Prediction – AI calculates accurate delivery time for better customer experience.
+Pharmacy Registration and Dashboard – Pharmacies can register, update business details, and manage orders.
+Inventory Management – Track stock availability and receive alerts for low-stock medicines.
+Order Management – Accept, process, and update order status in real-time.
+Prescription Verification – Review and approve prescriptions before processing orders.
+Sales Analytics and Reports – Monitor revenue, order trends, and stock movements.
+Pharmacy Profile and Reviews – Displays pharmacy details, working hours, and customer reviews.
+Advanced Features of the Pharmacy Panel (Medicine Sellers)
+Automated Stock Updates – Syncs pharmacy inventory with the app to show real-time medicine availability.
+Discount and Offer Management – Pharmacies can create and manage discounts for specific medicines.
+Multi-Pharmacy Management – If a business owns multiple pharmacies, they can manage them from a single dashboard.
+QR Code-Based Medicine Scanning – Pharmacies can scan barcodes or QR codes for quick stock updates and order management.
+AI-Powered Demand Forecasting – Predicts demand for medicines and helps pharmacies stock accordingly.
+AI-Powered Features of the Pharmacy Panel (Medicine Sellers)
+Dynamic Pricing Engine – Adjusts medicine prices based on demand, availability, and competition.
+Auto-Approval of Orders – AI filters orders for common medicines, reducing manual work.
+Intelligent Customer Insights – AI analyzes buying patterns to suggest best-selling medicines for stocking i uplaod all the think which better to analysis and given dashboad and function according
