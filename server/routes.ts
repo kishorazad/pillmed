@@ -620,7 +620,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         // Now try Zod parsing
-        const validUserData = insertUserSchema.parse(userData);
+        const validUserData = insertUserSchema.parse({
+          ...userData,
+          // Set a default role if none provided
+          role: userData.role || "customer"
+        });
         console.log("Zod validation passed for user data");
         
         // Check if user with the username already exists
