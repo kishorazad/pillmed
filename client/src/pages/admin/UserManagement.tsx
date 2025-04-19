@@ -92,6 +92,7 @@ const UserManagement = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [newUser, setNewUser] = useState({
     username: "",
+    name: "",
     email: "",
     password: "",
     role: "customer",
@@ -133,6 +134,7 @@ const UserManagement = () => {
       setShowAddDialog(false);
       setNewUser({
         username: "",
+        name: "",
         email: "",
         password: "",
         role: "customer",
@@ -467,6 +469,15 @@ const UserManagement = () => {
                   id="username"
                   value={newUser.username}
                   onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
                   required
                 />
               </div>
