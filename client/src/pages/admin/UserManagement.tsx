@@ -336,7 +336,10 @@ const UserManagement = () => {
             className="w-full pl-9"
           />
         </div>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
+        <Select 
+          value={roleFilter} 
+          onValueChange={setRoleFilter}
+          defaultValue="">
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by role" />
           </SelectTrigger>
@@ -551,6 +554,7 @@ const UserManagement = () => {
                 <Select 
                   value={newUser.role} 
                   onValueChange={(value) => setNewUser({ ...newUser, role: value })}
+                  defaultValue="customer"
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select role" />
@@ -604,6 +608,7 @@ const UserManagement = () => {
                 <Select 
                   value={newUser.status} 
                   onValueChange={(value) => setNewUser({ ...newUser, status: value })}
+                  defaultValue="active"
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select status" />
@@ -689,8 +694,9 @@ const UserManagement = () => {
                   Role
                 </Label>
                 <Select 
-                  value={editUser.role} 
+                  value={editUser.role || ""}
                   onValueChange={(value) => setEditUser({ ...editUser, role: value })}
+                  defaultValue="customer"
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select role" />
@@ -742,8 +748,9 @@ const UserManagement = () => {
                   Status
                 </Label>
                 <Select 
-                  value={editUser.status} 
+                  value={editUser.status || ""}
                   onValueChange={(value) => setEditUser({ ...editUser, status: value })}
+                  defaultValue="active"
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select status" />
