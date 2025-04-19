@@ -83,6 +83,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount admin routes
   app.use('/api/admin', adminRoutes);
   
+  // Mount MongoDB direct user management routes
+  app.use('/api/admin/mongodb-users', mongodbUsersRoutes);
+  
   // Mount admin SEO management routes
   app.use('/api/admin', adminSeoRoutes);
   
