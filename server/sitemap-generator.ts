@@ -291,26 +291,64 @@ async function generateSitemap(req: Request, res: Response) {
     const sitemapIncludeImages = settings?.sitemapIncludeImages !== undefined ? 
       settings.sitemapIncludeImages : true;
     
-    // Process routes to add image information for products
-    // This significantly improves image SEO and discovery
-    const enhancedRoutes = routes.map(route => {
-      // If this is a product page and we want to include images
+    // Process routes to add image information for products, articles, and doctors
+    // This significantly improves image SEO and discovery following patterns from 1mg, PharmEasy, and Netmeds
+    let enhancedRoutes = [];
+    
+    // Pre-fetch required data for efficiency
+    let articles = [];
+    try {
+      if (typeof storage.getArticles === 'function') {
+        articles = await storage.getArticles();
+      }
+    } catch (error) {
+      console.log('Error fetching articles for sitemap:', error);
+    }
+    
+    let doctors = [];
+    try {
+      if (typeof storage.getDoctors === 'function') {
+        const doctorsResult = await storage.getDoctors();
+        if (Array.isArray(doctorsResult)) {
+          doctors = doctorsResult;
+        }
+      }
+    } catch (error) {
+      console.log('Error fetching doctors for sitemap:', error);
+    }
+    
+    // Process each route to enhance with images and metadata
+    for (const route of routes) {
+      // Handle product images
       if (route.url.startsWith('/products/') && sitemapIncludeImages) {
         const productId = route.url.split('/').pop();
         const product = products.find(p => p.id.toString() === productId);
         
         if (product && product.imageUrl) {
-          return {
+          // Enhanced product image entry with pharmaceutical-specific metadata
+          // This follows the patterns of leading pharmacy platforms
+          const imgEntry: any = {
+            url: product.imageUrl,
+            caption: product.name,
+            title: `${product.name} ${product.quantity || ''}`,
+            geoLocation: 'India'
+          };
+          
+          // Add additional image metadata when available (composition, brand, etc.)
+          // Check for extended product properties safely using type assertion
+          const extendedProduct = product as any;
+          
+          if (extendedProduct.composition) {
+            imgEntry.caption += ` - ${extendedProduct.composition}`;
+          }
+          
+          if (product.brand) {
+            imgEntry.title += ` by ${product.brand}`;
+          }
+          
+          enhancedRoutes.push({
             ...route,
-            img: [
-              {
-                url: product.imageUrl,
-                caption: product.name,
-                title: product.name,
-                geoLocation: 'India',
-                license: 'https://pillnow.com/image-license'
-              }
-            ],
+            img: [imgEntry],
             // Add mobile specific tag for better mobile indexing
             mobile: true,
             // Add language alternatives if needed
@@ -318,11 +356,99 @@ async function generateSitemap(req: Request, res: Response) {
               { lang: 'en', url: `${baseUrl}${route.url}` },
               { lang: 'hi', url: `${baseUrl}/hi${route.url}` }
             ]
-          };
+          });
+          continue;
         }
       }
-      return route;
-    });
+      
+      // Handle article images
+      else if (route.url.startsWith('/health-articles/') && sitemapIncludeImages) {
+        try {
+          const articleId = route.url.split('/').pop() || '';
+          let article: any = null;
+          
+          // Use pre-fetched articles
+          if (articles && articles.length > 0) {
+            article = articles.find((a: any) => a.id && a.id.toString() === articleId);
+          }
+          
+          if (article && article.imageUrl) {
+            enhancedRoutes.push({
+              ...route,
+              img: [
+                {
+                  url: article.imageUrl,
+                  caption: article.title || 'Health Article',
+                  title: article.title || 'Health Article',
+                  geoLocation: 'India'
+                }
+              ],
+              mobile: true,
+              // Important for health content to specify languages
+              links: [
+                { lang: 'en', url: `${baseUrl}${route.url}` },
+                { lang: 'hi', url: `${baseUrl}/hi${route.url}` }
+              ]
+            });
+            continue;
+          }
+        } catch (error) {
+          console.log('Error processing article for sitemap:', error);
+        }
+      }
+      
+      // Handle doctor images
+      else if (route.url.startsWith('/doctors/') && sitemapIncludeImages) {
+        try {
+          const doctorId = route.url.split('/').pop() || '';
+          let doctor: any = null;
+          
+          // Use pre-fetched doctors
+          if (doctors && doctors.length > 0) {
+            doctor = doctors.find((d: any) => d.id && d.id.toString() === doctorId);
+          }
+          
+          // Extract doctor information safely
+          if (doctor) {
+            // Check doctor data
+            const doctorImage = doctor.profileImage || 
+                               (doctor.profile ? doctor.profile.imageUrl : null) ||
+                               null;
+                               
+            const doctorName = doctor.name || 
+                              (doctor.profile ? doctor.profile.name : null) || 
+                              'Doctor';
+                              
+            const doctorSpecialization = doctor.specialization || 'Medical Doctor';
+                                
+            if (doctorImage) {
+              enhancedRoutes.push({
+                ...route,
+                img: [
+                  {
+                    url: doctorImage,
+                    caption: `Dr. ${doctorName}, ${doctorSpecialization}`,
+                    title: `Dr. ${doctorName} - ${doctorSpecialization} at PillNow`,
+                    geoLocation: 'India'
+                  }
+                ],
+                mobile: true,
+                links: [
+                  { lang: 'en', url: `${baseUrl}${route.url}` },
+                  { lang: 'hi', url: `${baseUrl}/hi${route.url}` }
+                ]
+              });
+              continue;
+            }
+          }
+        } catch (error) {
+          console.log('Error processing doctor for sitemap:', error);
+        }
+      }
+      
+      // Add the original route if no enhancements were made
+      enhancedRoutes.push(route);
+    }
     
     // Add all enhanced routes to the sitemap
     const sitemapData = await streamToPromise(
