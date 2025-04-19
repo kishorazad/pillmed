@@ -148,6 +148,23 @@ class MongoDBStorage implements IStorage {
     return result as User | undefined;
   }
 
+  async updateUserPassword(id: number, password: string): Promise<User | undefined> {
+    if (!this.isConnected(this.collections.users)) {
+      return undefined; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.users);
+    if (!collection) return undefined;
+
+    const result = await collection.findOneAndUpdate(
+      { id: id },
+      { $set: { password } },
+      { returnDocument: 'after' }
+    );
+
+    return result as User | undefined;
+  }
+
   async deleteUser(id: number): Promise<boolean> {
     if (!this.isConnected(this.collections.users)) {
       return false; // Will fall back to in-memory storage
@@ -170,6 +187,11 @@ class MongoDBStorage implements IStorage {
 
     const users = await collection.find().toArray();
     return users as User[];
+  }
+  
+  async getUsers(): Promise<User[]> {
+    // Alias for getAllUsers to match the IStorage interface
+    return this.getAllUsers();
   }
 
   // ---------- OTP Records ----------
@@ -541,6 +563,63 @@ class MongoDBStorage implements IStorage {
     );
 
     return updateResult.modifiedCount > 0;
+  }
+  
+  // ---------- Notification Token Management ----------
+  
+  async saveNotificationToken(token: NotificationToken): Promise<NotificationToken> {
+    if (!this.isConnected(this.collections.notificationTokens)) {
+      throw new Error('MongoDB not connected for notification token creation'); // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.notificationTokens);
+    if (!collection) throw new Error('Failed to get notification tokens collection');
+
+    // Check if the token already exists
+    const existingToken = await collection.findOne({ token: token.token });
+    
+    if (existingToken) {
+      // Update the existing token
+      await collection.updateOne(
+        { token: token.token },
+        { $set: token }
+      );
+      
+      return token;
+    } else {
+      // Generate a numeric ID for compatibility with in-memory storage
+      const lastToken = await collection.find().sort({ id: -1 }).limit(1).toArray();
+      const id = lastToken.length > 0 ? lastToken[0].id + 1 : 1;
+
+      const newToken = { ...token, id };
+      
+      await collection.insertOne(newToken);
+      return newToken;
+    }
+  }
+
+  async getNotificationTokensByUserId(userId: number): Promise<NotificationToken[]> {
+    if (!this.isConnected(this.collections.notificationTokens)) {
+      return []; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.notificationTokens);
+    if (!collection) return [];
+
+    const tokens = await collection.find({ userId: userId }).toArray();
+    return tokens as NotificationToken[];
+  }
+
+  async deleteNotificationToken(token: string): Promise<boolean> {
+    if (!this.isConnected(this.collections.notificationTokens)) {
+      return false; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.notificationTokens);
+    if (!collection) return false;
+
+    const result = await collection.deleteOne({ token: token });
+    return result.deletedCount === 1;
   }
 
   // ---------- Sessions ----------

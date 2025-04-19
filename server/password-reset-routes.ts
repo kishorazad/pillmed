@@ -200,7 +200,7 @@ router.post('/reset', async (req: Request, res: Response) => {
     } else {
       // Update real user's password in the database using the appropriate storage service
       try {
-        await storageService.updateUser(user.id, { password: hashedPassword });
+        await storageService.updateUserPassword(user.id, hashedPassword);
       } catch (error) {
         console.error(`Error updating user password: ${error}`);
         return res.status(500).json({ success: false, message: 'Failed to update password' });
