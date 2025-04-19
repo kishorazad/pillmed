@@ -252,7 +252,6 @@ export const translations: Record<string, Record<string, string>> = {
     'processing': 'Processing',
     'shipped': 'Shipped',
     'emergency': 'Emergency',
-    'emergency_medical_services': 'Emergency Medical Services',
   },
   hi: {
     // Navigation & Basic UI
