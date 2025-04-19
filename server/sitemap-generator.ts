@@ -3,6 +3,7 @@ import { Readable } from 'stream';
 import { Request, Response, Router } from 'express';
 import { IStorage } from './storage';
 import { mongoDBStorage } from './mongodb-storage';
+import { Product } from '@shared/schema';
 
 /**
  * Sets up SEO-related routes including sitemap and robots.txt
@@ -73,8 +74,13 @@ async function generateSitemap(req: Request, res: Response) {
     // Dynamic routes
     let routes = [...staticRoutes];
     
-    // Get all product categories
-    const categories = await storage.getCategories();
+    // Get all product categories with error handling
+    let categories = [];
+    try {
+      categories = await storage.getCategories();
+    } catch (error) {
+      console.log('Error getting categories for sitemap:', error);
+    }
     
     for (const category of categories) {
       routes.push({
@@ -84,8 +90,13 @@ async function generateSitemap(req: Request, res: Response) {
       });
     }
     
-    // Get all products - use getProducts method which is available in storage
-    const products = await storage.getProducts();
+    // Get all products - use try/catch in case method is not available
+    let products: Product[] = [];
+    try {
+      products = await storage.getProducts();
+    } catch (error) {
+      console.log('Error getting products for sitemap:', error);
+    }
     
     for (const product of products) {
       routes.push({
