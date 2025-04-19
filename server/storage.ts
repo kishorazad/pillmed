@@ -18,6 +18,47 @@ import {
   type OTPRecord, type Session
 } from "@shared/schema";
 
+// SEO settings type
+export interface SeoSettings {
+  defaultTitle: string;
+  defaultDescription: string;
+  defaultKeywords: string;
+  ogImage: string;
+  googleVerification: string;
+  bingVerification: string;
+  enableIndexing: boolean;
+  sitemapEnabled: boolean;
+  robotsTxtEnabled: boolean;
+  schemaMarkupEnabled: boolean;
+  canonicalUrlEnabled: boolean;
+  hreflangEnabled: boolean;
+  socialMediaMetaEnabled: boolean;
+}
+
+// SEO analytics type
+export interface SeoAnalytics {
+  totalIndexedPages: number;
+  topPerformingPages: Array<{
+    path: string;
+    impressions: number;
+    clicks: number;
+    position: number;
+  }>;
+  topKeywords: Array<{
+    keyword: string;
+    impressions: number;
+    clicks: number;
+    position: number;
+  }>;
+  issuesCount: {
+    missingTitles: number;
+    duplicateTitles: number;
+    missingDescriptions: number;
+    brokenLinks: number;
+    missingAltText: number;
+  };
+}
+
 export interface IStorage {
   // User related methods
   getUser(id: number): Promise<User | undefined>;
@@ -152,6 +193,12 @@ export interface IStorage {
   
   // User management methods (if not already covered)
   deleteUser(id: number): Promise<boolean>;
+  
+  // SEO related methods
+  getSeoSettings(): Promise<SeoSettings | undefined>;
+  saveSeoSettings(settings: SeoSettings): Promise<SeoSettings>;
+  getSeoAnalytics(): Promise<SeoAnalytics | undefined>;
+  saveSeoAnalytics(analytics: SeoAnalytics): Promise<SeoAnalytics>;
 }
 
 export class MemStorage implements IStorage {
@@ -172,6 +219,8 @@ export class MemStorage implements IStorage {
   private healthTips: Map<number, HealthTip>;
   private notificationTokens: Map<number, NotificationToken>;
   private otpRecords: Map<string, OTPRecord>;
+  private seoSettings: SeoSettings | undefined;
+  private seoAnalytics: SeoAnalytics | undefined;
   
   currentUserId: number;
   currentProductId: number;
@@ -1148,6 +1197,25 @@ export class MemStorage implements IStorage {
   // User management methods
   async deleteUser(id: number): Promise<boolean> {
     return this.users.delete(id);
+  }
+  
+  // SEO related methods
+  async getSeoSettings(): Promise<SeoSettings | undefined> {
+    return this.seoSettings;
+  }
+
+  async saveSeoSettings(settings: SeoSettings): Promise<SeoSettings> {
+    this.seoSettings = settings;
+    return settings;
+  }
+
+  async getSeoAnalytics(): Promise<SeoAnalytics | undefined> {
+    return this.seoAnalytics;
+  }
+
+  async saveSeoAnalytics(analytics: SeoAnalytics): Promise<SeoAnalytics> {
+    this.seoAnalytics = analytics;
+    return analytics;
   }
 }
 

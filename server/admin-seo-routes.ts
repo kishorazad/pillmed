@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { mongoDBStorage } from './mongodb-storage';
 import { IStorage } from './storage';
-import { isAdmin } from './admin-routes';
 import { SitemapStream, streamToPromise } from 'sitemap';
 import { Readable } from 'stream';
 import path from 'path';
@@ -10,6 +9,22 @@ import axios from 'axios';
 import { z } from 'zod';
 
 const router = Router();
+
+// Middleware to check if user is admin
+const isAdmin = async (req: Request, res: Response, next: Function) => {
+  const sessionUser = (req.session as any)?.user;
+  
+  if (!sessionUser) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  
+  // Check if user has admin role
+  if (sessionUser.role !== 'admin' && sessionUser.role !== 'subadmin') {
+    return res.status(403).json({ message: "Access denied. Admin role required." });
+  }
+  
+  next();
+};
 
 // Ensure admin access for all routes
 router.use(isAdmin);
