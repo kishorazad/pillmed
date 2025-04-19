@@ -1,18 +1,27 @@
 import React from 'react';
 import SEO from '../common/SEO';
+import { Helmet } from 'react-helmet';
 
 interface HomeSEOProps {
   featuredProducts?: number;
   featuredCategories?: string[];
+  alternateLanguages?: Array<{
+    language: string;
+    url: string;
+  }>;
+  regions?: string[];
 }
 
 /**
  * Specialized SEO component for the homepage
  * Implements homepage-specific metadata and structured data
+ * Enhanced for better multilingual and regional SEO
  */
 const HomeSEO: React.FC<HomeSEOProps> = ({ 
   featuredProducts = 0, 
-  featuredCategories = []
+  featuredCategories = [],
+  alternateLanguages = [],
+  regions = ['IN']
 }) => {
   // Create pharmacy-specific keywords based on most common search terms
   const keywords = [
@@ -99,21 +108,97 @@ const HomeSEO: React.FC<HomeSEOProps> = ({
     }
   };
 
+  // Generate region specific keywords
+  const regionKeywords = regions.flatMap(region => {
+    return ['medicine delivery', 'online pharmacy', 'prescription delivery'].map(
+      term => `${term} in ${region === 'IN' ? 'India' : region}`
+    );
+  });
+
+  // Create comprehensive keyword list
+  const completeKeywords = [...keywords, ...regionKeywords].join(', ');
+  
+  // Generate default alternate languages if none provided
+  const defaultAlternateLanguages = alternateLanguages.length > 0 ? 
+    alternateLanguages : 
+    [
+      { language: 'en-IN', url: `${window.location.origin}/` },
+      { language: 'hi-IN', url: `${window.location.origin}/hi` }
+    ];
+  
+  // Create pharmacy-specific custom meta tags
+  const pharmaMeta = [
+    { name: 'pharmacy:delivery-areas', content: regions.join(', ') },
+    { name: 'pharmacy:prescription-required', content: 'partial' },
+    { name: 'pharmacy:services', content: 'medicine-delivery,lab-tests,doctor-consultation' },
+  ];
+  
+  // Create pharmacy-specific link tags for better discovery
+  const pharmaLinks = [
+    { rel: 'manifest', href: '/manifest.json' },
+    { rel: 'apple-touch-icon', href: '/pillnow-icon.png' },
+    { rel: 'mask-icon', href: '/safari-pinned-tab.svg', color: '#5bbad5' }
+  ];
+
   return (
     <>
       <SEO
         title="PillNow: Online Pharmacy & Healthcare Platform | Order Medicines & Lab Tests"
         description={description}
-        keywords={keywords}
+        keywords={completeKeywords}
         structuredData={organizationSchema}
+        language="en"
+        region="IN"
+        alternateLanguages={defaultAlternateLanguages}
+        meta={pharmaMeta}
+        links={pharmaLinks}
+        publishDate="2023-01-01"  // Use actual launch date
+        modifiedDate={new Date().toISOString().split('T')[0]}
       />
-      {/* We need separate Helmet components for each structured data schema */}
-      <script type="application/ld+json">
-        {JSON.stringify(websiteSchema)}
-      </script>
-      <script type="application/ld+json">
-        {JSON.stringify(medicalWebPageSchema)}
-      </script>
+      
+      {/* We need separate Helmet components for the additional structured data schemas */}
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(websiteSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(medicalWebPageSchema)}
+        </script>
+        
+        {/* Add FAQPage structured data for enhanced search results */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            'mainEntity': [
+              {
+                '@type': 'Question',
+                'name': 'How do I order medicines on PillNow?',
+                'acceptedAnswer': {
+                  '@type': 'Answer',
+                  'text': 'You can order medicines on PillNow by uploading your prescription, searching for medicines, or browsing categories. Add products to cart and proceed to checkout for home delivery.'
+                }
+              },
+              {
+                '@type': 'Question',
+                'name': 'Does PillNow deliver to my location?',
+                'acceptedAnswer': {
+                  '@type': 'Answer',
+                  'text': 'PillNow delivers to most cities and towns across India. You can check delivery availability by entering your pincode on the product page or during checkout.'
+                }
+              },
+              {
+                '@type': 'Question',
+                'name': 'Is a prescription required to order medicines?',
+                'acceptedAnswer': {
+                  '@type': 'Answer',
+                  'text': 'Prescription medicines require a valid doctor\'s prescription which can be uploaded during checkout. Over-the-counter (OTC) medicines can be purchased without a prescription.'
+                }
+              }
+            ]
+          })}
+        </script>
+      </Helmet>
     </>
   );
 };

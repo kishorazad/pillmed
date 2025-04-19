@@ -1,21 +1,86 @@
+# PillNow Robots.txt - Last updated: 2025-04-19
+# Enhanced for optimal search engine crawling
+# Following patterns from top pharmacy platforms like 1mg, PharmEasy, and Netmeds
+
+# Default rule for all crawlers
 User-agent: *
 Allow: /
 
 # Block admin and private areas
 Disallow: /admin/
-Disallow: /pharmacy/
-Disallow: /doctor/
-Disallow: /laboratory/
-Disallow: /delivery/
-Disallow: /chemist/
+Disallow: /pharmacy/dashboard/
+Disallow: /doctor/dashboard/
+Disallow: /laboratory/dashboard/
+Disallow: /delivery/dashboard/
+Disallow: /chemist/dashboard/
 Disallow: /profile/
 Disallow: /checkout/
+Disallow: /cart/
+Disallow: /account/
+Disallow: /login/
+Disallow: /register/
+Disallow: /password-reset/
+Disallow: /order-history/
+Disallow: /api/
+Disallow: /upload/
+Disallow: /dashboard/
+Disallow: /*/private/*
+Disallow: /*?*query=
+Disallow: /*?*sort=
+Disallow: /*?*filter=
 
-# Allow product, hospital and doctor pages
+# Priority crawling for key public pharmaceutical content
 Allow: /products/
 Allow: /hospitals/
 Allow: /doctors/
 Allow: /services/
+Allow: /lab-tests/
+Allow: /health-packages/
+Allow: /health-articles/
+Allow: /medicine-information/
+Allow: /health-conditions/
+Allow: /faqs/
+Allow: /offers/
+Allow: /health-tips/
+Allow: /about-us/
+Allow: /contact-us/
+Allow: /locations/
+Allow: /health-tools/
+Allow: /categories/
+Allow: /brands/
+Allow: /sitemap/
 
-# Sitemap location
+# Rate limiting for aggressive crawlers
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+# Image crawling optimization
+User-agent: Googlebot-Image
+Allow: /images/
+Allow: /products/*/images/
+Allow: /doctors/*/profile-image
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.png$
+Allow: /*.webp$
+Allow: /*.svg$
+
+# Special rules for mobile-specific crawlers
+User-agent: Googlebot-Mobile
+Allow: /
+
+# Sitemaps with specialized content
 Sitemap: https://pillnow.com/sitemap.xml
+Sitemap: https://pillnow.com/products-sitemap.xml
+Sitemap: https://pillnow.com/categories-sitemap.xml
+Sitemap: https://pillnow.com/health-articles-sitemap.xml
+Sitemap: https://pillnow.com/doctors-sitemap.xml
+Sitemap: https://pillnow.com/images-sitemap.xml
+Sitemap: https://pillnow.com/health-conditions-sitemap.xml
+Sitemap: https://pillnow.com/locations-sitemap.xml
+
+# Host directive for canonical domain
+Host: pillnow.com
