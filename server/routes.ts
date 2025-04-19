@@ -653,20 +653,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         let newUser;
         try {
+          // Double check MongoDB connection status before proceeding
           if (global.useMongoStorage) {
-            console.log('Creating user directly with MongoDB storage');
-            newUser = await mongoDBStorage.createUser({
-              ...validUserData,
-              password: hashedPassword
-            });
+            console.log('=== MONGODB USER CREATION DIAGNOSTICS ===');
+            console.log('1. Checking MongoDB connection status');
+            const isMongoConnected = mongoDBService.isConnectedToDb();
+            console.log(`2. MongoDB connected: ${isMongoConnected}`);
+            
+            if (isMongoConnected) {
+              console.log('3. Creating user with MongoDB storage');
+              try {
+                newUser = await mongoDBStorage.createUser({
+                  ...validUserData,
+                  password: hashedPassword
+                });
+                console.log(`4. MongoDB user creation succeeded with ID: ${newUser.id}`);
+              } catch (mongoError) {
+                console.error('4. MongoDB user creation failed:', mongoError);
+                console.log('5. Falling back to Memory storage after MongoDB failure');
+                newUser = await memStorage.createUser({
+                  ...validUserData,
+                  password: hashedPassword
+                });
+                console.log(`6. Memory storage fallback succeeded with ID: ${newUser.id}`);
+              }
+            } else {
+              console.log('3. MongoDB disconnected, using Memory storage instead');
+              newUser = await memStorage.createUser({
+                ...validUserData,
+                password: hashedPassword
+              });
+              console.log(`4. Memory storage succeeded with ID: ${newUser.id}`);
+            }
           } else {
-            console.log('Creating user with Memory storage');
+            console.log('Creating user with Memory storage (MongoDB not enabled)');
             newUser = await memStorage.createUser({
               ...validUserData,
               password: hashedPassword
             });
+            console.log(`User created successfully with ID: ${newUser.id}`);
           }
-          console.log(`User created successfully with ID: ${newUser.id}`);
+          
+          // Verify the user was actually created by immediately retrieving it
+          console.log('=== USER CREATION VERIFICATION ===');
+          console.log(`1. Verifying user exists with ID: ${newUser.id}`);
+          
+          const verifyUser = await dbStorage.getUser(newUser.id);
+          if (verifyUser) {
+            console.log(`2. User verification succeeded - found user with ID: ${verifyUser.id}`);
+          } else {
+            console.error(`2. User verification FAILED - could not find user with ID: ${newUser.id}`);
+            console.log('3. Attempting MongoDB direct verification');
+            
+            const mongoVerifyUser = await mongoDBStorage.getUser(newUser.id);
+            if (mongoVerifyUser) {
+              console.log(`4. MongoDB verification succeeded - found user with ID: ${mongoVerifyUser.id}`);
+            } else {
+              console.error(`4. MongoDB verification FAILED - could not find user with ID: ${newUser.id}`);
+            }
+            
+            console.log('5. Attempting memory storage direct verification');
+            const memVerifyUser = await memStorage.getUser(newUser.id);
+            if (memVerifyUser) {
+              console.log(`6. Memory verification succeeded - found user with ID: ${memVerifyUser.id}`);
+            } else {
+              console.error(`6. Memory verification FAILED - could not find user with ID: ${newUser.id}`);
+            }
+          }
+          
         } catch (createError) {
           console.error('Error creating user:', createError);
           throw createError;
