@@ -33,7 +33,7 @@ interface Prescription {
   customerAddress: string;
   customerPhone: string;
   prescriptionImage: string;
-  status: 'new' | 'readable' | 'not_readable' | 'verified' | 'packed' | 'picked' | 'delivered';
+  status: 'new' | 'reviewed' | 'medicine_checked' | 'order_confirmed' | 'not_readable' | 'packed' | 'picked' | 'delivered';
   uploadDate: string;
   medicines: Medicine[];
   extraMedicines?: ExtraMedicine[]; // Optional array for medicines added by chemist
@@ -590,16 +590,49 @@ const ChemistDashboard: React.FC = () => {
     }
   ];
 
-  const handleMarkReadable = (prescription: Prescription) => {
-    // In a real app, this would make an API call to update the status
-    console.log('Marking prescription as readable:', prescription.id);
+  // Step 1: Mark as reviewed - first step in the workflow
+  const handleMarkAsReviewed = (prescription: Prescription) => {
+    // In a real app, this would make an API call to update the status to 'reviewed'
+    console.log('Marking prescription as reviewed:', prescription.id);
     toast({
-      title: "Prescription verified",
-      description: "Customer has been notified that their prescription is readable.",
+      title: "Prescription reviewed",
+      description: "Prescription has been reviewed and will be checked against medicine database.",
     });
     
     // Mock notification to customer
-    console.log(`NOTIFICATION to ${prescription.customerPhone}: Your prescription has been verified by our pharmacist. Your order is being processed.`);
+    console.log(`NOTIFICATION to ${prescription.customerPhone}: Your prescription has been reviewed by our pharmacist. We're now checking medicine availability.`);
+  };
+  
+  // Step 2: Mark as medicine checked
+  const handleMarkMedicineChecked = (prescription: Prescription) => {
+    // In a real app, this would make an API call to update the status to 'medicine_checked'
+    console.log('Marking prescription medicines as checked:', prescription.id);
+    toast({
+      title: "Medicines checked",
+      description: "All prescribed medicines have been checked for availability.",
+    });
+    
+    // Mock notification to customer
+    console.log(`NOTIFICATION to ${prescription.customerPhone}: Your prescribed medicines are available. Proceeding to order confirmation.`);
+  };
+  
+  // Step 3: Mark as order confirmed
+  const handleConfirmOrder = (prescription: Prescription) => {
+    // In a real app, this would make an API call to update the status to 'order_confirmed'
+    console.log('Confirming prescription order:', prescription.id);
+    toast({
+      title: "Order confirmed",
+      description: "The order has been confirmed and will be prepared for delivery.",
+    });
+    
+    // Mock notification to customer
+    console.log(`NOTIFICATION to ${prescription.customerPhone}: Your prescription order #${prescription.id} has been confirmed. We'll prepare it for delivery soon.`);
+  };
+  
+  // For backward compatibility
+  const handleMarkReadable = (prescription: Prescription) => {
+    // Call the new workflow function
+    handleMarkAsReviewed(prescription);
   };
 
   const handleMarkNotReadable = (prescription: Prescription) => {
@@ -1204,8 +1237,12 @@ const ChemistDashboard: React.FC = () => {
     switch(status) {
       case 'new':
         return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">New</Badge>;
-      case 'readable':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Verified</Badge>;
+      case 'reviewed':
+        return <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-300">Reviewed</Badge>;
+      case 'medicine_checked':
+        return <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">Medicines Checked</Badge>;
+      case 'order_confirmed':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Order Confirmed</Badge>;
       case 'not_readable':
         return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">Not Readable</Badge>;
       case 'packed':
@@ -1214,6 +1251,9 @@ const ChemistDashboard: React.FC = () => {
         return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">Picked</Badge>;
       case 'delivered':
         return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300">Delivered</Badge>;
+      // For backward compatibility
+      case 'readable':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Verified</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -1245,7 +1285,9 @@ const ChemistDashboard: React.FC = () => {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="verified">{t('verified')}</TabsTrigger>
+          <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
+          <TabsTrigger value="medicine_checked">Medicines Checked</TabsTrigger>
+          <TabsTrigger value="order_confirmed">Order Confirmed</TabsTrigger>
           <TabsTrigger value="not_readable">{t('not_readable')}</TabsTrigger>
           <TabsTrigger value="processing">{t('processing')}</TabsTrigger>
           <TabsTrigger value="completed">{t('completed')}</TabsTrigger>
