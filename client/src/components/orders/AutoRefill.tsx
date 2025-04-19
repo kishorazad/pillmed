@@ -95,8 +95,12 @@ const RefillStatusBadge = ({ status, className = "" }: { status: MedicationRefil
   );
 };
 
+interface AutoRefillProps {
+  userId?: number;
+}
+
 // Main component
-const AutoRefill = () => {
+const AutoRefill: React.FC<AutoRefillProps> = ({ userId }) => {
   const [selectedRefill, setSelectedRefill] = useState<MedicationRefill | null>(null);
   const [refillDialogOpen, setRefillDialogOpen] = useState(false);
   const [newRefillDialogOpen, setNewRefillDialogOpen] = useState(false);
