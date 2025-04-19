@@ -206,6 +206,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get all prescriptions (for admin dashboard)
+  app.get('/api/admin/prescriptions', async (req: Request, res: Response) => {
+    try {
+      console.log('Fetching all prescriptions for admin dashboard');
+      
+      // Use the MongoDB storage to get all prescriptions
+      const storage = global.useMongoStorage ? mongoDBStorage : memStorage;
+      
+      const prescriptions = await storage.getAllPrescriptions();
+      
+      console.log(`Found ${prescriptions.length} prescriptions`);
+      
+      res.status(200).json(prescriptions);
+    } catch (error) {
+      console.error('Error fetching prescriptions:', error);
+      res.status(500).json({ error: 'Failed to fetch prescriptions' });
+    }
+  });
+  
   // Add error handling middleware for multer
   app.use((err: any, req: Request, res: Response, next: Function) => {
     if (err instanceof multer.MulterError) {

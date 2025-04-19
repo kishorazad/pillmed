@@ -1184,6 +1184,57 @@ export class MemStorage implements IStorage {
       }
     ];
   }
+  
+  async getAllPrescriptions(): Promise<any[]> {
+    // Return a combined list of prescriptions for all pharmacies
+    // In memory implementation with sample prescriptions data
+    return [
+      {
+        id: 1,
+        userId: 1,
+        userName: 'Test User',
+        uploadDate: new Date('2025-04-18'),
+        status: 'pending',
+        imageUrl: 'https://images.unsplash.com/photo-1617817705453-2b5929d01517',
+        fileName: 'test-prescription.jpg',
+        fileSize: 125000,
+        fileType: 'image/jpeg',
+        notes: 'Please process this prescription urgently',
+        pharmacyId: 4
+      },
+      {
+        id: 2,
+        userId: 1,
+        userName: 'Test User',
+        uploadDate: new Date('2025-04-17'),
+        status: 'approved',
+        imageUrl: 'https://images.unsplash.com/photo-1617817705453-2b5929d01517',
+        fileName: 'medical-prescription.jpg',
+        fileSize: 98500,
+        fileType: 'image/jpeg',
+        notes: 'Monthly medication',
+        pharmacyId: 4,
+        verifiedBy: 4,
+        updatedAt: new Date('2025-04-17T15:30:00Z')
+      },
+      {
+        id: 3,
+        userId: 3,
+        userName: 'Dr. John Smith',
+        uploadDate: new Date('2025-04-16'),
+        status: 'rejected',
+        imageUrl: 'https://images.unsplash.com/photo-1617817705453-2b5929d01517',
+        fileName: 'doctor-prescription.pdf',
+        fileSize: 145000,
+        fileType: 'application/pdf',
+        notes: 'Prescription from hospital visit',
+        pharmacyId: 4,
+        verifiedBy: 4,
+        rejectionReason: 'Prescription expired',
+        updatedAt: new Date('2025-04-16T10:15:00Z')
+      }
+    ];
+  }
 
   async updatePrescriptionStatus(prescriptionId: number, status: string, pharmacyId: number): Promise<any> {
     // Simulation for memory storage
