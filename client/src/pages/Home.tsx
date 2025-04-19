@@ -137,6 +137,11 @@ const Home = () => {
             {/* Mobile Banner Carousel */}
             <MobileBannerCarousel />
             
+            {/* Doctor Consultation Banner - Added for better visibility */}
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <ConsultDoctors />
+            </Suspense>
+            
             {/* Categories slider for Mobile - MOVED TO TOP */}
             {!categoriesLoading && categories?.length > 0 && (
               <MedicineCategorySlider 
@@ -225,6 +230,11 @@ const Home = () => {
           <>
             <HeroSection />
             <ServicesSection />
+            
+            {/* Doctor Consultation Banner - Added for better visibility */}
+            <Suspense fallback={<div className="my-6 h-40 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <ConsultDoctors />
+            </Suspense>
             
             {/* Top Categories - MOVED TO TOP */}
             <section className="py-8">

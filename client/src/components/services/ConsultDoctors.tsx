@@ -47,7 +47,7 @@ const ConsultDoctors = () => {
                 </div>
               </div>
               <Button asChild className="bg-[#14bef0] text-white hover:bg-[#14bef0]/90">
-                <Link href="/consult">
+                <Link href="/doctors">
                   Consult Now
                 </Link>
               </Button>
@@ -65,7 +65,7 @@ const ConsultDoctors = () => {
             <h3 className="font-medium mb-4">Popular Specialties</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
               {specialties.map((specialty, index) => (
-                <Link key={index} href={`/consult/${specialty.name.toLowerCase()}`} className="bg-white rounded-lg p-3 text-center hover:shadow-md transition">
+                <Link key={index} href={`/doctors?specialty=${specialty.name.toLowerCase()}`} className="bg-white rounded-lg p-3 text-center hover:shadow-md transition">
                   <div className={`w-12 h-12 mx-auto bg-${specialty.color}-100 rounded-full flex items-center justify-center mb-2`}>
                     <i className={`fas ${specialty.icon} text-${specialty.color}-500`}></i>
                   </div>
