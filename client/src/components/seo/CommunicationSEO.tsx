@@ -1,5 +1,5 @@
 import React from 'react';
-import SEO from './SEO';
+import SEO from '../common/SEO';
 
 /**
  * Specialized SEO component for the Communication page
