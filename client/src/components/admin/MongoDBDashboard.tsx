@@ -133,6 +133,12 @@ const MongoDBDashboard = () => {
     queryKey: ['/api/articles'],
     staleTime: 60000,
   });
+  
+  // Fetch prescriptions data directly from the new API endpoint
+  const { data: prescriptionsData } = useQuery<any[]>({
+    queryKey: ['/api/admin/prescriptions'],
+    staleTime: 30000, // 30 seconds - more frequent refresh for prescriptions
+  });
 
   if (isLoading) {
     return (
@@ -331,42 +337,194 @@ const MongoDBDashboard = () => {
         
         <TabsContent value="prescriptions" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Recent Prescription Uploads</CardTitle>
-              <CardDescription>Customer prescriptions awaiting review</CardDescription>
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle>Prescription Management</CardTitle>
+                <CardDescription>View and manage customer prescription uploads</CardDescription>
+              </div>
+              <div className="mt-4 sm:mt-0 flex gap-2">
+                <div className="flex items-center space-x-2">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                    <Input
+                      type="search"
+                      placeholder="Search..."
+                      className="pl-8 w-full sm:w-[200px]"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              {data.recentPrescriptions && data.recentPrescriptions.length > 0 ? (
+              {/* Display loader if prescriptions are being fetched */}
+              {!prescriptionsData ? (
+                <div className="text-center py-10">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+                  <p className="text-gray-500">Loading prescriptions...</p>
+                </div>
+              ) : prescriptionsData.length > 0 ? (
                 <div className="space-y-4">
-                  {data.recentPrescriptions.map(prescription => (
-                    <div key={prescription.id} className="flex items-start p-3 bg-gray-50 rounded-lg">
-                      {prescription.imageUrl && (
-                        <div className="mr-4 w-16 h-16 bg-white rounded border overflow-hidden flex-shrink-0">
-                          <img 
-                            src={prescription.imageUrl} 
-                            alt="Prescription" 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-grow">
-                        <div className="font-medium">{prescription.userName}</div>
-                        <div className="text-sm text-gray-500">Uploaded on {prescription.uploadDate}</div>
-                        <div className="mt-1 flex items-center">
-                          <Badge className={`
-                            ${prescription.status === 'pending' ? 'bg-amber-100 text-amber-800' : 
-                            prescription.status === 'approved' ? 'bg-green-100 text-green-800' :
-                            'bg-red-100 text-red-800'}
-                          `}>
-                            {prescription.status.charAt(0).toUpperCase() + prescription.status.slice(1)}
-                          </Badge>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        View Details
-                      </Button>
-                    </div>
-                  ))}
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Image</TableHead>
+                          <TableHead>User</TableHead>
+                          <TableHead>Uploaded</TableHead>
+                          <TableHead>File</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {prescriptionsData
+                          .filter(p => statusFilter === 'all' || p.status === statusFilter)
+                          .filter(p => 
+                            searchQuery === '' || 
+                            p.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            p.fileName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            (p.notes && p.notes.toLowerCase().includes(searchQuery.toLowerCase()))
+                          )
+                          .map(prescription => (
+                            <TableRow key={prescription.id}>
+                              <TableCell className="font-medium">{prescription.id}</TableCell>
+                              <TableCell>
+                                {prescription.imageUrl && (
+                                  <div className="w-12 h-12 rounded border overflow-hidden">
+                                    <img 
+                                      src={prescription.imageUrl} 
+                                      alt="Prescription" 
+                                      className="w-full h-full object-cover" 
+                                    />
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium">{prescription.userName || prescription.userFullName}</div>
+                                <div className="text-xs text-gray-500">ID: {prescription.userId}</div>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(prescription.uploadDate).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium truncate max-w-[150px]" title={prescription.fileName}>
+                                  {prescription.fileName}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {Math.round(prescription.fileSize / 1024)} KB
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={`
+                                  ${prescription.status === 'pending' ? 'bg-amber-100 text-amber-800' : 
+                                  prescription.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  'bg-red-100 text-red-800'}
+                                `}>
+                                  {prescription.status.charAt(0).toUpperCase() + prescription.status.slice(1)}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button size="sm" variant="outline">View Details</Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="sm:max-w-[600px]">
+                                    <DialogHeader>
+                                      <DialogTitle>Prescription Details</DialogTitle>
+                                      <DialogDescription>
+                                        View complete prescription information and manage status
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                      {prescription.imageUrl && (
+                                        <div className="mx-auto max-w-full max-h-[300px] overflow-hidden rounded-md border">
+                                          <img
+                                            src={prescription.imageUrl}
+                                            alt="Prescription"
+                                            className="w-full h-full object-contain"
+                                          />
+                                        </div>
+                                      )}
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <h4 className="font-medium text-sm">User Information</h4>
+                                          <p className="text-sm mt-1">{prescription.userName || prescription.userFullName}</p>
+                                          <p className="text-xs text-gray-500">ID: {prescription.userId}</p>
+                                          {prescription.userEmail && <p className="text-xs text-gray-500">{prescription.userEmail}</p>}
+                                          {prescription.userPhone && <p className="text-xs text-gray-500">{prescription.userPhone}</p>}
+                                        </div>
+                                        <div>
+                                          <h4 className="font-medium text-sm">File Information</h4>
+                                          <p className="text-sm mt-1 break-all">{prescription.fileName}</p>
+                                          <p className="text-xs text-gray-500">{Math.round(prescription.fileSize / 1024)} KB</p>
+                                          <p className="text-xs text-gray-500">{prescription.fileType}</p>
+                                        </div>
+                                      </div>
+                                      {prescription.notes && (
+                                        <div>
+                                          <h4 className="font-medium text-sm">Notes</h4>
+                                          <p className="text-sm mt-1 p-2 bg-gray-50 rounded">{prescription.notes}</p>
+                                        </div>
+                                      )}
+                                      <div>
+                                        <h4 className="font-medium text-sm">Status</h4>
+                                        <div className="flex items-center mt-2">
+                                          <Badge className={`
+                                            ${prescription.status === 'pending' ? 'bg-amber-100 text-amber-800' : 
+                                            prescription.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                            'bg-red-100 text-red-800'}
+                                          `}>
+                                            {prescription.status.charAt(0).toUpperCase() + prescription.status.slice(1)}
+                                          </Badge>
+                                          {prescription.updatedAt && (
+                                            <span className="text-xs text-gray-500 ml-2">
+                                              Updated: {new Date(prescription.updatedAt).toLocaleString()}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <Button variant="outline" size="sm">Download</Button>
+                                      <div className="flex gap-2">
+                                        <Button variant="outline" size="sm" 
+                                          className="bg-green-50 hover:bg-green-100 text-green-700"
+                                          disabled={prescription.status === 'approved'}>
+                                          Approve
+                                        </Button>
+                                        <Button variant="outline" size="sm"
+                                          className="bg-red-50 hover:bg-red-100 text-red-700"
+                                          disabled={prescription.status === 'rejected'}>
+                                          Reject
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8">

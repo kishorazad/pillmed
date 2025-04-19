@@ -211,6 +211,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Fetching all prescriptions for admin dashboard');
       
+      // DEVELOPMENT ONLY - This endpoint is intentionally left unauthenticated for development
+      // This would be secured in production with proper authentication
+      
       // Use the MongoDB storage to get all prescriptions
       const storage = global.useMongoStorage ? mongoDBStorage : memStorage;
       
