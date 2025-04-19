@@ -1,53 +1,50 @@
-import express, { Request, Response } from 'express';
+import express, { Router, Request, Response } from 'express';
 import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
 
-const router = express.Router();
+const router = Router();
 
-const emergencySchema = z.object({
-  name: z.string().min(2),
+// Create validation schema for emergency requests
+export const emergencySchema = z.object({
+  name: z.string().min(3),
   phone: z.string().min(10),
+  serviceType: z.enum(['ambulance', 'doctor_visit', 'nursing', 'scheduled']),
   address: z.string().min(5),
-  pincode: z.string().min(6),
-  emergencyType: z.enum(['medical', 'ambulance', 'home_doctor', 'nursing']),
-  urgencyLevel: z.enum(['urgent', 'scheduled']),
-  description: z.string().min(10),
-  preferredTime: z.string().optional(),
-  consent: z.boolean()
+  urgency: z.enum(['high', 'medium', 'low']),
+  description: z.string().min(5).max(500),
 });
 
 type EmergencyRequest = z.infer<typeof emergencySchema>;
 
-// In-memory storage for emergency requests (would be replaced with database in production)
+// In-memory storage for emergency requests (in a real system, this would be a database)
 const emergencyRequests: (EmergencyRequest & { id: string, timestamp: Date })[] = [];
 
-// POST /api/emergency-requests - Create new emergency request
+// Create a new emergency request
 router.post('/', async (req: Request, res: Response) => {
   try {
+    // Validate request body
     const validatedData = emergencySchema.parse(req.body);
     
-    // Create new emergency request with ID and timestamp
+    // Generate unique ID and add timestamp
     const newRequest = {
       ...validatedData,
-      id: `ER${Date.now()}`,
+      id: uuidv4(),
       timestamp: new Date()
     };
     
     // Store the request
     emergencyRequests.push(newRequest);
     
-    // Log for monitoring (in production, would send notifications to medical team)
-    console.log(`New emergency request received: ${newRequest.id}`);
-    console.log(`Type: ${newRequest.emergencyType}, Urgency: ${newRequest.urgencyLevel}`);
+    // In a real system, we would also:
+    // 1. Send notifications to relevant healthcare providers
+    // 2. Send SMS confirmation to the user
+    // 3. Store in a persistent database
     
-    // In a real implementation, we would:
-    // 1. Store in database
-    // 2. Send SMS/email notifications to medical team
-    // 3. Trigger alerts for urgent cases
-    // 4. Setup response SLA tracking
+    console.log(`New emergency request received: ${newRequest.serviceType} - ${newRequest.urgency} priority`);
     
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: 'Emergency request submitted successfully',
+      message: 'Emergency request received',
       requestId: newRequest.id
     });
   } catch (error) {
@@ -59,18 +56,17 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
     
-    console.error('Error submitting emergency request:', error);
-    res.status(500).json({
+    console.error('Emergency request error:', error);
+    return res.status(500).json({
       success: false,
-      message: 'Failed to submit emergency request'
+      message: 'Failed to process emergency request'
     });
   }
 });
 
-// GET /api/emergency-requests - Get all emergency requests (admin only in production)
+// Get all emergency requests (admin access only in a real system)
 router.get('/', (req: Request, res: Response) => {
-  // In production, this would require admin authentication
-  res.json(emergencyRequests);
+  return res.json(emergencyRequests);
 });
 
 export default router;

@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { X, AlertCircle, Phone, Clock, Ambulance } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
-
+import { z } from 'zod';
+import { X, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
@@ -15,9 +14,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -25,21 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/components/LanguageSwitcher';
+import { apiRequest } from '@/lib/queryClient';
 
-const emergencySchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+// Create validation schema for emergency requests
+export const emergencySchema = z.object({
+  name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
   phone: z.string().min(10, { message: 'Please enter a valid phone number' }),
-  address: z.string().min(5, { message: 'Please enter your complete address' }),
-  pincode: z.string().min(6, { message: 'Please enter a valid pincode' }),
-  emergencyType: z.enum(['medical', 'ambulance', 'home_doctor', 'nursing']),
-  urgencyLevel: z.enum(['urgent', 'scheduled']),
-  description: z.string().min(10, { message: 'Please describe the emergency situation briefly' }),
-  preferredTime: z.string().optional(),
-  consent: z.boolean().refine(val => val === true, {
-    message: 'You must agree to the terms',
-  }),
+  serviceType: z.enum(['ambulance', 'doctor_visit', 'nursing', 'scheduled']),
+  address: z.string().min(5, { message: 'Please provide a detailed address' }),
+  urgency: z.enum(['high', 'medium', 'low']),
+  description: z.string().min(5, { message: 'Please describe your situation' }).max(500, { message: 'Description too long' }),
 });
 
 type EmergencyFormData = z.infer<typeof emergencySchema>;
@@ -49,86 +42,68 @@ interface EmergencyContactFormProps {
 }
 
 export function EmergencyContactForm({ onClose }: EmergencyContactFormProps) {
-  const [submitting, setSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const form = useForm<EmergencyFormData>({
     resolver: zodResolver(emergencySchema),
     defaultValues: {
       name: '',
       phone: '',
+      serviceType: 'ambulance',
       address: '',
-      pincode: '',
-      emergencyType: 'medical',
-      urgencyLevel: 'urgent',
+      urgency: 'medium',
       description: '',
-      consent: false,
     },
   });
   
-  const emergencyMutation = useMutation({
-    mutationFn: async (data: EmergencyFormData) => {
+  const onSubmit = async (data: EmergencyFormData) => {
+    setIsSubmitting(true);
+    
+    try {
       const response = await apiRequest('POST', '/api/emergency-requests', data);
-      if (!response.ok) {
-        throw new Error('Failed to submit emergency request');
+      
+      if (response.ok) {
+        toast({
+          title: 'Request Sent',
+          description: 'Your emergency service request has been sent successfully. We will contact you shortly.',
+          variant: 'default',
+        });
+        
+        onClose();
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send request');
       }
-      return response.json();
-    },
-    onSuccess: () => {
+    } catch (error) {
       toast({
-        title: 'Emergency request submitted',
-        description: 'Our team will contact you as soon as possible.',
-        variant: 'default',
-      });
-      onClose();
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error submitting request',
-        description: error.message,
+        title: 'Request Failed',
+        description: error instanceof Error ? error.message : 'Failed to send request',
         variant: 'destructive',
       });
-    },
-  });
-  
-  const onSubmit = (data: EmergencyFormData) => {
-    setSubmitting(true);
-    emergencyMutation.mutate(data);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-  
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-end md:pt-16 pt-0">
-      <div className="relative bg-white rounded-lg shadow-lg md:w-[450px] w-full min-h-screen md:min-h-0 md:max-h-[90vh] overflow-auto">
-        <div className="sticky top-0 bg-primary text-white p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Phone className="h-6 w-6" />
-            <h2 className="text-xl font-bold">Emergency Services</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-full hover:bg-white/20 p-1.5 transition-colors"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        
-        <div className="bg-red-50 p-4 border-l-4 border-red-500 flex gap-3">
-          <div className="flex-shrink-0">
-            <AlertCircle className="h-6 w-6 text-red-500" />
-          </div>
-          <div>
-            <h3 className="font-medium text-red-800">Medical Emergency?</h3>
-            <p className="text-sm text-red-700">
-              For life-threatening emergencies, dial 102 or 108 immediately.
-              This service is for urgent but non-life-threatening situations.
-            </p>
-          </div>
-        </div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-auto">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md relative max-h-[90vh] overflow-auto">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={onClose}
+          className="absolute top-2 right-2"
+        >
+          <X className="h-4 w-4" />
+        </Button>
         
         <div className="p-6">
+          <h2 className="text-xl font-bold mb-4">Emergency Service Request</h2>
+          
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -159,35 +134,7 @@ export function EmergencyContactForm({ onClose }: EmergencyContactFormProps) {
               
               <FormField
                 control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter your complete address" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="pincode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Pincode</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter pincode" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="emergencyType"
+                name="serviceType"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Service Type</FormLabel>
@@ -198,10 +145,10 @@ export function EmergencyContactForm({ onClose }: EmergencyContactFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="medical">Medical Consultation</SelectItem>
                         <SelectItem value="ambulance">Ambulance Service</SelectItem>
-                        <SelectItem value="home_doctor">Doctor Home Visit</SelectItem>
+                        <SelectItem value="doctor_visit">Doctor Home Visit</SelectItem>
                         <SelectItem value="nursing">Nursing Care</SelectItem>
+                        <SelectItem value="scheduled">Scheduled Consultation</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -211,91 +158,84 @@ export function EmergencyContactForm({ onClose }: EmergencyContactFormProps) {
               
               <FormField
                 control={form.control}
-                name="urgencyLevel"
+                name="address"
                 render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Urgency Level</FormLabel>
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="urgent" id="urgent" />
-                          <label htmlFor="urgent" className="flex items-center gap-1 text-sm font-medium">
-                            <Ambulance className="h-4 w-4 text-red-500" /> Urgent (As soon as possible)
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="scheduled" id="scheduled" />
-                          <label htmlFor="scheduled" className="flex items-center gap-1 text-sm font-medium">
-                            <Clock className="h-4 w-4 text-blue-500" /> Scheduled (Select time below)
-                          </label>
-                        </div>
-                      </RadioGroup>
+                      <Textarea 
+                        placeholder="Enter your full address for the service" 
+                        className="resize-none h-20"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              {form.watch('urgencyLevel') === 'scheduled' && (
-                <FormField
-                  control={form.control}
-                  name="preferredTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preferred Time</FormLabel>
+              <FormField
+                control={form.control}
+                name="urgency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Urgency Level</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <Input type="datetime-local" {...field} />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select urgency level" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+                      <SelectContent>
+                        <SelectItem value="high">High (Urgent medical attention)</SelectItem>
+                        <SelectItem value="medium">Medium (Needed within 2-3 hours)</SelectItem>
+                        <SelectItem value="low">Low (Scheduled care)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Describe the Situation</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Briefly describe the medical situation or requirements" {...field} />
+                      <Textarea 
+                        placeholder="Please describe your condition or requirements" 
+                        className="resize-none h-24"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="consent"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        I agree to share my information with medical service providers and consent to follow-up communications.
-                      </FormLabel>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex gap-3">
-                <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting ? 'Submitting...' : 'Request Emergency Service'}
+              <div className="pt-2">
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending Request...
+                    </>
+                  ) : (
+                    'Submit Request'
+                  )}
                 </Button>
               </div>
+              
+              <p className="text-xs text-gray-500 mt-4">
+                By submitting this form, you agree to our terms and conditions. For life-threatening emergencies, 
+                please call your national emergency number immediately.
+              </p>
             </form>
           </Form>
         </div>
