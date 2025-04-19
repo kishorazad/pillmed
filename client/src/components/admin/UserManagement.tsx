@@ -286,7 +286,7 @@ const UserManagement = () => {
     confirmPassword: '',
     phone: '',
     role: 'customer',
-    active: true
+    active: true // This will be converted to a status field on the server
   });
   
   const [formError, setFormError] = useState<string | null>(null);
@@ -398,8 +398,8 @@ const UserManagement = () => {
       password: newUser.password,
       phone: newUser.phone,
       role: newUser.role,
-      // status field will be set on the server based on active flag
-      // We don't send status directly as the server validation schema doesn't expect it
+      active: newUser.active, // Send active flag to server
+      // Server will convert this to a status value based on this flag
     };
     
     // Log the data being sent for debugging

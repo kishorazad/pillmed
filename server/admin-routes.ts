@@ -218,11 +218,28 @@ router.post('/users', async (req: Request, res: Response) => {
     const hash = crypto.scryptSync(validatedData.password, salt, 64).toString('hex');
     const hashedPassword = `${hash}.${salt}`;
     
-    // Create the user
-    const newUser = await storage.createUser({
+    // Prepare user data with status based on active flag if provided
+    let userData: any = {
       ...validatedData,
       password: hashedPassword
+    };
+    
+    // If active flag was sent, convert it to status
+    if (validatedData.active !== undefined) {
+      userData.status = validatedData.active ? 'active' : 'pending';
+      delete userData.active;
+    } else if (validatedData.status === undefined) {
+      // Default status if neither is provided
+      userData.status = 'active';
+    }
+    
+    console.log('Creating user with data:', {
+      ...userData,
+      password: '[REDACTED]'
     });
+    
+    // Create the user
+    const newUser = await storage.createUser(userData);
     
     // Return the new user without password
     const { password, ...userWithoutPassword } = newUser;

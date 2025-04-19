@@ -198,6 +198,16 @@ class MongoDBStorage implements IStorage {
         ]
       });
       
+      // Set proper status based on active flag if provided
+      if ('active' in user && typeof user.active === 'boolean') {
+        user.status = user.active ? 'active' : 'pending';
+        // Remove the active flag as it's not part of our User schema
+        delete (user as any).active;
+      } else if (!user.status) {
+        // Default status if neither active nor status is provided
+        user.status = 'active';
+      }
+      
       if (existingUser) {
         console.log(`User already exists in MongoDB: ${JSON.stringify(existingUser)}`);
         throw new Error(`User with username '${user.username}' or email '${user.email}' already exists`);
