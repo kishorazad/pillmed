@@ -32,6 +32,7 @@ import MedicineSpecialtyCategories from '@/components/home/MedicineSpecialtyCate
 import PrescriptionUpload from '@/components/home/PrescriptionUpload';
 import FeaturedProductsSlider from '@/components/home/FeaturedProductsSlider';
 import CategoryCard from '@/components/categories/CategoryCard';
+import EmergencyCallButton from '@/components/EmergencyCallButton';
 
 // Lazy load non-critical components to improve initial load time
 const PromotionalBanner = lazy(() => import('@/components/home/PromotionalBanner'));
@@ -49,7 +50,6 @@ const TopDeals = lazy(() => import('@/components/home/TopDeals'));
 const OrderHistory = lazy(() => import('@/components/orders/OrderHistory'));
 const HealthServices = lazy(() => import('@/components/home/HealthServices'));
 const NearbyHospitals = lazy(() => import('@/components/hospitals/NearbyHospitals'));
-const EmergencyCallButton = lazy(() => import('@/components/EmergencyCallButton'));
 const MedicalEquipmentSection = lazy(() => import('@/components/equipment/MedicalEquipmentSection'));
 const MedicalServicesSection = lazy(() => import('@/components/medical-services/MedicalServicesSection'));
 const EmergencyServicesSection = lazy(() => import('@/components/emergency/EmergencyServicesSection'));
