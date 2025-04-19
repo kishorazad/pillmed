@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { useMediaQuery } from '../hooks/use-media-query';
 import { HomeSEO } from '@/components/seo';
+import { useAuth } from '@/lib/auth-provider';
 
 // Define interfaces for product and category data
 interface Category {
@@ -63,6 +64,7 @@ import { Loader } from 'lucide-react';
 
 const Home = () => {
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const { user } = useAuth(); // Get user from auth context
   
   // Using useQueries to parallelize API calls for better performance
   const results = useQueries({
