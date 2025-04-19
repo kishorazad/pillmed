@@ -25,6 +25,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getUsers(): Promise<User[]>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
+  updateUserPassword(id: number, password: string): Promise<User | undefined>;
   
   // Notification related methods
   saveNotificationToken(token: InsertNotificationToken): Promise<NotificationToken>;
@@ -623,6 +624,17 @@ export class MemStorage implements IStorage {
     }
     
     const updatedUser = { ...existingUser, ...user };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserPassword(id: number, password: string): Promise<User | undefined> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) {
+      return undefined;
+    }
+    
+    const updatedUser = { ...existingUser, password };
     this.users.set(id, updatedUser);
     return updatedUser;
   }
