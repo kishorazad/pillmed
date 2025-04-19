@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Home, Search, ShoppingCart, Clock, User, Bot, Building, Building2, Globe, X } from 'lucide-react';
+import { Home, Search, ShoppingCart, Clock, User, Bot, Building, Building2, Globe, X, Ambulance } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useLanguage, LANGUAGES } from '@/components/LanguageSwitcher';
 
@@ -42,6 +42,12 @@ const MobileNavigation: React.FC = () => {
       highlight: true,
     },
     {
+      label: t('emergency'),
+      icon: <Ambulance className="h-5 w-5" />,
+      path: '/services/emergency',
+      highlight: true,
+    },
+    {
       label: t('ai_assistant'),
       icon: <Bot className="h-5 w-5" />,
       path: '/ai-healthcare',
@@ -52,11 +58,6 @@ const MobileNavigation: React.FC = () => {
       icon: <ShoppingCart className="h-5 w-5" />,
       path: '/cart',
       badge: cart.length > 0 ? cart.reduce((total, item) => total + item.quantity, 0) : null,
-    },
-    {
-      label: user && user.role !== 'user' ? t('dashboard') : t('profile'),
-      icon: <User className="h-5 w-5" />,
-      path: getDashboardPath(),
     },
   ];
   
