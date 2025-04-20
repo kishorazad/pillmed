@@ -65,14 +65,14 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
           name: 'Teltab 80mg Tablet',
           quantity: 2,
           price: 420.25,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/I05582/dolo-650-tablet-15s-1-1669710798.jpg'
+          imageUrl: '/pillnow.png'
         },
         {
           id: 2,
           name: 'Blood Pressure Monitor',
           quantity: 1,
           price: 1599,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/W67219/dr-morepen-bp-one-bp02-fully-automatic-blood-pressure-monitor-with-adaptor-2-1671745339.jpg'
+          imageUrl: '/pillnow.png'
         }
       ]
     },
@@ -88,14 +88,14 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
           name: 'Multivitamin Tablets',
           quantity: 1,
           price: 450,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/000665/accusure-simple-gluco-test-strips-box-of-50-1-1669710026.jpg'
+          imageUrl: '/pillnow.png'
         },
         {
           id: 4,
           name: 'Pain Relief Gel',
           quantity: 2,
           price: 120,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/142528/cetaphil-gentle-skin-cleanser-250ml-2-1669710367.jpg'
+          imageUrl: '/pillnow.png'
         }
       ]
     },
@@ -111,14 +111,14 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
           name: 'Diabetes Testing Kit',
           quantity: 1,
           price: 799,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/Q83701/onetouch-select-plus-simple-blood-glucose-monitoring-system-free-10-strips-2-1671745264.jpg'
+          imageUrl: '/pillnow.png'
         },
         {
           id: 6,
           name: 'Calcium Supplements',
           quantity: 1,
           price: 299.50,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/G67946/everherb-ashwagandha-immunity-booster-tablets-natural-stress-reliever-bottle-of-60-2-1654233767.jpg'
+          imageUrl: '/pillnow.png'
         }
       ]
     },
@@ -134,14 +134,14 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
           name: 'Nebulizer',
           quantity: 1,
           price: 1250,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/I05582/dolo-650-tablet-15s-1-1669710798.jpg'
+          imageUrl: '/pillnow.png'
         },
         {
           id: 8,
           name: 'Antiseptic Solution',
           quantity: 2,
           price: 50,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/I05582/dolo-650-tablet-15s-1-1669710798.jpg'
+          imageUrl: '/pillnow.png'
         }
       ]
     },
@@ -156,14 +156,14 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
           name: 'Digestion Tablets',
           quantity: 3,
           price: 110.25,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/000665/accusure-simple-gluco-test-strips-box-of-50-1-1669710026.jpg'
+          imageUrl: '/pillnow.png'
         },
         {
           id: 10,
           name: 'Cough Syrup',
           quantity: 1,
           price: 90,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/142528/cetaphil-gentle-skin-cleanser-250ml-2-1669710367.jpg'
+          imageUrl: '/pillnow.png'
         }
       ]
     },
@@ -179,14 +179,14 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ userId }) => {
           name: 'Thermometer',
           quantity: 1,
           price: 450.50,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/I05582/dolo-650-tablet-15s-1-1669710798.jpg'
+          imageUrl: '/pillnow.png'
         },
         {
           id: 12,
           name: 'First Aid Kit',
           quantity: 1,
           price: 1395,
-          imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/W67219/dr-morepen-bp-one-bp02-fully-automatic-blood-pressure-monitor-with-adaptor-2-1671745339.jpg'
+          imageUrl: '/pillnow.png'
         }
       ]
     }

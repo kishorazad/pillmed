@@ -34,42 +34,42 @@ const PreviouslyBrowsedItems: React.FC = () => {
     {
       id: 1,
       name: 'Dolo 650mg Tablet',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/I05582/dolo-650-tablet-15s-1-1669710798.jpg',
+      imageUrl: '/pillnow.png',
       price: 30.50,
       viewedAt: '2025-04-17T10:30:00'
     },
     {
       id: 2,
       name: 'Cetaphil Gentle Skin Cleanser',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/142528/cetaphil-gentle-skin-cleanser-250ml-2-1669710367.jpg',
+      imageUrl: '/pillnow.png',
       price: 450,
       viewedAt: '2025-04-17T11:15:00'
     },
     {
       id: 3,
       name: 'Blood Glucose Test Strips',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/000665/accusure-simple-gluco-test-strips-box-of-50-1-1669710026.jpg',
+      imageUrl: '/pillnow.png',
       price: 999,
       viewedAt: '2025-04-17T14:20:00'
     },
     {
       id: 4,
       name: 'Dr. Morepen BP Monitor',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/W67219/dr-morepen-bp-one-bp02-fully-automatic-blood-pressure-monitor-with-adaptor-2-1671745339.jpg',
+      imageUrl: '/pillnow.png',
       price: 1899,
       viewedAt: '2025-04-18T09:10:00'
     },
     {
       id: 5,
       name: 'Himalaya Baby Lotion',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/H68199/himalaya-baby-lotion-100ml-2-1671743800.jpg',
+      imageUrl: '/pillnow.png',
       price: 175.50,
       viewedAt: '2025-04-17T16:45:00'
     },
     {
       id: 6,
       name: 'Ensure Diabetes Care Powder',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/E54088/ensure-diabetes-care-powder-vanilla-flavour-400gm-jar-2-1671744557.jpg',
+      imageUrl: '/pillnow.png',
       price: 845.75,
       viewedAt: '2025-04-18T08:20:00'
     }
