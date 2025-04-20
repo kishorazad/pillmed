@@ -36,7 +36,7 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
     {
       id: 1,
       name: 'Dolo 650mg Tablet',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/I05582/dolo-650-tablet-15s-1-1669710798.jpg',
+      imageUrl: '/pillnow.png',
       price: 30,
       discountedPrice: 25.5,
       rating: 4.5,
@@ -47,7 +47,7 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
     {
       id: 2,
       name: 'Vitamin D3 Supplements',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/T22634/carbamide-forte-vitamin-d3-50000iu-supplement-for-vitamin-d-deficiency-60-soft-gelatin-capsules-2-1683205238.jpg',
+      imageUrl: '/pillnow.png',
       price: 899,
       discountedPrice: 674.25,
       rating: 4.3,
@@ -58,7 +58,7 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
     {
       id: 3,
       name: 'Blood Glucose Test Strips',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/000665/accusure-simple-gluco-test-strips-box-of-50-1-1669710026.jpg',
+      imageUrl: '/pillnow.png',
       price: 999,
       discountedPrice: 799.2,
       rating: 4.7,
@@ -68,7 +68,7 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
     {
       id: 4,
       name: 'Digital Thermometer',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/J51815/dettol-instant-hand-sanitizer-original-200ml-2-1656662057.jpg',
+      imageUrl: '/pillnow.png',
       price: 199,
       discountedPrice: 149.25,
       rating: 4.1,
@@ -79,7 +79,7 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
     {
       id: 5,
       name: 'Automatic BP Monitor',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/W67219/dr-morepen-bp-one-bp02-fully-automatic-blood-pressure-monitor-with-adaptor-2-1671745339.jpg',
+      imageUrl: '/pillnow.png',
       price: 2499,
       discountedPrice: 1999.2,
       rating: 4.2,
@@ -89,7 +89,7 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
     {
       id: 6,
       name: 'Vitamin C Tablets',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/G19614/phytorelief-cc-10s-lozenge-2-1641398367.jpg',
+      imageUrl: '/pillnow.png',
       price: 450,
       discountedPrice: 382.5,
       rating: 4.6,
