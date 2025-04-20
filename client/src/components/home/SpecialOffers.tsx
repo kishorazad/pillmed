@@ -20,7 +20,7 @@ const SpecialOffers: React.FC = () => {
     {
       id: 1,
       name: 'Diabetes Care',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/a9ad640ce86-DIABETES.jpg',
+      imageUrl: '/pillnow.png',
       discount: 35,
       description: 'Special discounts on diabetes medication and supplies',
       tag: 'Health Specific'
@@ -28,7 +28,7 @@ const SpecialOffers: React.FC = () => {
     {
       id: 2,
       name: 'First Order Discount',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/7297689b081-FIRST.jpg',
+      imageUrl: '/pillnow.png',
       discount: 25,
       description: 'Special offer for first-time customers',
       tag: 'New Users'
@@ -36,7 +36,7 @@ const SpecialOffers: React.FC = () => {
     {
       id: 3,
       name: 'Cardiac Care',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/e695cef1018-CARDIAC-min.jpg',
+      imageUrl: '/pillnow.png',
       discount: 30,
       description: 'Special discounts on heart health products',
       tag: 'Health Specific'
@@ -44,7 +44,7 @@ const SpecialOffers: React.FC = () => {
     {
       id: 4,
       name: 'Membership Deal',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/9bf974c173d-MEMBERSHIP.jpg',
+      imageUrl: '/pillnow.png',
       discount: 20,
       description: 'Exclusive discounts for members',
       tag: 'Members Only'

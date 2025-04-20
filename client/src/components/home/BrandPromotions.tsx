@@ -33,37 +33,37 @@ const BrandPromotions: React.FC = () => {
     {
       id: 1,
       name: 'Himalaya',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/6d462f424a43372ea8b7b6f8ee455ae5.png',
+      imageUrl: '/pillnow.png',
       description: 'Natural healthcare products'
     },
     {
       id: 2,
       name: 'Dabur',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/335dae76832d370c94f0440f5ba89e1f.png',
+      imageUrl: '/pillnow.png',
       description: 'Ayurvedic healthcare'
     },
     {
       id: 3,
       name: 'Baidyanath',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/2f85888a0a4f3d22a65931aef6355a77.png',
+      imageUrl: '/pillnow.png',
       description: 'Traditional remedies'
     },
     {
       id: 4,
       name: 'Dr. Morepen',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/ecad9a974a273b658f32c2ac65d736f9.png',
+      imageUrl: '/pillnow.png',
       description: 'Healthcare devices'
     },
     {
       id: 5,
       name: 'Zandu',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/105ceca515ee30509f93309ae75306aa.png',
+      imageUrl: '/pillnow.png',
       description: 'Ayurvedic healthcare'
     },
     {
       id: 6,
       name: 'Patanjali',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/discovery/categoryImages/c9cfac89b6f63dd1a151c7fb23a8d830.png',
+      imageUrl: '/pillnow.png',
       description: 'Ayurvedic products'
     }
   ];

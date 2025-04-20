@@ -90,19 +90,19 @@ const Home = () => {
   const offerSlides = [
     {
       id: 1,
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/11d75cea0ea-GRAND20.jpg',
+      imageUrl: '/pillnow.png',
       alt: 'Flat 20% off on medicines',
       link: '/products'
     },
     {
       id: 2,
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/9fe349e05e7-LABTEST.jpg',
+      imageUrl: '/pillnow.png',
       alt: 'Up to 60% off on lab tests',
       link: '/lab-tests'
     },
     {
       id: 3,
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/414524ad3dd-WELLNESS.jpg',
+      imageUrl: '/pillnow.png',
       alt: 'Wellness Products',
       link: '/products'
     }

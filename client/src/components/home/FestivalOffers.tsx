@@ -35,7 +35,7 @@ const FestivalOffers: React.FC = () => {
     {
       id: 1,
       name: 'Diwali Special',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/80d465aa6e6-GRAND.jpg',
+      imageUrl: '/pillnow.png',
       discount: 30,
       offerCode: 'DIWALI30',
       expiryDate: '2025-04-28'
@@ -43,7 +43,7 @@ const FestivalOffers: React.FC = () => {
     {
       id: 2,
       name: 'Summer Health',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/a9ad640ce86-DIABETES.jpg',
+      imageUrl: '/pillnow.png',
       discount: 25,
       offerCode: 'SUMMER25',
       expiryDate: '2025-05-10'
@@ -51,7 +51,7 @@ const FestivalOffers: React.FC = () => {
     {
       id: 3,
       name: 'Weekend Special',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/fcbf95577c7-MEGA.jpg',
+      imageUrl: '/pillnow.png',
       discount: 20,
       offerCode: 'WEEKEND20',
       expiryDate: '2025-04-25'
@@ -59,7 +59,7 @@ const FestivalOffers: React.FC = () => {
     {
       id: 4,
       name: 'Navratri Offer',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/19a254ab4c1-BESTSELLER.jpg',
+      imageUrl: '/pillnow.png',
       discount: 35,
       offerCode: 'NAVRATRI35',
       expiryDate: '2025-05-15'
@@ -67,7 +67,7 @@ const FestivalOffers: React.FC = () => {
     {
       id: 5,
       name: 'Senior Citizens Discount',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/7c6e72f75be-DIABETIC.jpg',
+      imageUrl: '/pillnow.png',
       discount: 15,
       offerCode: 'SENIOR15',
       expiryDate: '2025-06-30'
@@ -75,7 +75,7 @@ const FestivalOffers: React.FC = () => {
     {
       id: 6,
       name: 'First Order Special',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/banner/banner/1588ff0987a-FIRST.jpg',
+      imageUrl: '/pillnow.png',
       discount: 40,
       offerCode: 'FIRST40',
       expiryDate: '2025-05-01'
