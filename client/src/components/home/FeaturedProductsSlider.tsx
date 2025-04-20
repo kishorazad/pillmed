@@ -3,6 +3,7 @@ import { useLanguage } from '../LanguageSwitcher';
 import { ChevronLeft, ChevronRight, Star, ShoppingCart } from 'lucide-react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { getSafeImageUrl } from '@/utils/imageUtils';
 
 interface Product {
   id: number;
@@ -198,7 +199,7 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
                 <Link href={`/products/${product.id}`}>
                   <div className="relative px-4 pt-4 flex justify-center h-40">
                     <img 
-                      src={product.imageUrl || "https://via.placeholder.com/150?text=No+Image"} 
+                      src={getSafeImageUrl(product.imageUrl) || "/pillnow.png"} 
                       alt={product.name} 
                       className="h-full object-contain"
                     />

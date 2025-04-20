@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useDebounce } from '@/hooks/use-debounce';
+import { getSafeImageUrl } from '@/utils/imageUtils';
 
 interface SearchResult {
   id: number;
@@ -209,7 +210,7 @@ const MedicineSearch: React.FC = () => {
                     <div className="flex items-center">
                       <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                         <img 
-                          src={result.imageUrl || 'https://via.placeholder.com/48'} 
+                          src={getSafeImageUrl(result.imageUrl) || '/pillnow.png'} 
                           alt={result.name} 
                           className="w-full h-full object-contain"
                           loading="lazy"
