@@ -2,6 +2,7 @@ import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
+import { getSafeImageUrl } from '@/utils/imageUtils';
 
 interface ProductCardProps {
   product: {
@@ -43,9 +44,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <div className="relative">
         <Link href={`/products/${product.id}`}>
           <img 
-            src={product.imageUrl} 
+            src={getSafeImageUrl(product.imageUrl)} 
             alt={product.name} 
-            className="w-full h-40 object-cover"
+            className="w-full h-40 object-contain"
           />
         </Link>
         {discountPercentage > 0 && (

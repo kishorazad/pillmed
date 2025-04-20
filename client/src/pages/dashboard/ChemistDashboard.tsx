@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import { getSafeImageUrl } from '@/utils/imageUtils';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -1980,9 +1981,9 @@ const PrescriptionCard: React.FC<PrescriptionCardProps> = ({
                   
                   <h3 className="font-medium text-gray-700 mt-4 mb-2">{t('prescription_image')}</h3>
                   <img 
-                    src={prescription.prescriptionImage} 
+                    src={getSafeImageUrl(prescription.prescriptionImage)} 
                     alt="Prescription" 
-                    className="rounded-md border border-gray-200 w-full max-h-60 object-cover"
+                    className="rounded-md border border-gray-200 w-full max-h-60 object-contain"
                   />
                 </div>
                 
@@ -2433,9 +2434,9 @@ const MedicineCard: React.FC<{
     <Card className="overflow-hidden">
       <div className="h-48 overflow-hidden relative">
         <img 
-          src={medicine.imageUrl} 
+          src={getSafeImageUrl(medicine.imageUrl)} 
           alt={medicine.name} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
         <div className="absolute top-2 right-2">
           {renderStatusBadge(medicine.status)}
@@ -2552,9 +2553,9 @@ const MedicineCard: React.FC<{
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
             <div>
               <img 
-                src={medicine.imageUrl} 
+                src={getSafeImageUrl(medicine.imageUrl)} 
                 alt={medicine.name} 
-                className="w-full h-64 object-cover rounded-md border"
+                className="w-full h-64 object-contain rounded-md border"
               />
               <div className="mt-4">
                 <h3 className="font-medium text-gray-700 mb-2">{t('price_information')}</h3>
