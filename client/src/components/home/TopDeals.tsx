@@ -3,6 +3,7 @@ import { useLanguage } from '../LanguageSwitcher';
 import { ArrowRightIcon, Star, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'wouter';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { getSafeImageUrl } from '@/utils/imageUtils';
 
 interface Product {
   id: number;
@@ -37,7 +38,7 @@ const TopDeals: React.FC = () => {
     {
       id: 1,
       name: 'Dolo 650mg Tablet',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/I05582/dolo-650-tablet-15s-1-1669710798.jpg',
+      imageUrl: '/pillnow.png',
       originalPrice: 30,
       discountedPrice: 22.5,
       discountPercentage: 25,
@@ -47,7 +48,7 @@ const TopDeals: React.FC = () => {
     {
       id: 2,
       name: 'Cetaphil Gentle Skin Cleanser',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/142528/cetaphil-gentle-skin-cleanser-250ml-2-1669710367.jpg',
+      imageUrl: '/pillnow.png',
       originalPrice: 450,
       discountedPrice: 382.5,
       discountPercentage: 15,
@@ -57,7 +58,7 @@ const TopDeals: React.FC = () => {
     {
       id: 3,
       name: 'Accu-Chek Active Test Strips',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/000665/accusure-simple-gluco-test-strips-box-of-50-1-1669710026.jpg',
+      imageUrl: '/pillnow.png',
       originalPrice: 999,
       discountedPrice: 699.3,
       discountPercentage: 30,
@@ -67,7 +68,7 @@ const TopDeals: React.FC = () => {
     {
       id: 4,
       name: 'Dr. Morepen BP One BP Monitor',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/W67219/dr-morepen-bp-one-bp02-fully-automatic-blood-pressure-monitor-with-adaptor-2-1671745339.jpg',
+      imageUrl: '/pillnow.png',
       originalPrice: 2499,
       discountedPrice: 1499.4,
       discountPercentage: 40,
@@ -77,7 +78,7 @@ const TopDeals: React.FC = () => {
     {
       id: 5,
       name: 'Everherb Ashwagandha Tablets',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/G67946/everherb-ashwagandha-immunity-booster-tablets-natural-stress-reliever-bottle-of-60-2-1654233767.jpg',
+      imageUrl: '/pillnow.png',
       originalPrice: 599,
       discountedPrice: 329.45,
       discountPercentage: 45,
@@ -87,7 +88,7 @@ const TopDeals: React.FC = () => {
     {
       id: 6,
       name: 'OneTouch Select Plus Test Strips',
-      imageUrl: 'https://cdn01.pharmeasy.in/dam/products_otc/Q83701/onetouch-select-plus-simple-blood-glucose-monitoring-system-free-10-strips-2-1671745264.jpg',
+      imageUrl: '/pillnow.png',
       originalPrice: 1199,
       discountedPrice: 959.2,
       discountPercentage: 20,
@@ -146,7 +147,7 @@ const TopDeals: React.FC = () => {
               <div className="bg-white rounded-lg shadow-sm overflow-hidden transition duration-300 hover:shadow-md cursor-pointer h-full flex flex-col">
                 <div className="relative px-4 pt-4 flex justify-center">
                   <img 
-                    src={product.imageUrl} 
+                    src={getSafeImageUrl(product.imageUrl)} 
                     alt={product.name} 
                     className="h-36 object-contain"
                   />

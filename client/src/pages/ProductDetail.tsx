@@ -12,6 +12,7 @@ import SubstituteMedicines from '@/components/products/SubstituteMedicines';
 import { useLanguage } from '@/components/LanguageSwitcher';
 import { addToBrowsingHistory } from '@/services/browsing-history-service';
 import { ProductSEO } from '@/components/seo';
+import { getSafeImageUrl } from '@/utils/imageUtils';
 
 const ProductDetail = () => {
   const params = useParams();
@@ -147,9 +148,9 @@ const ProductDetail = () => {
   // Multiple product images (in a real app, these would come from the database)
   const productImages = [
     product.imageUrl || '',
-    'https://cdn01.pharmeasy.in/dam/products_otc/I40046/cipcal-500mg-strip-of-15-tablets-2-1669710287.jpg',
-    'https://cdn01.pharmeasy.in/dam/products_otc/I40046/cipcal-500mg-strip-of-15-tablets-3-1669710290.jpg',
-    'https://cdn01.pharmeasy.in/dam/products_otc/I40046/cipcal-500mg-strip-of-15-tablets-4-1669710292.jpg'
+    '/pillnow.png',
+    '/pillnow.png',
+    '/pillnow.png'
   ];
   
   // Filtered related products (exclude current product)
@@ -190,7 +191,7 @@ const ProductDetail = () => {
           <div className="lg:w-2/5">
             <div className="border rounded-lg overflow-hidden bg-white p-4 mb-4 relative">
               <img 
-                src={currentImageIndex === 0 ? product.imageUrl : productImages[currentImageIndex]} 
+                src={getSafeImageUrl(currentImageIndex === 0 ? product.imageUrl : productImages[currentImageIndex])} 
                 alt={product.name} 
                 className="w-full h-auto object-contain max-h-80 mx-auto"
               />
@@ -212,7 +213,7 @@ const ProductDetail = () => {
                   onClick={() => setCurrentImageIndex(idx)}
                 >
                   <img 
-                    src={img} 
+                    src={getSafeImageUrl(img)} 
                     alt={`${product.name} - view ${idx+1}`} 
                     className="h-16 w-16 object-contain"
                   />
