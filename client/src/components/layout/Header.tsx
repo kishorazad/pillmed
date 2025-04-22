@@ -6,6 +6,7 @@ import Logo from './Logo';
 import MedicineSearch from '@/components/search/MedicineSearch';
 import NotificationHandler from '@/components/notifications/NotificationHandler';
 import LanguageSwitcher, { useLanguage } from '@/components/LanguageSwitcher';
+import PincodeDetector from '@/components/PincodeDetector';
 
 const Header = () => {
   const [location, navigate] = useLocation();
@@ -56,10 +57,7 @@ const Header = () => {
           <div className="flex items-center gap-6 w-full md:w-auto justify-between">
             <Logo size="medium" className="text-orange-500" />
             <div className="flex items-center text-sm text-[#666666] md:ml-4">
-              <i className="fas fa-map-marker-alt mr-1 text-orange-500"></i>
-              <span>Deliver to</span>
-              <span className="font-medium ml-1 text-orange-500">110001</span>
-              <i className="fas fa-chevron-down ml-1 text-xs"></i>
+              <PincodeDetector />
             </div>
           </div>
           

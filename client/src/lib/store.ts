@@ -28,6 +28,7 @@ interface AppState {
   userLoading: boolean;
   tempUserId: number;
   searchQuery: string;
+  pincode: string | null;
   
   // Actions
   openCart: () => void;
@@ -39,6 +40,7 @@ interface AppState {
   clearCart: () => Promise<void>;
   setUser: (user: User | null) => void;
   setSearchQuery: (query: string) => void;
+  setPincode: (pincode: string) => void;
   fetchCart: (userId?: number) => Promise<void>;
 }
 
@@ -50,6 +52,7 @@ export const useStore = create<AppState>((set, get) => ({
   userLoading: false,
   tempUserId: 1, // Temp user ID for demo purposes
   searchQuery: '',
+  pincode: null,
   
   // Cart actions
   openCart: () => set({ cartOpen: true }),
@@ -200,4 +203,7 @@ export const useStore = create<AppState>((set, get) => ({
   
   // Search actions
   setSearchQuery: (query) => set({ searchQuery: query }),
+  
+  // Pincode actions
+  setPincode: (pincode) => set({ pincode }),
 }));

@@ -18,6 +18,7 @@ import adminCustomerRoutes from './admin-customer-routes'; // Admin customer man
 import adminSeoRoutes from './admin-seo-routes'; // Admin SEO management routes
 import adminEmailRoutes from './admin-email-routes'; // Admin email tracking and management routes
 import mongodbUsersRoutes from './api-mongodb-users'; // MongoDB direct user management
+import pincodeRoutes from './pincode-routes'; // Pincode location detection routes
 import appointmentRoutes from './appointment-routes'; // Doctor appointment booking routes
 import { z } from "zod";
 import multer from 'multer';
@@ -2955,6 +2956,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Server error sending password reset confirmation email" });
     }
   });
+  
+  // Mount pincode routes for location detection
+  app.use('/api/pincode', pincodeRoutes);
   
   const httpServer = createServer(app);
 
