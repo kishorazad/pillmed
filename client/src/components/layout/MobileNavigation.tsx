@@ -23,7 +23,7 @@ const MobileNavigation: React.FC = () => {
     }
   };
   
-  // Navigation items
+  // Navigation items - reduced to 5 with Emergency in the middle (position 3)
   const navItems = [
     {
       label: t('home'),
@@ -35,7 +35,7 @@ const MobileNavigation: React.FC = () => {
       icon: <Search className="h-5 w-5" />,
       path: '/products',
     },
-    // Emergency moved to middle position
+    // Emergency placed exactly in the middle position
     {
       label: t('emergency'),
       icon: <Ambulance className="h-5 w-5" />,
@@ -43,28 +43,15 @@ const MobileNavigation: React.FC = () => {
       highlight: true,
     },
     {
-      label: 'Hospitals',
-      icon: <Building2 className="h-5 w-5" />,
-      path: '/hospitals',
-      highlight: true,
-    },
-    {
-      label: 'Communication',
-      icon: <MessageSquare className="h-5 w-5" />,
-      path: '/communication',
-      highlight: true,
-    },
-    {
-      label: t('ai_assistant'),
-      icon: <Bot className="h-5 w-5" />,
-      path: '/ai-healthcare',
-      highlight: true,
-    },
-    {
       label: t('cart'),
       icon: <ShoppingCart className="h-5 w-5" />,
       path: '/cart',
       badge: cart.length > 0 ? cart.reduce((total, item) => total + item.quantity, 0) : null,
+    },
+    {
+      label: t('profile'),
+      icon: <User className="h-5 w-5" />,
+      path: getDashboardPath(),
     },
   ];
   
