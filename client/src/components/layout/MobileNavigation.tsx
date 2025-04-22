@@ -35,6 +35,13 @@ const MobileNavigation: React.FC = () => {
       icon: <Search className="h-5 w-5" />,
       path: '/products',
     },
+    // Emergency moved to middle position
+    {
+      label: t('emergency'),
+      icon: <Ambulance className="h-5 w-5" />,
+      path: '/services/emergency',
+      highlight: true,
+    },
     {
       label: 'Hospitals',
       icon: <Building2 className="h-5 w-5" />,
@@ -45,12 +52,6 @@ const MobileNavigation: React.FC = () => {
       label: 'Communication',
       icon: <MessageSquare className="h-5 w-5" />,
       path: '/communication',
-      highlight: true,
-    },
-    {
-      label: t('emergency'),
-      icon: <Ambulance className="h-5 w-5" />,
-      path: '/services/emergency',
       highlight: true,
     },
     {
@@ -68,7 +69,7 @@ const MobileNavigation: React.FC = () => {
   ];
   
   // Currently selected language
-  const currentLanguageName = LANGUAGES[language]?.nativeName || 'English';
+  const currentLanguageName = LANGUAGES[language as keyof typeof LANGUAGES]?.nativeName || 'English';
 
   return (
     <>

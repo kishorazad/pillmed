@@ -230,10 +230,10 @@ const ProductDetail = () => {
               <span className="text-xs text-blue-700">{t('all_products_packed_safely')}</span>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
+            <div className="flex flex-row gap-2 justify-center mt-4">
               <Button 
                 onClick={handleAddToCart} 
-                className="w-full sm:flex-1 bg-[#FF8F00] hover:bg-[#FF8F00]/90 text-white font-semibold py-6 rounded-lg shadow-md transition-all flex items-center justify-center"
+                className="w-full flex-1 bg-[#FF8F00] hover:bg-[#FF8F00]/90 text-white font-semibold py-3 md:py-4 rounded-lg shadow-md transition-all flex items-center justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -242,7 +242,7 @@ const ProductDetail = () => {
               </Button>
               <Button 
                 onClick={handleDirectBooking} 
-                className="w-full sm:flex-1 bg-[#10847e] hover:bg-[#10847e]/90 text-white font-semibold py-6 rounded-lg shadow-md transition-all flex items-center justify-center"
+                className="w-full flex-1 bg-[#FF8F00] hover:bg-[#FF8F00]/90 text-white font-semibold py-3 md:py-4 rounded-lg shadow-md transition-all flex items-center justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -409,7 +409,7 @@ const ProductDetail = () => {
                       <line x1="12" y1="8" x2="12.01" y2="8" />
                     </svg>
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">{t('about')} {product.name}</h3>
+                      <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
                       <p className="mb-3">{product.description || `${product.name} is a medication prescribed by healthcare professionals.`}</p>
                       
                       {/* Treatment information - dynamic based on medication type */}
