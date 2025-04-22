@@ -9,6 +9,7 @@ import { sendNotificationToUser, sendNotificationToAllUsers } from './notificati
 import { sendWelcomeEmail, sendPasswordResetConfirmation, sendPasswordResetOTP } from './email-service';
 import cacheService from './cache-service'; // Cache service for reducing database load
 import { getPincodeData, isValidPincodeFormat, isServiceablePincode, getDeliveryEstimate, initializePincodeService } from './pincode-service';
+import resendWebhookRoutes from './resend-webhook'; // Resend email webhook handler
 import authRoutes from './auth-routes'; // Authentication routes for social login
 import emergencyRoutes from './emergency-routes'; // Emergency service request routes
 import passwordResetRoutes from './password-reset-routes'; // Password reset routes
@@ -108,6 +109,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount doctor appointment routes
   app.use('/api/appointments', appointmentRoutes);
+  
+  // Mount Resend email webhook routes for email delivery tracking
+  app.use('/api/email', resendWebhookRoutes);
   
   // Setup SEO routes for better search engine visibility
   setupSeoRoutes(app);
