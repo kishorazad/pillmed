@@ -108,9 +108,9 @@ const sessionConfig: session.SessionOptions = {
   store: sessionStore,
   rolling: true, // Reset maxAge on every response
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // Only use secure in production
+    secure: false, // Allow non-HTTPS during development
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for better user experience
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days for better user experience
     sameSite: 'lax', // Protects against CSRF
     path: '/' // Ensure cookie is available across all routes
   }

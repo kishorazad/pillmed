@@ -975,27 +975,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessionID = req.sessionID;
       console.log(`Clearing session: ${sessionID}`);
       
-      // Log session information before destroying
-      console.log(`Session cookie before destroy:`, req.session.cookie);
-      console.log(`User in session before destroy:`, (req.session as any).user);
+      // Log session information before clearing
+      console.log(`Session cookie before logout:`, req.session.cookie);
+      console.log(`User in session before logout:`, (req.session as any).user);
       
-      // Simplified and more reliable logout process
-      req.session.destroy(err => {
+      // Clear user data instead of destroying the session
+      // This prevents issues with session regeneration
+      (req.session as any).user = null;
+      
+      // Save the session with cleared user data
+      req.session.save(err => {
         if (err) {
-          console.error("Error destroying session:", err);
+          console.error("Error saving session during logout:", err);
           return res.status(500).json({ message: "Error logging out" });
         }
         
-        console.log(`Session ${sessionID} successfully destroyed`);
-        
-        // Clear cookie with the correct name and all necessary cookie options
-        res.clearCookie('pillnow.sid', {
-          path: '/', 
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production', // Match the cookie setting from session config
-          sameSite: 'lax',
-          maxAge: 0 // Immediate expiration
-        });
+        console.log(`User data cleared from session ${sessionID}`);
         
         // Ensure the browser receives a 200 OK status
         res.status(200).json({ success: true, message: "Logged out successfully" });
@@ -1288,47 +1283,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: user.name
       };
       
-      // Store the user data before session regeneration
-      const userData = {
-        user: {
-          id: user.id,
-          username: user.username,
-          role: user.role,
-          email: user.email,
-          name: user.name
-        },
-        loginTime: new Date().toISOString(),
-        userAgent: req.headers['user-agent']
+      // Skip session regeneration for improved stability
+      // Set user in session directly
+      (req.session as any).user = {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        email: user.email,
+        name: user.name
       };
+      (req.session as any).loginTime = new Date().toISOString();
+      (req.session as any).userAgent = req.headers['user-agent'];
       
-      // Force regenerate session ID to prevent session fixation
-      req.session.regenerate((regenerateErr) => {
-        if (regenerateErr) {
-          console.error('Session regeneration error during login:', regenerateErr);
-          return res.status(500).json({ message: "Error creating secure session" });
+      // Configure session cookie
+      req.session.cookie.path = '/';
+      
+      // Save the session
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('Session save error during login:', saveErr);
+          return res.status(500).json({ message: "Error saving session" });
         }
         
-        // Restore user data to the new session
-        (req.session as any).user = userData.user;
-        (req.session as any).loginTime = userData.loginTime;
-        (req.session as any).userAgent = userData.userAgent;
+        console.log(`Session saved successfully for user ${user.username}, session ID: ${req.sessionID}`);
+        console.log(`Session cookie details: ${JSON.stringify(req.session.cookie)}`);
         
-        // Configure session cookie
-        req.session.cookie.path = '/';
-        
-        // Now save the session with the new session ID
-        req.session.save((saveErr) => {
-          if (saveErr) {
-            console.error('Session save error during login:', saveErr);
-            return res.status(500).json({ message: "Error saving session" });
-          }
-          
-          console.log(`Session saved successfully for user ${user.username}, new session ID: ${req.sessionID}`);
-          console.log(`Session cookie details: ${JSON.stringify(req.session.cookie)}`);
-          
-          // Send response after session is saved
-          res.json(userWithoutPassword);
-        });
+        // Send response after session is saved
+        res.json(userWithoutPassword);
       });
       
       // Perform background tasks after sending the response
