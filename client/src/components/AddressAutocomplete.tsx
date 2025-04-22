@@ -40,7 +40,8 @@ export default function AddressAutocomplete({
 }: AddressAutocompleteProps) {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
-    libraries
+    libraries,
+    loading: "async"
   });
 
   const [inputValue, setInputValue] = useState(defaultValue);
