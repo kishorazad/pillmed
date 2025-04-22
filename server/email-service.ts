@@ -69,8 +69,27 @@ export async function sendEmail(to: string, subject: string, text: string, html?
     // Try sending with Resend first if configured
     if (process.env.RESEND_API_KEY && resendInitialized) {
       try {
-        console.log(`📧 RESEND: Attempting to send email to ${to} with subject "${subject}"`);
-        console.log(`📧 RESEND: API key exists and client initialized: ${!!resend}`);
+        const timestamp = new Date().toISOString();
+        console.log(`📧 [${timestamp}] RESEND: Attempting to send email to ${to} with subject "${subject}"`);
+        console.log(`📧 [${timestamp}] RESEND: API key exists (length: ${process.env.RESEND_API_KEY?.length || 0}) and client initialized: ${!!resend}`);
+        
+        // Ensure Resend client is properly initialized
+        if (!resend) {
+          console.error(`📧 [${timestamp}] RESEND ERROR: Resend client is not initialized properly`);
+          
+          // Try to re-initialize if API key exists
+          if (process.env.RESEND_API_KEY) {
+            console.log(`📧 [${timestamp}] RESEND: Attempting to re-initialize Resend client`);
+            resend = new Resend(process.env.RESEND_API_KEY);
+            if (resend) {
+              console.log(`📧 [${timestamp}] RESEND: Successfully re-initialized Resend client`);
+            } else {
+              throw new Error('Failed to re-initialize Resend client');
+            }
+          } else {
+            throw new Error('Resend API key is missing');
+          }
+        }
         
         // Use the real recipient since our domain is now verified
         let recipient = to;
@@ -78,12 +97,24 @@ export async function sendEmail(to: string, subject: string, text: string, html?
         // Only use test email if domain is not verified and we're in development mode
         if (!USE_VERIFIED_DOMAIN && process.env.NODE_ENV !== 'production') {
           recipient = 'delivered@resend.dev';
-          console.log(`📧 RESEND: Email would be sent to: ${to} (using test recipient in development: ${recipient})`);
+          console.log(`📧 [${timestamp}] RESEND: Email would be sent to: ${to} (using test recipient in development: ${recipient})`);
         } else {
-          console.log(`📧 RESEND: Email will be sent to the actual recipient: ${to}`);
+          console.log(`📧 [${timestamp}] RESEND: Email will be sent to the actual recipient: ${to}`);
+          console.log(`📧 [${timestamp}] RESEND: Using "${fromEmail}" as the sender email`);
         }
         
-        console.log(`📧 RESEND: Making API call with data: {
+        // Check if email addresses look valid
+        if (!recipient.includes('@')) {
+          console.error(`📧 [${timestamp}] RESEND ERROR: Invalid recipient email address: ${recipient}`);
+          throw new Error(`Invalid recipient email address: ${recipient}`);
+        }
+        
+        if (!fromEmail.includes('@')) {
+          console.error(`📧 [${timestamp}] RESEND ERROR: Invalid sender email address: ${fromEmail}`);
+          throw new Error(`Invalid sender email address: ${fromEmail}`);
+        }
+        
+        console.log(`📧 [${timestamp}] RESEND: Making API call with data: {
           from: ${fromEmail},
           to: ${recipient},
           subject: ${subject},
@@ -91,34 +122,64 @@ export async function sendEmail(to: string, subject: string, text: string, html?
           htmlLength: ${html?.length || 0}
         }`);
         
-        const data = await resend.emails.send({
-          from: fromEmail,
-          to: recipient,
-          subject,
-          text,
-          html: html || text,
-        });
+        // Structured error handling
+        try {
+          const data = await resend.emails.send({
+            from: fromEmail,
+            to: recipient,
+            subject,
+            text,
+            html: html || text,
+          });
+          
+          console.log(`📧 [${timestamp}] RESEND: API response received:`, data);
+          console.log(`📧 [${timestamp}] RESEND: Email sent successfully with Resend to ${to}`);
+          
+          // Optional ID logging if available
+          if (data && typeof data === 'object' && 'id' in data) {
+            console.log(`📧 [${timestamp}] RESEND: Email ID: ${data.id}`);
+          }
+          
+          return true;
+        } catch (apiError: any) {
+          console.error(`📧 [${timestamp}] RESEND API ERROR:`, apiError);
+          
+          // Handle specific error codes from Resend
+          if (apiError.statusCode === 403) {
+            console.error(`📧 [${timestamp}] RESEND ERROR: Authentication failure (403) - API key may be invalid`);
+          } else if (apiError.statusCode === 429) {
+            console.error(`📧 [${timestamp}] RESEND ERROR: Rate limit exceeded (429)`);
+          } else if (apiError.statusCode === 422) {
+            console.error(`📧 [${timestamp}] RESEND ERROR: Invalid request (422) - Check email addresses and content`);
+          }
+          
+          throw apiError; // Rethrow to be caught by outer catch
+        }
+      } catch (resendError: any) {
+        const timestamp = new Date().toISOString();
+        console.error(`📧 [${timestamp}] RESEND ERROR: Error sending email via Resend:`, resendError);
         
-        console.log(`📧 RESEND: API response received:`, data);
-        console.log(`📧 RESEND: Email sent successfully with Resend to ${to}`);
-        
-        // Optional ID logging if available
-        if (data && typeof data === 'object' && 'id' in data) {
-          console.log(`📧 RESEND: Email ID: ${data.id}`);
+        if (resendError.message) {
+          console.error(`📧 [${timestamp}] RESEND ERROR MESSAGE: ${resendError.message}`);
         }
         
-        return true;
-      } catch (resendError) {
-        console.error('📧 RESEND ERROR: Error sending email via Resend:', resendError);
-        console.error('📧 RESEND ERROR: Full error details:', JSON.stringify(resendError, null, 2));
+        if (resendError.statusCode) {
+          console.error(`📧 [${timestamp}] RESEND ERROR STATUS: ${resendError.statusCode}`);
+        }
+        
+        try {
+          console.error(`📧 [${timestamp}] RESEND ERROR DETAILS:`, JSON.stringify(resendError, null, 2));
+        } catch (jsonError) {
+          console.error(`📧 [${timestamp}] RESEND ERROR: Could not stringify error`);
+        }
         
         // Fall back to SendGrid if available
         if (process.env.SENDGRID_API_KEY && sendgridInitialized) {
-          console.log('📧 RESEND ERROR: Falling back to SendGrid');
+          console.log(`📧 [${timestamp}] RESEND ERROR: Falling back to SendGrid`);
           return sendWithSendGrid(to, subject, text, html, fromEmail);
         }
         
-        console.error('📧 RESEND ERROR: No fallback available, email will not be sent');
+        console.error(`📧 [${timestamp}] RESEND ERROR: No fallback available, email will not be sent`);
         return false;
       }
     } 

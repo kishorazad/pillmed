@@ -58,24 +58,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    refetch: refetchUser
   } = useQuery<User | null, Error>({
     queryKey: ['/api/user'],
     queryFn: async () => {
       const response = await fetch('/api/user', {
-        credentials: 'include' // Important for cookies
+        credentials: 'include', // Important for cookies
+        cache: 'no-store' // Ensure fresh data on each request
       });
       
       if (!response.ok) {
         if (response.status === 401) {
+          console.log('User not authenticated (401)');
           return null;
         }
         throw new Error('Failed to fetch user');
       }
       
       const userData = await response.json();
+      console.log('User data fetched:', userData ? `ID: ${userData.id}, Role: ${userData.role}` : 'No user data');
       return userData || null;
     },
-    staleTime: 30000 // Consider data fresh for 30 seconds
+    staleTime: 10000, // Lower stale time for more frequent refreshes
+    refetchOnWindowFocus: true, // Refresh when window regains focus
+    retry: 1 // Retry once if failed
   });
   
   // Update Zustand store when user data changes

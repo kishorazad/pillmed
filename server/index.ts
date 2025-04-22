@@ -106,14 +106,16 @@ if (process.env.MONGODB_URI) {
 const sessionConfig: session.SessionOptions = {
   name: 'pillnow.sid', // Custom session ID name for better security
   secret: sessionSecret,
-  resave: false,
+  resave: true, // Changed to true to ensure session is saved on each request
   saveUninitialized: false,
   store: sessionStore,
+  rolling: true, // Reset maxAge on every response
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Don't require HTTPS in development
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for better user experience
-    sameSite: 'lax' // Protects against CSRF
+    sameSite: 'lax', // Protects against CSRF
+    path: '/' // Ensure cookie is available across all routes
   }
 };
 

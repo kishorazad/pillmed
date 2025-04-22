@@ -975,28 +975,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessionID = req.sessionID;
       console.log(`Clearing session: ${sessionID}`);
       
-      // Clear user data from session first
-      (req.session as any).user = null;
+      // Log session information before destroying
+      console.log(`Session cookie before destroy:`, req.session.cookie);
+      console.log(`User in session before destroy:`, (req.session as any).user);
       
-      // Destroy the session completely
-      req.session.destroy(err => {
-        if (err) {
-          console.error("Error destroying session:", err);
-          return res.status(500).json({ message: "Error logging out" });
+      // First regenerate the session to enhance security
+      req.session.regenerate((regErr) => {
+        if (regErr) {
+          console.error("Error regenerating session during logout:", regErr);
+          // Continue with destruction anyway
         }
         
-        console.log(`Session ${sessionID} successfully destroyed`);
+        // Clear user data from session 
+        (req.session as any).user = null;
         
-        // Clear any session cookie using the custom name we set in sessionConfig
-        res.clearCookie('pillnow.sid', {
-          path: '/', 
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax'
+        // Save the cleared session before destroying
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Error saving cleared session:", saveErr);
+            // Continue with destruction anyway
+          }
+          
+          // Destroy the session completely
+          req.session.destroy(err => {
+            if (err) {
+              console.error("Error destroying session:", err);
+              return res.status(500).json({ message: "Error logging out" });
+            }
+            
+            console.log(`Session ${sessionID} successfully destroyed`);
+            
+            // Clear cookie with the correct name and all necessary cookie options
+            res.clearCookie('pillnow.sid', {
+              path: '/', 
+              httpOnly: true,
+              secure: false, // Match the cookie setting from session config
+              sameSite: 'lax',
+              maxAge: 0 // Immediate expiration
+            });
+            
+            // Ensure the browser receives a 200 OK status
+            res.status(200).json({ success: true, message: "Logged out successfully" });
+          });
         });
-        
-        // Ensure the browser receives a 200 OK status
-        res.status(200).json({ success: true, message: "Logged out successfully" });
       });
     } else {
       console.log("No active session to clear");
@@ -1008,17 +1029,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get the current authenticated user (if any)
   app.get("/api/user", async (req: Request, res: Response) => {
     try {
+      // Log request details for debugging
+      console.log(`GET /api/user - Session ID: ${req.sessionID}`); 
+      console.log(`Cookie header: ${req.headers.cookie}`);
+      
       // Check if we have user stored in session
       const sessionUser = (req.session as any)?.user;
       
       if (!sessionUser) {
+        console.log('No user in session');
+        
+        // If cookie exists but no session user, refresh the session
+        if (req.headers.cookie && req.headers.cookie.includes('pillnow.sid')) {
+          console.log('Cookie exists but no session user - refreshing session');
+          req.session.touch();
+          req.session.save((err) => {
+            if (err) console.error('Error refreshing session:', err);
+          });
+        }
+        
         return res.status(200).json(null);
       }
       
       console.log('Session user found:', { 
         id: sessionUser.id, 
         username: sessionUser.username,
-        role: sessionUser.role
+        role: sessionUser.role,
+        loginTime: (req.session as any).loginTime || 'unknown'
       });
       
       // Get the latest user data from database (may have been updated)
@@ -1028,6 +1065,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`User with ID ${sessionUser.id} not found in database`);
         // Session contains invalid user, clear it
         (req.session as any).user = null;
+        
+        // Save the session with null user
+        req.session.save((err) => {
+          if (err) console.error('Error saving session after clearing invalid user:', err);
+        });
+        
         return res.status(200).json(null);
       }
       
@@ -1037,9 +1080,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: user.role
       });
       
+      // Touch the session to reset the expiration timer
+      req.session.touch();
+      
       // Don't return the password
       const { password, ...userWithoutPassword } = user;
-      return res.status(200).json(userWithoutPassword);
+      
+      // Save the session to ensure cookie expiration gets updated
+      req.session.save((err) => {
+        if (err) {
+          console.error('Error saving session after fetch:', err);
+        } else {
+          console.log('Session refreshed successfully');
+        }
+        
+        // Return the user data after attempt to save session (don't block on session save)
+        return res.status(200).json(userWithoutPassword);
+      });
     } catch (error) {
       console.error('Error fetching authenticated user:', error);
       return res.status(500).json({ message: "Internal server error" });
@@ -1237,22 +1294,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Set user in session and explicitly save the session
       console.log(`Login successful for user ${user.username}, setting session: ${req.sessionID}`);
-      (req.session as any).user = user;
       
-      // Force the session to be saved before responding
-      req.session.save((err) => {
-        if (err) {
-          console.error('Session save error during login:', err);
-          return res.status(500).json({ message: "Error creating session" });
+      // Create a clean user object without sensitive data
+      const { password: _, ...userWithoutPassword } = user;
+      
+      // Store only necessary user info in session to minimize session size
+      (req.session as any).user = {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        email: user.email,
+        name: user.name
+      };
+      
+      // Add additional debug information to session
+      (req.session as any).loginTime = new Date().toISOString();
+      (req.session as any).userAgent = req.headers['user-agent'];
+      
+      // Force regenerate session ID to prevent session fixation
+      req.session.regenerate((regenerateErr) => {
+        if (regenerateErr) {
+          console.error('Session regeneration error during login:', regenerateErr);
+          return res.status(500).json({ message: "Error creating secure session" });
         }
         
-        console.log(`Session saved successfully for user ${user.username}, session ID: ${req.sessionID}`);
-        
-        // Don't return the password
-        const { password: _, ...userWithoutPassword } = user;
-        
-        // Send response after session is saved
-        res.json(userWithoutPassword);
+        // Now save the session with the new session ID
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error('Session save error during login:', saveErr);
+            return res.status(500).json({ message: "Error saving session" });
+          }
+          
+          console.log(`Session saved successfully for user ${user.username}, new session ID: ${req.sessionID}`);
+          console.log(`Session cookie details: ${JSON.stringify(req.session.cookie)}`);
+          
+          // Send response after session is saved
+          res.json(userWithoutPassword);
+        });
       });
       
       // Perform background tasks after sending the response
