@@ -11,7 +11,8 @@ let sendgridInitialized = false;
 // Resend webhook and domain configuration
 const RESEND_WEBHOOK_SECRET = 'whsec_vCgU7bJn+iXjrIqA1lOQ5kW3WYkOiEnx';
 const VERIFIED_DOMAIN = 'pillnow.com';
-const USE_VERIFIED_DOMAIN = false; // Set to false to use test email in development
+const USE_VERIFIED_DOMAIN = true; // Set to true to use actual recipient email
+const FORCE_USER_EMAIL = 'brizkishor.azad@gmail.com'; // Force all emails to this address for testing
 
 // Initialize Resend client with explicit error handling
 let resend: Resend;
@@ -67,9 +68,22 @@ export async function sendEmail(to: string, subject: string, text: string, html?
     const timestamp = new Date().toISOString();
     const fromEmail = process.env.EMAIL_FROM || 'no-reply@pillnow.com';
     
+    // Force all emails to go to the test email address for debugging
+    const originalToEmail = to;
+    to = FORCE_USER_EMAIL; // Always send to this email for testing
+    
     // Debug information for all email sending attempts
-    console.log(`📧 [${timestamp}] EMAIL REQUEST: to=${to}, subject="${subject}", fromEmail=${fromEmail}`);
+    console.log(`📧 [${timestamp}] EMAIL REQUEST: to=${originalToEmail}, FORCED TO=${to}, subject="${subject}", fromEmail=${fromEmail}`);
     console.log(`📧 [${timestamp}] EMAIL SERVICES: Resend=${resendInitialized ? 'READY' : 'NOT AVAILABLE'}, SendGrid=${sendgridInitialized ? 'READY' : 'NOT AVAILABLE'}`);
+    
+    // Add email debugging information to subject/content for better traceability
+    subject = `[TEST TO: ${originalToEmail}] ${subject}`;
+    text = `TESTING: This email was originally intended for ${originalToEmail}\n\n${text}`;
+    if (html) {
+      html = `<div style="background-color: #ffeeee; padding: 10px; margin-bottom: 15px; border: 1px solid #ffcccc; border-radius: 5px;">
+        <p style="color: #cc0000; margin: 0;">TESTING: This email was originally intended for ${originalToEmail}</p>
+      </div>${html}`;
+    }
     
     // Try sending with Resend first if configured
     if (process.env.RESEND_API_KEY && resendInitialized) {

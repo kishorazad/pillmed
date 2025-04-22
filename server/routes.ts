@@ -1271,20 +1271,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set user in session and explicitly save the session
       console.log(`Login successful for user ${user.username}, setting session: ${req.sessionID}`);
       
-      // Create a clean user object without sensitive data
+      // Create a clean user object without sensitive data for response
       const { password: _, ...userWithoutPassword } = user;
       
       // Store only necessary user info in session to minimize session size
-      (req.session as any).user = {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        email: user.email,
-        name: user.name
-      };
-      
-      // Skip session regeneration for improved stability
-      // Set user in session directly
+      // IMPORTANT: This is the only place user session data is set
+      console.log(`Setting user session data for user ID: ${user.id}, role: ${user.role}`);
       (req.session as any).user = {
         id: user.id,
         username: user.username,
