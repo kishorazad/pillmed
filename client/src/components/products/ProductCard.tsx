@@ -43,11 +43,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
     <div className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition">
       <div className="relative">
         <Link href={`/products/${product.id}`}>
-          <img 
-            src={getSafeImageUrl(product.imageUrl)} 
-            alt={product.name} 
-            className="w-full h-40 object-contain"
-          />
+          <div className="relative overflow-hidden w-full h-40">
+            {/* Low-quality placeholder */}
+            <div className="absolute inset-0 bg-gray-100 animate-pulse"></div>
+            
+            {/* Actual image with loading optimization */}
+            <img 
+              src={getSafeImageUrl(product.imageUrl, 'MEDIUM')} 
+              alt={product.name} 
+              className="w-full h-40 object-contain relative z-10"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
         </Link>
         {discountPercentage > 0 && (
           <span className="absolute top-2 left-2 bg-orange-500 text-white text-xs py-1 px-2 rounded">

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
@@ -8,62 +8,66 @@ import { LanguageProvider } from "./components/LanguageSwitcher";
 import { AuthProvider, useAuth } from "./lib/auth-provider";
 import { Loader2 } from "lucide-react";
 
-// Layout
+// Critical Layout Components - these are needed for initial render
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
-import CartSidebar from "./components/cart/CartSidebar";
-import MobileNavigation from "./components/layout/MobileNavigation";
-import FloatingContactButtons from "./components/contact/FloatingContactButtons";
 import NotificationHandler from "./components/notifications/NotificationHandler";
 
-// Pages
+// Frequently used pages - load these eagerly
 import Home from "./pages/Home";
-import ProductListing from "./pages/ProductListing";
-import ProductDetail from "./pages/ProductDetail";
-import Cart from "./pages/Cart";
 import Login from "./pages/Login";
-import Profile from "./pages/Profile";
-import Checkout from "./pages/Checkout";
 import NotFound from "@/pages/not-found";
-import AIHealthcare from "./pages/AIHealthcare";
-import Achievements from "./pages/Achievements";
-import MedicationTracking from "./pages/MedicationTracking";
-import OrderHistory from "./pages/OrderHistory";
-import CommunicationPage from "./pages/Communication";
 
-// Admin and Professional Dashboards
-import AdminPanel from "./pages/admin";
-import AdminUserManagement from "./pages/admin/users";
-import AdminCustomerManagement from "./pages/admin/customers";
-import AdminPharmacyManagement from "./pages/admin/pharmacies";
-import AdminDoctorManagement from "./pages/admin/doctors";
-import AdminAnalytics from "./pages/admin/analytics";
-import EmailManagement from "./pages/admin/EmailManagement";
-import PharmacyDashboard from "./pages/Pharmacy/Dashboard";
-import DoctorDashboard from "./pages/Doctor/Dashboard";
-import LaboratoryDashboard from "./pages/Laboratory/Dashboard";
-import ChemistDashboard from "./pages/dashboard/ChemistDashboard";
+// Lazily load less critical layout components
+const CartSidebar = lazy(() => import("./components/cart/CartSidebar"));
+const MobileNavigation = lazy(() => import("./components/layout/MobileNavigation"));
+const FloatingContactButtons = lazy(() => import("./components/contact/FloatingContactButtons"));
 
-// New Features
-import DeliveryDashboard from "./pages/Delivery/Dashboard";
-import NearbyHospitalsPage from "./pages/Hospitals/NearbyHospitalsPage";
-import HospitalsList from "./pages/hospitals/HospitalsList";
-import HospitalDetail from "./pages/hospitals/HospitalDetail";
+// Lazily load main pages - these load only when needed
+const ProductListing = lazy(() => import("./pages/ProductListing"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const AIHealthcare = lazy(() => import("./pages/AIHealthcare"));
+const Achievements = lazy(() => import("./pages/Achievements"));
+const MedicationTracking = lazy(() => import("./pages/MedicationTracking"));
+const OrderHistory = lazy(() => import("./pages/OrderHistory"));
+const CommunicationPage = lazy(() => import("./pages/Communication"));
 
-// Services
-import ServicesPage from "./pages/services";
-import MedicalEquipment from "./pages/services/MedicalEquipment";
-import MedicalServices from "./pages/services/MedicalServices";
-import AmbulanceRequest from "./pages/services/AmbulanceRequest";
-import EmergencyServicesPage from "./pages/EmergencyServicesPage";
+// Lazily load admin dashboards - these are accessed less frequently
+const AdminPanel = lazy(() => import("./pages/admin"));
+const AdminUserManagement = lazy(() => import("./pages/admin/users"));
+const AdminCustomerManagement = lazy(() => import("./pages/admin/customers"));
+const AdminPharmacyManagement = lazy(() => import("./pages/admin/pharmacies"));
+const AdminDoctorManagement = lazy(() => import("./pages/admin/doctors"));
+const AdminAnalytics = lazy(() => import("./pages/admin/analytics"));
+const EmailManagement = lazy(() => import("./pages/admin/EmailManagement"));
+const PharmacyDashboard = lazy(() => import("./pages/Pharmacy/Dashboard"));
+const DoctorDashboard = lazy(() => import("./pages/Doctor/Dashboard"));
+const LaboratoryDashboard = lazy(() => import("./pages/Laboratory/Dashboard"));
+const ChemistDashboard = lazy(() => import("./pages/dashboard/ChemistDashboard"));
 
-// Doctors
-import DoctorSearch from "./pages/doctors/DoctorSearch";
-import DoctorDetail from "./pages/doctors/DoctorDetail";
-import AppointmentConfirmation from "./pages/doctors/AppointmentConfirmation";
-import AppointmentSuccess from "./pages/doctors/AppointmentSuccess";
-import VideoConsultation from "./pages/doctors/VideoConsultation";
-import EPrescription from "./pages/doctors/EPrescription";
+// Lazily load new features
+const DeliveryDashboard = lazy(() => import("./pages/Delivery/Dashboard"));
+const NearbyHospitalsPage = lazy(() => import("./pages/Hospitals/NearbyHospitalsPage"));
+const HospitalsList = lazy(() => import("./pages/hospitals/HospitalsList"));
+const HospitalDetail = lazy(() => import("./pages/hospitals/HospitalDetail"));
+
+// Lazily load services
+const ServicesPage = lazy(() => import("./pages/services"));
+const MedicalEquipment = lazy(() => import("./pages/services/MedicalEquipment"));
+const MedicalServices = lazy(() => import("./pages/services/MedicalServices"));
+const AmbulanceRequest = lazy(() => import("./pages/services/AmbulanceRequest"));
+const EmergencyServicesPage = lazy(() => import("./pages/EmergencyServicesPage"));
+
+// Lazily load doctor-related pages
+const DoctorSearch = lazy(() => import("./pages/doctors/DoctorSearch"));
+const DoctorDetail = lazy(() => import("./pages/doctors/DoctorDetail"));
+const AppointmentConfirmation = lazy(() => import("./pages/doctors/AppointmentConfirmation"));
+const AppointmentSuccess = lazy(() => import("./pages/doctors/AppointmentSuccess"));
+const VideoConsultation = lazy(() => import("./pages/doctors/VideoConsultation"));
+const EPrescription = lazy(() => import("./pages/doctors/EPrescription"));
 
 // Role-based route protection
 interface RoleBasedRouteProps {
@@ -128,39 +132,59 @@ function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedR
 }
 
 function Router() {
+  // Loading fallback component
+  const LoadingFallback = () => (
+    <div className="flex items-center justify-center p-4 min-h-[50vh]">
+      <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+      <span>Loading page...</span>
+    </div>
+  );
+
+  // Wrap lazy-loaded component with Suspense
+  const SuspenseRoute = ({ component: Component, ...rest }: any) => (
+    <Route {...rest}>
+      <Suspense fallback={<LoadingFallback />}>
+        <Component />
+      </Suspense>
+    </Route>
+  );
+  
   return (
     <Switch>
+      {/* Critical routes loaded eagerly */}
       <Route path="/" component={Home} />
-      <Route path="/products" component={ProductListing} />
-      <Route path="/products/category/:categoryId" component={ProductListing} />
-      <Route path="/products/:id" component={ProductDetail} />
-      <Route path="/cart" component={Cart} />
       <Route path="/login" component={Login} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/checkout" component={Checkout} />
-      <Route path="/ai-healthcare" component={AIHealthcare} />
-      <Route path="/nearby-hospitals" component={NearbyHospitalsPage} />
-      <Route path="/hospitals" component={HospitalsList} />
-      <Route path="/hospitals/:id" component={HospitalDetail} />
-      <Route path="/achievements" component={Achievements} />
-      <Route path="/medication-tracking" component={MedicationTracking} />
-      <Route path="/orders" component={OrderHistory} />
+      
+      {/* Lazy-loaded routes */}
+      <SuspenseRoute path="/products" component={ProductListing} />
+      <SuspenseRoute path="/products/category/:categoryId" component={ProductListing} />
+      <SuspenseRoute path="/products/:id" component={ProductDetail} />
+      <SuspenseRoute path="/cart" component={Cart} />
+      <SuspenseRoute path="/profile" component={Profile} />
+      <SuspenseRoute path="/checkout" component={Checkout} />
+      <SuspenseRoute path="/ai-healthcare" component={AIHealthcare} />
+      <SuspenseRoute path="/nearby-hospitals" component={NearbyHospitalsPage} />
+      <SuspenseRoute path="/hospitals" component={HospitalsList} />
+      <SuspenseRoute path="/hospitals/:id" component={HospitalDetail} />
+      <SuspenseRoute path="/achievements" component={Achievements} />
+      <SuspenseRoute path="/medication-tracking" component={MedicationTracking} />
+      <SuspenseRoute path="/orders" component={OrderHistory} />
     
       {/* Services Routes */}
-      <Route path="/services" component={ServicesPage} />
-      <Route path="/services/medical-equipment" component={MedicalEquipment} />
-      <Route path="/services/medical-services" component={MedicalServices} />
-      <Route path="/services/ambulance-request" component={AmbulanceRequest} />
-      <Route path="/services/emergency" component={EmergencyServicesPage} />
-      <Route path="/communication" component={CommunicationPage} />
+      <SuspenseRoute path="/services" component={ServicesPage} />
+      <SuspenseRoute path="/services/medical-equipment" component={MedicalEquipment} />
+      <SuspenseRoute path="/services/medical-services" component={MedicalServices} />
+      <SuspenseRoute path="/services/ambulance-request" component={AmbulanceRequest} />
+      <SuspenseRoute path="/services/emergency" component={EmergencyServicesPage} />
+      <SuspenseRoute path="/communication" component={CommunicationPage} />
       
       {/* Doctor Routes */}
-      <Route path="/doctors" component={DoctorSearch} />
-      <Route path="/doctors/:id" component={DoctorDetail} />
-      <Route path="/doctors/:id/book" component={AppointmentConfirmation} />
-      <Route path="/doctors/:id/success" component={AppointmentSuccess} />
-      <Route path="/doctors/:id/video" component={VideoConsultation} />
-      <Route path="/doctors/:id/prescription" component={EPrescription} />
+      <SuspenseRoute path="/doctors" component={DoctorSearch} />
+      <SuspenseRoute path="/doctors/:id" component={DoctorDetail} />
+      <SuspenseRoute path="/doctors/:id/book" component={AppointmentConfirmation} />
+      <SuspenseRoute path="/doctors/:id/success" component={AppointmentSuccess} />
+      <SuspenseRoute path="/doctors/:id/video" component={VideoConsultation} />
+      <SuspenseRoute path="/doctors/:id/prescription" component={EPrescription} />
       
       {/* Admin and Professional Dashboard Routes with Role Protection */}
       <RoleBasedRoute path="/admin" component={AdminPanel} allowedRoles={['admin', 'subadmin']} />
@@ -189,6 +213,14 @@ function AppContent() {
     fetchCart();
   }, [user, tempUserId, fetchCart]);
   
+  // Loading fallback component
+  const LoadingFallback = () => (
+    <div className="flex items-center justify-center p-4">
+      <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+      <span>Loading...</span>
+    </div>
+  );
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -197,15 +229,24 @@ function AppContent() {
         <Router />
       </main>
       <Footer />
-      <CartSidebar />
-      <MobileNavigation />
+      
+      {/* Use Suspense for each lazy-loaded component */}
+      <Suspense fallback={null}>
+        <CartSidebar />
+      </Suspense>
+      
+      <Suspense fallback={null}>
+        <MobileNavigation />
+      </Suspense>
       
       {/* WhatsApp and Call Buttons */}
-      <FloatingContactButtons 
-        phoneNumber="8770762307"
-        whatsappNumber="918770762307"
-        message="Hello! I'm interested in ordering medicines from PillNow."
-      />
+      <Suspense fallback={null}>
+        <FloatingContactButtons 
+          phoneNumber="8770762307"
+          whatsappNumber="918770762307"
+          message="Hello! I'm interested in ordering medicines from PillNow."
+        />
+      </Suspense>
     </div>
   );
 }
