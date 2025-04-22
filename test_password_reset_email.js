@@ -1,4 +1,4 @@
-import { sendPasswordResetOTP, generateOTP } from './server/email-service.js';
+import { sendPasswordResetOTP, generateOTP } from './server/email-service.ts';
 
 async function testPasswordResetEmail() {
   console.log("Testing Password Reset Email Function...");

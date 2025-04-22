@@ -3,6 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 import fetch from 'node-fetch';
 import { randomBytes, scryptSync, createHash } from 'crypto';
 import { storage } from './storage';
+import { sendPasswordResetOTP, sendWelcomeEmail, generateOTP } from './email-service';
 
 const router = Router();
 
@@ -193,6 +194,80 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('OTP verification error:', error);
     res.status(500).json({ message: 'Authentication failed' });
+  }
+});
+
+/**
+ * Forgot Password endpoint
+ * Generates and sends a reset OTP to the user's email
+ */
+router.post('/forgot-password', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+    
+    // Check if user exists
+    const user = await storage.getUserByEmail(email);
+    
+    if (!user) {
+      // For security reasons, we still return success even if user doesn't exist
+      return res.status(200).json({ 
+        message: 'If an account with that email exists, a password reset link has been sent' 
+      });
+    }
+    
+    // Generate OTP
+    const otp = generateOTP(6);
+    
+    // Store OTP in database (in a real app)
+    // For now, we'll just simulate this process
+    
+    // Send email
+    const emailSent = await sendPasswordResetOTP(email, otp);
+    
+    if (emailSent) {
+      console.log(`Password reset OTP ${otp} sent to ${email}`);
+      res.status(200).json({ 
+        message: 'Password reset instructions sent to your email',
+        // Include OTP for testing purposes only, in production this should be removed
+        testOtp: process.env.NODE_ENV === 'production' ? undefined : otp
+      });
+    } else {
+      res.status(500).json({ message: 'Failed to send password reset email' });
+    }
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Error processing request' });
+  }
+});
+
+/**
+ * Test Welcome Email endpoint
+ * Used for testing the welcome email functionality
+ */
+router.post('/test-welcome-email', async (req: Request, res: Response) => {
+  try {
+    const { email, name } = req.body;
+    
+    if (!email || !name) {
+      return res.status(400).json({ message: 'Email and name are required' });
+    }
+    
+    // Send welcome email
+    const emailSent = await sendWelcomeEmail(email, name);
+    
+    if (emailSent) {
+      console.log(`Welcome email sent to ${email}`);
+      res.status(200).json({ message: 'Welcome email sent successfully' });
+    } else {
+      res.status(500).json({ message: 'Failed to send welcome email' });
+    }
+  } catch (error) {
+    console.error('Test welcome email error:', error);
+    res.status(500).json({ message: 'Error processing request' });
   }
 });
 
