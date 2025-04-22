@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useLocation, Link } from 'wouter';
+import React, { useState, useEffect } from 'react';
+import { useLocation, Link, useRoute } from 'wouter';
 import { 
   Calendar, 
   Clock, 
@@ -12,7 +12,8 @@ import {
   CreditCard,
   Wallet,
   Building2, // replacing Bank which is not available in lucide-react
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +26,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 // Sample appointment data - in a real application, this would come from the previous booking step
 const appointmentData = {
@@ -49,6 +52,10 @@ const appointmentData = {
 const AppointmentConfirmation: React.FC = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [matched, params] = useRoute('/doctors/:doctorId/appointment/:appointmentId/confirmation');
+  
+  const doctorId = matched ? parseInt(params.doctorId) : appointmentData.doctor.id;
+  const appointmentId = matched ? params.appointmentId : null;
   
   // State for patient information form
   const [patientName, setPatientName] = useState('');
@@ -60,6 +67,80 @@ const AppointmentConfirmation: React.FC = () => {
   
   // State for payment method
   const [paymentMethod, setPaymentMethod] = useState('card');
+  
+  // Fetch doctor data
+  const { data: doctorData, isLoading: isLoadingDoctor } = useQuery({
+    queryKey: ['/api/doctors', doctorId],
+    enabled: !!doctorId,
+    placeholderData: appointmentData.doctor
+  });
+  
+  // Fetch appointment data if we have an ID
+  const { data: appointment, isLoading: isLoadingAppointment } = useQuery({
+    queryKey: ['/api/appointments', appointmentId],
+    enabled: !!appointmentId,
+    placeholderData: {
+      id: 'temp123',
+      doctorId: doctorId,
+      appointmentDate: appointmentData.appointmentDate,
+      appointmentTime: appointmentData.appointmentTime,
+      consultationType: appointmentData.consultationType,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    }
+  });
+  
+  // Prefill user data if available
+  useEffect(() => {
+    // In a real app, this would get the logged-in user data
+    const userData = {
+      name: 'Rahul Khanna',
+      age: '32',
+      gender: 'male',
+      phone: '+91 98765 43210',
+      email: 'rahul.khanna@example.com'
+    };
+    
+    setPatientName(userData.name);
+    setPatientAge(userData.age);
+    setPatientGender(userData.gender);
+    setPatientPhone(userData.phone);
+    setPatientEmail(userData.email);
+  }, []);
+  
+  // Confirm appointment mutation
+  const confirmAppointmentMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('PATCH', `/api/appointments/${appointmentId}/status`, {
+        status: 'confirmed',
+        patientDetails: {
+          name: patientName,
+          age: parseInt(patientAge),
+          gender: patientGender,
+          phone: patientPhone,
+          email: patientEmail,
+          symptoms: patientSymptoms
+        },
+        paymentMethod
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Appointment Confirmed!",
+        description: `Your appointment with ${doctorData?.name || appointmentData.doctor.name} has been confirmed.`,
+        variant: "default",
+      });
+      navigate(`/doctors/${doctorId}/appointment/${appointmentId}/success`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Confirmation Failed",
+        description: error.message || "Could not confirm appointment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
   
   // Function to handle form submission and payment
   const confirmAppointment = () => {
@@ -73,18 +154,18 @@ const AppointmentConfirmation: React.FC = () => {
       return;
     }
     
-    // In a real application, this would make an API call to process payment and confirm the appointment
-    console.log('Confirming appointment with payment method:', paymentMethod);
-    
-    // Show success toast
-    toast({
-      title: "Appointment Confirmed!",
-      description: `Your appointment with Dr. Priya Sharma on ${appointmentData.appointmentDate} at ${appointmentData.appointmentTime} has been confirmed.`,
-      variant: "default",
-    });
-    
-    // Navigate to success page
-    navigate(`/doctors/${appointmentData.doctor.id}/success`);
+    if (appointmentId) {
+      // If we have an appointment ID, we call the API to confirm it
+      confirmAppointmentMutation.mutate({});
+    } else {
+      // For demo purposes, if no appointment ID exists (using static data)
+      toast({
+        title: "Appointment Confirmed!",
+        description: `Your appointment with ${doctorData?.name || appointmentData.doctor.name} has been confirmed.`,
+        variant: "default",
+      });
+      navigate(`/doctors/${doctorId}/success`);
+    }
   };
   
   return (

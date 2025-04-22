@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, Link, useRoute } from 'wouter';
 import DoctorSEO from '@/components/SEO/DoctorSEO';
 import {
@@ -19,7 +19,8 @@ import {
   Info,
   File,
   Download,
-  Share2
+  Share2,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +32,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 // Sample doctor data
 const doctorDetails = {
@@ -180,22 +184,65 @@ const DoctorDetail: React.FC = () => {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   
-  // In a real application, you would fetch the doctor data based on the doctorId
-  // const { data: doctor } = useQuery({
-  //   queryKey: ['/api/doctors', doctorId],
-  //   queryFn: getQueryFn()
-  // });
-  // For now, we'll use the static data
+  // Use React Query to fetch doctor data
+  const { data: doctor, isLoading: isLoadingDoctor } = useQuery({
+    queryKey: ['/api/doctors', doctorId],
+    enabled: !!doctorId,
+    // Use static data if API call fails
+    placeholderData: doctorDetails
+  });
   
-  const displayedReviews = showAllReviews ? doctorDetails.reviews : doctorDetails.reviews.slice(0, 2);
+  // Fetch available time slots
+  const { data: availableSlots, isLoading: isLoadingSlots } = useQuery({
+    queryKey: ['/api/appointments/available-slots', doctorId, selectedDay],
+    enabled: !!doctorId && !!selectedDay,
+    placeholderData: doctorDetails.availableTimeSlots[selectedDay] || []
+  });
+  
+  const { toast } = useToast();
+  
+  const displayedReviews = showAllReviews 
+    ? (doctor?.reviews || doctorDetails.reviews) 
+    : (doctor?.reviews || doctorDetails.reviews).slice(0, 2);
+  
+  // Create appointment mutation
+  const bookAppointmentMutation = useMutation({
+    mutationFn: async (appointmentData: any) => {
+      const response = await apiRequest('POST', '/api/appointments/book', appointmentData);
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Appointment Booked",
+        description: "Your appointment has been successfully scheduled",
+        variant: "default",
+      });
+      // Navigate to confirmation page with the new appointment ID
+      setLocation(`/doctors/${doctorId}/appointment/${data.id}/confirmation`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Booking Failed",
+        description: error.message || "Could not book appointment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
   
   // Function to book appointment
   const bookAppointment = () => {
     if (selectedTimeSlot) {
-      // In a real application, this would make an API call to book the appointment
-      console.log(`Booking appointment with ${doctorDetails.name} for ${selectedDay} at ${selectedTimeSlot} via ${consultationType}`);
-      // Navigate to confirmation page
-      setLocation(`/doctors/${doctorDetails.id}/confirmation`);
+      const appointmentData = {
+        doctorId,
+        appointmentDate: selectedDay,
+        appointmentTime: selectedTimeSlot,
+        consultationType,
+        patientId: 1, // In a real app, this would be the logged-in user's ID
+        symptoms: '',
+        notes: ''
+      };
+      
+      bookAppointmentMutation.mutate(appointmentData);
     } else {
       setBookingDialogOpen(true);
     }
