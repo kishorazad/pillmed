@@ -1084,6 +1084,398 @@ class MongoDBStorage implements IStorage {
       throw error;
     }
   }
+
+  // Doctor & Appointment related methods
+  async getDoctor(doctorId: string | number): Promise<any> {
+    try {
+      const numericId = typeof doctorId === 'string' ? parseInt(doctorId, 10) : doctorId;
+      
+      // First, try to get from the doctorInfo collection
+      if (!this.isConnected(this.collections.doctorInfo)) {
+        console.error('MongoDB not connected or doctorInfo collection not available');
+        return null;
+      }
+      
+      const doctorsCollection = mongoDBService.getCollection(this.collections.doctorInfo);
+      if (doctorsCollection) {
+        const doctor = await doctorsCollection.findOne({ id: numericId });
+        if (doctor) {
+          return doctor;
+        }
+      }
+      
+      // If not found, check users collection with role = 'doctor'
+      if (!this.isConnected(this.collections.users)) {
+        console.error('MongoDB not connected or users collection not available');
+        return null;
+      }
+      
+      const usersCollection = mongoDBService.getCollection(this.collections.users);
+      if (usersCollection) {
+        const user = await usersCollection.findOne({ 
+          id: numericId,
+          role: 'doctor'
+        });
+        
+        if (user) {
+          // Add default data for demonstration purposes
+          return {
+            ...user,
+            specialty: user.specialty || 'General Physician',
+            clinicName: user.clinicName || 'PillNow Medical Center',
+            clinicAddress: user.address || 'Medical District, Mumbai',
+            consultationFee: user.consultationFee || 500
+          };
+        }
+      }
+      
+      console.error(`Doctor with ID ${doctorId} not found in any collection`);
+      return null;
+    } catch (error) {
+      console.error(`Error getting doctor with ID ${doctorId}:`, error);
+      return null;
+    }
+  }
+  
+  async getDoctorAvailabilityForDate(doctorId: string | number, date: string): Promise<any[]> {
+    try {
+      const numericId = typeof doctorId === 'string' ? parseInt(doctorId, 10) : doctorId;
+      const selectedDate = new Date(date);
+      const dayOfWeek = selectedDate.getDay(); // 0 for Sunday, 1 for Monday, etc.
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const selectedDayName = dayNames[dayOfWeek];
+      
+      // Get doctor information
+      const doctor = await this.getDoctor(numericId);
+      if (!doctor) {
+        console.error(`Doctor with ID ${doctorId} not found`);
+        return [];
+      }
+      
+      // Check if doctor is available on this day
+      let availableDays = [];
+      if (doctor.availableDays) {
+        if (typeof doctor.availableDays === 'string') {
+          availableDays = doctor.availableDays.split(',').map(day => day.trim());
+        } else if (Array.isArray(doctor.availableDays)) {
+          availableDays = doctor.availableDays;
+        }
+      } else {
+        // Default availability for demonstration
+        availableDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      }
+      
+      if (!availableDays.includes(selectedDayName)) {
+        return []; // Doctor not available on this day
+      }
+      
+      // Get all appointments for this doctor on this date
+      if (!this.isConnected(this.collections.appointments)) {
+        console.error('MongoDB not connected or appointments collection not available');
+        return [];
+      }
+      
+      const appointmentsCollection = mongoDBService.getCollection(this.collections.appointments);
+      const startOfDay = new Date(selectedDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      let bookedTimes: string[] = [];
+      
+      if (appointmentsCollection) {
+        const appointments = await appointmentsCollection.find({
+          doctorId: numericId,
+          appointmentDate: {
+            $gte: startOfDay,
+            $lte: endOfDay
+          },
+          status: { $nin: ['cancelled'] }
+        }).toArray();
+        
+        bookedTimes = appointments.map((appointment: any) => {
+          const appointmentDate = new Date(appointment.appointmentDate);
+          return `${appointmentDate.getHours().toString().padStart(2, '0')}:${appointmentDate.getMinutes().toString().padStart(2, '0')}`;
+        });
+      }
+      
+      // Generate time slots based on doctor's schedule
+      const timeSlots = [];
+      
+      // Default time range if not specified
+      const startTime = doctor.availableTimeStart || '09:00';
+      const endTime = doctor.availableTimeEnd || '17:00';
+      
+      const [startHour, startMinute] = startTime.split(':').map(part => parseInt(part, 10));
+      const [endHour, endMinute] = endTime.split(':').map(part => parseInt(part, 10));
+      
+      const slotDurationMinutes = 30; // 30-minute slots
+      
+      let currentTime = new Date();
+      currentTime.setHours(startHour, startMinute, 0, 0);
+      
+      const endTimeObj = new Date();
+      endTimeObj.setHours(endHour, endMinute, 0, 0);
+      
+      while (currentTime < endTimeObj) {
+        const timeStr = `${currentTime.getHours().toString().padStart(2, '0')}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
+        
+        // Check if this slot is already booked
+        const isAvailable = !bookedTimes.includes(timeStr);
+        
+        timeSlots.push({
+          time: timeStr,
+          available: isAvailable
+        });
+        
+        // Move to next slot
+        currentTime.setMinutes(currentTime.getMinutes() + slotDurationMinutes);
+      }
+      
+      return timeSlots;
+    } catch (error) {
+      console.error(`Error getting availability for doctor ${doctorId} on ${date}:`, error);
+      return [];
+    }
+  }
+  
+  async checkSlotAvailability(doctorId: string | number, date: string, time: string): Promise<boolean> {
+    try {
+      const numericId = typeof doctorId === 'string' ? parseInt(doctorId, 10) : doctorId;
+      const [hours, minutes] = time.split(':').map(part => parseInt(part, 10));
+      
+      const appointmentDateTime = new Date(date);
+      appointmentDateTime.setHours(hours, minutes, 0, 0);
+      
+      // Buffer time (10 minutes before and after)
+      const startBuffer = new Date(appointmentDateTime);
+      startBuffer.setMinutes(startBuffer.getMinutes() - 10);
+      
+      const endBuffer = new Date(appointmentDateTime);
+      endBuffer.setMinutes(endBuffer.getMinutes() + 40); // 30 min appointment + 10 min buffer
+      
+      if (!this.isConnected(this.collections.appointments)) {
+        console.error('MongoDB not connected or appointments collection not available');
+        return false; // If we can't check, assume not available
+      }
+      
+      const appointmentsCollection = mongoDBService.getCollection(this.collections.appointments);
+      if (!appointmentsCollection) {
+        return false; // If we can't check, assume not available
+      }
+      
+      // Check for existing appointments in this time range
+      const existingAppointment = await appointmentsCollection.findOne({
+        doctorId: numericId,
+        appointmentDate: {
+          $gte: startBuffer,
+          $lte: endBuffer
+        },
+        status: { $nin: ['cancelled'] }
+      });
+      
+      return !existingAppointment; // Available if no appointment found
+    } catch (error) {
+      console.error(`Error checking slot availability:`, error);
+      return false; // If error, assume not available
+    }
+  }
+  
+  async createAppointment(appointmentData: any): Promise<any> {
+    try {
+      if (!this.isConnected(this.collections.appointments)) {
+        console.error('MongoDB not connected or appointments collection not available');
+        throw new Error('MongoDB not connected or appointments collection not available');
+      }
+      
+      const appointmentsCollection = mongoDBService.getCollection(this.collections.appointments);
+      if (!appointmentsCollection) {
+        throw new Error('Appointments collection not available');
+      }
+      
+      // Generate an ID for the new appointment
+      const lastAppointment = await appointmentsCollection.findOne({}, { sort: { id: -1 } });
+      const newId = (lastAppointment?.id || 0) + 1;
+      
+      // Parse time and construct appointment date
+      const [hours, minutes] = appointmentData.time.split(':').map(part => parseInt(part, 10));
+      const appointmentDateTime = new Date(appointmentData.date);
+      appointmentDateTime.setHours(hours, minutes, 0, 0);
+      
+      // Create appointment object
+      const appointment = {
+        id: newId,
+        userId: typeof appointmentData.patientId === 'string' 
+          ? parseInt(appointmentData.patientId, 10) 
+          : appointmentData.patientId,
+        doctorId: typeof appointmentData.doctorId === 'string' 
+          ? parseInt(appointmentData.doctorId, 10) 
+          : appointmentData.doctorId,
+        patientName: appointmentData.patientName,
+        patientEmail: appointmentData.patientEmail,
+        patientPhone: appointmentData.patientPhone,
+        appointmentDate: appointmentDateTime,
+        status: appointmentData.status || 'confirmed',
+        isVideoConsultation: appointmentData.isVideoConsultation || false,
+        symptoms: appointmentData.symptoms || '',
+        notes: appointmentData.notes || '',
+        createdAt: new Date(),
+        bookingTime: appointmentData.bookingTime ? new Date(appointmentData.bookingTime) : new Date()
+      };
+      
+      // Insert into database
+      await appointmentsCollection.insertOne(appointment);
+      
+      console.log(`Appointment ${newId} created successfully`);
+      return appointment;
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      throw error;
+    }
+  }
+  
+  async getAppointment(appointmentId: string): Promise<any> {
+    try {
+      const numericId = parseInt(appointmentId, 10);
+      
+      if (!this.isConnected(this.collections.appointments)) {
+        console.error('MongoDB not connected or appointments collection not available');
+        return null;
+      }
+      
+      const appointmentsCollection = mongoDBService.getCollection(this.collections.appointments);
+      if (!appointmentsCollection) {
+        return null;
+      }
+      
+      const appointment = await appointmentsCollection.findOne({ id: numericId });
+      return appointment;
+    } catch (error) {
+      console.error(`Error getting appointment ${appointmentId}:`, error);
+      return null;
+    }
+  }
+  
+  async getDoctorAppointments(doctorId: string | number): Promise<any[]> {
+    try {
+      const numericId = typeof doctorId === 'string' ? parseInt(doctorId, 10) : doctorId;
+      
+      if (!this.isConnected(this.collections.appointments)) {
+        console.error('MongoDB not connected or appointments collection not available');
+        return [];
+      }
+      
+      const appointmentsCollection = mongoDBService.getCollection(this.collections.appointments);
+      if (!appointmentsCollection) {
+        return [];
+      }
+      
+      const appointments = await appointmentsCollection.find({
+        doctorId: numericId
+      }).sort({ appointmentDate: -1 }).toArray();
+      
+      return appointments;
+    } catch (error) {
+      console.error(`Error getting appointments for doctor ${doctorId}:`, error);
+      return [];
+    }
+  }
+  
+  async getPatientAppointments(patientId: string | number): Promise<any[]> {
+    try {
+      const numericId = typeof patientId === 'string' ? parseInt(patientId, 10) : patientId;
+      
+      if (!this.isConnected(this.collections.appointments)) {
+        console.error('MongoDB not connected or appointments collection not available');
+        return [];
+      }
+      
+      const appointmentsCollection = mongoDBService.getCollection(this.collections.appointments);
+      if (!appointmentsCollection) {
+        return [];
+      }
+      
+      const appointments = await appointmentsCollection.find({
+        userId: numericId
+      }).sort({ appointmentDate: -1 }).toArray();
+      
+      return appointments;
+    } catch (error) {
+      console.error(`Error getting appointments for patient ${patientId}:`, error);
+      return [];
+    }
+  }
+  
+  async updateAppointmentStatus(appointmentId: string, status: string, cancellationReason?: string): Promise<any> {
+    try {
+      const numericId = parseInt(appointmentId, 10);
+      
+      if (!this.isConnected(this.collections.appointments)) {
+        console.error('MongoDB not connected or appointments collection not available');
+        throw new Error('MongoDB not connected or appointments collection not available');
+      }
+      
+      const appointmentsCollection = mongoDBService.getCollection(this.collections.appointments);
+      if (!appointmentsCollection) {
+        throw new Error('Appointments collection not available');
+      }
+      
+      const updateData: any = { status };
+      if (cancellationReason && status === 'cancelled') {
+        updateData.cancellationReason = cancellationReason;
+      }
+      
+      const result = await appointmentsCollection.findOneAndUpdate(
+        { id: numericId },
+        { $set: updateData },
+        { returnDocument: 'after' }
+      );
+      
+      return result.value;
+    } catch (error) {
+      console.error(`Error updating appointment ${appointmentId} status:`, error);
+      throw error;
+    }
+  }
+  
+  async rescheduleAppointment(appointmentId: string, date: string, time: string): Promise<any> {
+    try {
+      const numericId = parseInt(appointmentId, 10);
+      
+      if (!this.isConnected(this.collections.appointments)) {
+        console.error('MongoDB not connected or appointments collection not available');
+        throw new Error('MongoDB not connected or appointments collection not available');
+      }
+      
+      const appointmentsCollection = mongoDBService.getCollection(this.collections.appointments);
+      if (!appointmentsCollection) {
+        throw new Error('Appointments collection not available');
+      }
+      
+      // Parse time and construct appointment date
+      const [hours, minutes] = time.split(':').map(part => parseInt(part, 10));
+      const appointmentDateTime = new Date(date);
+      appointmentDateTime.setHours(hours, minutes, 0, 0);
+      
+      const result = await appointmentsCollection.findOneAndUpdate(
+        { id: numericId },
+        { 
+          $set: { 
+            appointmentDate: appointmentDateTime,
+            status: 'rescheduled',
+            rescheduledAt: new Date()
+          }
+        },
+        { returnDocument: 'after' }
+      );
+      
+      return result.value;
+    } catch (error) {
+      console.error(`Error rescheduling appointment ${appointmentId}:`, error);
+      throw error;
+    }
+  }
 }
 
 // Create and export the MongoDB storage instance

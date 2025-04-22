@@ -1280,6 +1280,206 @@ export class MemStorage implements IStorage {
     this.seoAnalytics = analytics;
     return analytics;
   }
+
+  // Doctor & Appointment related methods
+  async getDoctor(doctorId: string | number): Promise<any> {
+    const numericId = typeof doctorId === 'string' ? parseInt(doctorId, 10) : doctorId;
+    return this.users.get(numericId)?.role === 'doctor' 
+      ? {
+          ...this.users.get(numericId),
+          specialty: 'General Physician',
+          clinicName: 'PillNow Medical Center',
+          clinicAddress: 'Medical District, Mumbai',
+          consultationFee: 500,
+          availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          availableTimeStart: '09:00',
+          availableTimeEnd: '17:00'
+        }
+      : null;
+  }
+  
+  async getDoctorAvailabilityForDate(doctorId: string | number, date: string): Promise<any[]> {
+    const doctor = await this.getDoctor(doctorId);
+    if (!doctor) return [];
+    
+    const selectedDate = new Date(date);
+    const dayOfWeek = selectedDate.getDay(); // 0 for Sunday, 1 for Monday, etc.
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const selectedDayName = dayNames[dayOfWeek];
+    
+    // Check if doctor is available on this day
+    const availableDays = doctor.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    
+    if (!availableDays.includes(selectedDayName)) {
+      return []; // Doctor not available on this day
+    }
+    
+    // Generate time slots for the doctor
+    const startTime = doctor.availableTimeStart || '09:00';
+    const endTime = doctor.availableTimeEnd || '17:00';
+    
+    const [startHour, startMinute] = startTime.split(':').map(part => parseInt(part, 10));
+    const [endHour, endMinute] = endTime.split(':').map(part => parseInt(part, 10));
+    
+    const slotDurationMinutes = 30; // 30-minute slots
+    
+    let currentTime = new Date();
+    currentTime.setHours(startHour, startMinute, 0, 0);
+    
+    const endTimeObj = new Date();
+    endTimeObj.setHours(endHour, endMinute, 0, 0);
+    
+    // Get booked slots
+    const bookedSlots = Array.from(this.appointments.values())
+      .filter(appointment => 
+        appointment.doctorId === (typeof doctorId === 'string' ? parseInt(doctorId, 10) : doctorId) &&
+        new Date(appointment.appointmentDate).toDateString() === selectedDate.toDateString() &&
+        appointment.status !== 'cancelled'
+      )
+      .map(appointment => {
+        const appointmentDate = new Date(appointment.appointmentDate);
+        return `${appointmentDate.getHours().toString().padStart(2, '0')}:${appointmentDate.getMinutes().toString().padStart(2, '0')}`;
+      });
+    
+    const timeSlots = [];
+    
+    while (currentTime < endTimeObj) {
+      const timeStr = `${currentTime.getHours().toString().padStart(2, '0')}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
+      
+      // Check if this slot is already booked
+      const isAvailable = !bookedSlots.includes(timeStr);
+      
+      timeSlots.push({
+        time: timeStr,
+        available: isAvailable
+      });
+      
+      // Move to next slot
+      currentTime.setMinutes(currentTime.getMinutes() + slotDurationMinutes);
+    }
+    
+    return timeSlots;
+  }
+  
+  async checkSlotAvailability(doctorId: string | number, date: string, time: string): Promise<boolean> {
+    const numericDoctorId = typeof doctorId === 'string' ? parseInt(doctorId, 10) : doctorId;
+    const [hours, minutes] = time.split(':').map(part => parseInt(part, 10));
+    
+    const appointmentDateTime = new Date(date);
+    appointmentDateTime.setHours(hours, minutes, 0, 0);
+    
+    // Buffer time (10 minutes before and after)
+    const startBuffer = new Date(appointmentDateTime);
+    startBuffer.setMinutes(startBuffer.getMinutes() - 10);
+    
+    const endBuffer = new Date(appointmentDateTime);
+    endBuffer.setMinutes(endBuffer.getMinutes() + 40); // 30 min appointment + 10 min buffer
+    
+    // Check for existing appointments in this time range
+    const existingAppointment = Array.from(this.appointments.values()).find(appointment => 
+      appointment.doctorId === numericDoctorId && 
+      new Date(appointment.appointmentDate) >= startBuffer && 
+      new Date(appointment.appointmentDate) <= endBuffer &&
+      appointment.status !== 'cancelled'
+    );
+    
+    return !existingAppointment;
+  }
+  
+  async createAppointment(appointmentData: any): Promise<any> {
+    // Parse time and construct appointment date
+    const [hours, minutes] = appointmentData.time.split(':').map(part => parseInt(part, 10));
+    const appointmentDateTime = new Date(appointmentData.date);
+    appointmentDateTime.setHours(hours, minutes, 0, 0);
+    
+    // Create appointment object
+    const newAppointment = {
+      id: this.currentAppointmentId++,
+      userId: typeof appointmentData.patientId === 'string' 
+        ? parseInt(appointmentData.patientId, 10) 
+        : appointmentData.patientId,
+      doctorId: typeof appointmentData.doctorId === 'string' 
+        ? parseInt(appointmentData.doctorId, 10) 
+        : appointmentData.doctorId,
+      patientName: appointmentData.patientName,
+      patientEmail: appointmentData.patientEmail,
+      patientPhone: appointmentData.patientPhone,
+      appointmentDate: appointmentDateTime,
+      status: appointmentData.status || 'confirmed',
+      isVideoConsultation: appointmentData.isVideoConsultation || false,
+      symptoms: appointmentData.symptoms || '',
+      notes: appointmentData.notes || '',
+      createdAt: new Date(),
+      bookingTime: appointmentData.bookingTime ? new Date(appointmentData.bookingTime) : new Date()
+    };
+    
+    // Store the appointment
+    this.appointments.set(newAppointment.id, newAppointment);
+    
+    return newAppointment;
+  }
+  
+  async getAppointment(appointmentId: string): Promise<any> {
+    const numericId = parseInt(appointmentId, 10);
+    return this.appointments.get(numericId);
+  }
+  
+  async getDoctorAppointments(doctorId: string | number): Promise<any[]> {
+    const numericId = typeof doctorId === 'string' ? parseInt(doctorId, 10) : doctorId;
+    
+    return Array.from(this.appointments.values())
+      .filter(appointment => appointment.doctorId === numericId)
+      .sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
+  }
+  
+  async getPatientAppointments(patientId: string | number): Promise<any[]> {
+    const numericId = typeof patientId === 'string' ? parseInt(patientId, 10) : patientId;
+    
+    return Array.from(this.appointments.values())
+      .filter(appointment => appointment.userId === numericId)
+      .sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
+  }
+  
+  async updateAppointmentStatus(appointmentId: string, status: string, cancellationReason?: string): Promise<any> {
+    const numericId = parseInt(appointmentId, 10);
+    const appointment = this.appointments.get(numericId);
+    
+    if (!appointment) {
+      throw new Error(`Appointment with ID ${appointmentId} not found`);
+    }
+    
+    appointment.status = status;
+    
+    if (cancellationReason && status === 'cancelled') {
+      appointment.cancellationReason = cancellationReason;
+    }
+    
+    this.appointments.set(numericId, appointment);
+    
+    return appointment;
+  }
+  
+  async rescheduleAppointment(appointmentId: string, date: string, time: string): Promise<any> {
+    const numericId = parseInt(appointmentId, 10);
+    const appointment = this.appointments.get(numericId);
+    
+    if (!appointment) {
+      throw new Error(`Appointment with ID ${appointmentId} not found`);
+    }
+    
+    // Parse time and construct appointment date
+    const [hours, minutes] = time.split(':').map(part => parseInt(part, 10));
+    const appointmentDateTime = new Date(date);
+    appointmentDateTime.setHours(hours, minutes, 0, 0);
+    
+    appointment.appointmentDate = appointmentDateTime;
+    appointment.status = 'rescheduled';
+    appointment.rescheduledAt = new Date();
+    
+    this.appointments.set(numericId, appointment);
+    
+    return appointment;
+  }
 }
 
 export const storage = new MemStorage();
