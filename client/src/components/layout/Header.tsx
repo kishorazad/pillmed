@@ -82,7 +82,7 @@ const Header = () => {
                   if (user) {
                     setIsUserMenuOpen(!isUserMenuOpen);
                   } else {
-                    navigate('/profile');
+                    navigate('/login');
                   }
                 }} 
                 className="flex flex-col items-center cursor-pointer"

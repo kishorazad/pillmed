@@ -17,6 +17,7 @@ import { Link } from 'wouter';
 import OrderHistory from '@/components/orders/OrderHistory';
 import { Eye, EyeOff } from 'lucide-react';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
+import EmailOTPLogin from '@/components/auth/EmailOTPLogin';
 import AddressForm from '@/components/AddressForm';
 
 // Define User type for this component
@@ -61,6 +62,8 @@ const Profile = () => {
   const [formType, setFormType] = useState('login');
   // Track if forgot password form should be shown
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  // Track if OTP login form should be shown
+  const [showOtpLogin, setShowOtpLogin] = useState(false);
   
   // Reset form error states when switching between forms
   const resetFormErrors = () => {
@@ -433,6 +436,8 @@ const Profile = () => {
                           setFormType('login');
                           resetFormErrors();
                           loginForm.reset();
+                          setShowOtpLogin(false);
+                          setShowForgotPassword(false);
                           console.log('Setting formType to login');
                         }}
                       >
@@ -445,6 +450,8 @@ const Profile = () => {
                           setFormType('register');
                           resetFormErrors();
                           registerForm.reset();
+                          setShowOtpLogin(false);
+                          setShowForgotPassword(false);
                           console.log('Setting formType to register');
                         }}
                       >
@@ -456,6 +463,13 @@ const Profile = () => {
                     {formType === 'login' ? (
                       showForgotPassword ? (
                         <ForgotPasswordForm onSuccess={() => setShowForgotPassword(false)} />
+                      ) : showOtpLogin ? (
+                        <EmailOTPLogin 
+                          onLoginSuccess={() => {
+                            // Will redirect automatically with the user's role
+                          }}
+                          onBackToPassword={() => setShowOtpLogin(false)}
+                        />
                       ) : (
                         <Form {...loginForm}>
                           <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
@@ -503,7 +517,15 @@ const Profile = () => {
                               )}
                             />
                             
-                            <div className="flex justify-end">
+                            <div className="flex justify-between">
+                              <Button 
+                                variant="link" 
+                                type="button" 
+                                onClick={() => setShowOtpLogin(true)}
+                                className="text-sm p-0 h-auto"
+                              >
+                                Login with OTP
+                              </Button>
                               <Button 
                                 variant="link" 
                                 type="button" 

@@ -21,6 +21,7 @@ import Home from "./pages/Home";
 import ProductListing from "./pages/ProductListing";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
 import NotFound from "@/pages/not-found";
@@ -93,7 +94,7 @@ function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedR
           <h2 className="text-xl font-semibold mb-4">Authentication Required</h2>
           <p className="mb-4">You need to log in to access this area.</p>
           <a 
-            href="/profile"
+            href="/login"
             className="px-4 py-2 bg-primary text-white rounded"
           >
             Go to Login Page
@@ -134,6 +135,7 @@ function Router() {
       <Route path="/products/category/:categoryId" component={ProductListing} />
       <Route path="/products/:id" component={ProductDetail} />
       <Route path="/cart" component={Cart} />
+      <Route path="/login" component={Login} />
       <Route path="/profile" component={Profile} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/ai-healthcare" component={AIHealthcare} />
