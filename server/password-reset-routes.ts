@@ -3,7 +3,7 @@ import { storage } from './storage';
 import { mongoDBStorage } from './mongodb-storage';
 import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
-import { mockEmailService } from './mock-email-service';
+import { sendPasswordResetOTP, sendPasswordResetConfirmation } from './email-service';
 
 const router = Router();
 const scryptAsync = promisify(scrypt);
@@ -73,8 +73,8 @@ router.post('/request', async (req: Request, res: Response) => {
     
     console.log(`Generated OTP ${otp} for ${email} with expiration at ${new Date(expiresAt).toLocaleString()}`);
     
-    // Send OTP via mock email service
-    await mockEmailService.sendOtpEmail(email, otp);
+    // Send OTP via email service
+    await sendPasswordResetOTP(email, otp);
     
     return res.json({ success: true, message: 'OTP sent to email' });
   } catch (error) {
@@ -213,7 +213,7 @@ router.post('/reset', async (req: Request, res: Response) => {
     console.log(`Password reset successful for user: ${email}`);
     
     // Send confirmation email
-    await mockEmailService.sendPasswordResetConfirmation(email);
+    await sendPasswordResetConfirmation(email);
     
     return res.json({ success: true, message: 'Password reset successfully' });
   } catch (error) {

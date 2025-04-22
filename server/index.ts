@@ -5,6 +5,7 @@ import { importMedicinesFromCSV } from "./csv-import";
 import { importMedicinesFromExcel } from "./excel-import";
 import { mongoDBStorage } from './mongodb-storage';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import { optimizeDatabaseForLargeDatasets } from './index-optimizer';
 import { mongoDBService } from './services/mongodb-service';
 
@@ -76,18 +77,35 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Use memory session store
+// Configure session store based on MongoDB availability
+let sessionStore;
+if (global.useMongoStorage && process.env.MONGODB_URI) {
+  // Use MongoDB session store for persistence
+  sessionStore = MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    dbName: 'pillnow',
+    collectionName: 'sessions',
+    ttl: 24 * 60 * 60, // 1 day in seconds
+    autoRemove: 'native',
+    touchAfter: 24 * 3600 // Refresh session only once per day for better performance
+  });
+  console.log('MongoDB session store initialized');
+} else {
+  // Fallback to memory store (not recommended for production)
+  console.log('Memory session store initialized (sessions will be lost on server restart)');
+}
+
 app.use(session({
   secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
+  store: sessionStore,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 1 day
   }
 }));
-console.log('Memory session store initialized');
 
 app.use((req, res, next) => {
   const start = Date.now();

@@ -271,6 +271,49 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<boo
  * @param orderData Order information
  * @returns Promise resolving to true if successful
  */
+/**
+ * Send a password reset confirmation email
+ * @param email Recipient email address
+ * @returns Promise resolving to true if successful
+ */
+export async function sendPasswordResetConfirmation(email: string): Promise<boolean> {
+  const subject = 'Your PillNow Password Has Been Reset';
+  const text = `
+    Your PillNow account password has been successfully reset.
+    
+    If you did not make this change, please contact our support team immediately at support@pillnow.com.
+    
+    Thank you for using PillNow!
+  `;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <div style="background-color: #FF8F00; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">Password Reset Complete</h1>
+      </div>
+      
+      <div style="padding: 20px;">
+        <p>Hello,</p>
+        <p>Your PillNow account password has been successfully reset.</p>
+        
+        <div style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;">
+          <p style="margin: 10px 0; font-size: 16px;">If you did not make this change, please contact our support team immediately.</p>
+        </div>
+        
+        <p style="margin-top: 30px; margin-bottom: 5px;">Stay healthy,</p>
+        <p style="margin-top: 0;"><strong>The PillNow Team</strong></p>
+      </div>
+      
+      <div style="background-color: #f2f2f2; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #666;">
+        <p>&copy; ${new Date().getFullYear()} PillNow. All rights reserved.</p>
+        <p>This email was sent to ${email}</p>
+      </div>
+    </div>
+  `;
+  
+  return sendEmail(email, subject, text, html);
+}
+
 export async function sendOrderConfirmation(email: string, orderData: any): Promise<boolean> {
   const subject = 'Your PillNow Order Confirmation';
   

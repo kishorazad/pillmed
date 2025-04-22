@@ -1,26 +1,34 @@
-import { sendPasswordResetOTP, generateOTP } from './server/email-service.ts';
+// Instead of importing directly from the TS file, we'll use the API directly
+const fetch = require('node-fetch');
 
 async function testPasswordResetEmail() {
-  console.log("Testing Password Reset Email Function...");
-  
-  // Generate a random OTP
-  const otp = generateOTP(6);
-  console.log(`Generated OTP: ${otp}`);
+  console.log("Testing Password Reset Email API...");
   
   // Test email address (this will be redirected to delivered@resend.dev in development)
   const testEmail = "test@example.com";
   
   try {
-    console.log(`Sending password reset email to ${testEmail}...`);
-    const result = await sendPasswordResetOTP(testEmail, otp);
+    console.log(`Sending password reset request for ${testEmail}...`);
     
-    if (result) {
-      console.log("Password reset email sent successfully!");
+    // Use the forgot-password API endpoint which handles OTP generation and sending
+    const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: testEmail }),
+    });
+    
+    const data = await response.json();
+    console.log('API Response:', data);
+    
+    if (response.ok) {
+      console.log("Password reset request successful!");
     } else {
-      console.log("Failed to send password reset email.");
+      console.log("Failed to send password reset request.");
     }
   } catch (error) {
-    console.error("Error sending password reset email:", error);
+    console.error("Error with password reset API:", error);
   }
 }
 
