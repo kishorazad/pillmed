@@ -104,7 +104,7 @@ console.log(`Email service status: Resend [${resendInitialized ? 'READY' : 'NOT 
 }
 
 /**
- * Send an email using either Resend or SendGrid
+ * Send an email using ZohoMail as primary provider with fallbacks
  * @param to Recipient email address
  * @param subject Email subject
  * @param text Plain text email content
@@ -133,7 +133,22 @@ export async function sendEmail(to: string, subject: string, text: string, html?
       </div>${html}`;
     }
     
-    // Try sending with Resend first if configured
+    // Use ZohoMail as the primary provider since it's working reliably
+    if (process.env.ZOHOMAIL_USERNAME && zohomailInitialized) {
+      try {
+        console.log(`📧 [${timestamp}] ZOHOMAIL: Using ZohoMail as primary email provider`);
+        const result = await sendWithZohoMail(to, subject, text, html, fromEmail);
+        if (result) {
+          return true;
+        }
+        throw new Error('ZohoMail failed to send email');
+      } catch (error) {
+        console.error(`📧 [${timestamp}] ZOHOMAIL ERROR: Failed to send with primary provider`, error);
+        // Fall back to other providers
+      }
+    }
+    
+    // Try sending with Resend as a fallback
     if (process.env.RESEND_API_KEY && resendInitialized) {
       try {
         console.log(`📧 [${timestamp}] RESEND: Attempting to send email to ${to} with subject "${subject}"`);
@@ -336,14 +351,17 @@ async function sendWithZohoMail(to: string, subject: string, text: string, html:
     const timestamp = new Date().toISOString();
     console.log(`📧 [${timestamp}] ZOHOMAIL: Attempting to send email to ${to} with subject "${subject}"`);
     
-    // Use the configured Zoho Mail username as the sender if no fromEmail is provided
-    // Ensure we have a valid sender email
-    if (!fromEmail && !process.env.ZOHOMAIL_USERNAME) {
-      console.error(`📧 [${timestamp}] ZOHOMAIL ERROR: No sender email address provided`);
-      throw new Error('No sender email address provided');
+    // IMPORTANT: With ZohoMail we must use the ZohoMail account email as the sender
+    // Don't use the provided fromEmail as ZohoMail will reject it with "Relaying disallowed"
+    if (!process.env.ZOHOMAIL_USERNAME) {
+      console.error(`📧 [${timestamp}] ZOHOMAIL ERROR: ZOHOMAIL_USERNAME not set in environment`);
+      throw new Error('ZOHOMAIL_USERNAME not set in environment');
     }
     
-    const sender = fromEmail || process.env.ZOHOMAIL_USERNAME as string;
+    // Always use the ZohoMail account as the sender to prevent relaying errors
+    const sender = process.env.ZOHOMAIL_USERNAME as string;
+    console.log(`📧 [${timestamp}] ZOHOMAIL: Using sender email "${sender}" (ignoring provided fromEmail)`);
+    
     if (!sender.includes('@')) {
       console.error(`📧 [${timestamp}] ZOHOMAIL ERROR: Invalid sender email address: ${sender}`);
       throw new Error(`Invalid sender email address: ${sender}`);
