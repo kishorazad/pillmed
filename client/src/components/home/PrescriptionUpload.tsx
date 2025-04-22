@@ -242,7 +242,7 @@ const PrescriptionUpload = () => {
                 
                 <Button 
                   onClick={() => setIsDialogOpen(true)}
-                  className="bg-[#ff6f61] text-white hover:bg-[#ff6f61]/90 flex items-center gap-2"
+                  className="bg-[#FF8F00] text-white hover:bg-[#FF8F00]/90 flex items-center gap-2"
                 >
                   <Upload size={16} /> Upload Now
                 </Button>
@@ -251,15 +251,15 @@ const PrescriptionUpload = () => {
             
             {/* Voice search detected - showing transcript */}
             {transcript && (
-              <div className="mt-3 p-3 bg-[#f0f9f8] rounded-md border border-[#d4e9e7]">
+              <div className="mt-3 p-3 bg-[#fff8e1] rounded-md border border-[#FFD54F]">
                 <p className="text-sm font-medium mb-1">Voice search detected:</p>
                 <p className="text-sm text-gray-600">"{transcript}"</p>
                 {isSearching && (
                   <div className="flex items-center justify-center py-4">
                     <div className="w-8 h-8 relative">
-                      <div className="absolute top-0 w-2 h-2 rounded-full bg-[#10847e] animate-pulse"></div>
-                      <div className="absolute top-0 left-3 w-2 h-2 rounded-full bg-[#10847e] animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="absolute top-0 left-6 w-2 h-2 rounded-full bg-[#10847e] animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="absolute top-0 w-2 h-2 rounded-full bg-[#FF8F00] animate-pulse"></div>
+                      <div className="absolute top-0 left-3 w-2 h-2 rounded-full bg-[#FF8F00] animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="absolute top-0 left-6 w-2 h-2 rounded-full bg-[#FF8F00] animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                     </div>
                     <p className="ml-2 text-sm text-gray-600">Searching medicines...</p>
                   </div>
@@ -272,7 +272,7 @@ const PrescriptionUpload = () => {
                       {voiceSearchResults.map((result, index) => (
                         <div 
                           key={index} 
-                          className="p-2 bg-white rounded-md border border-gray-200 hover:border-[#10847e] hover:bg-[#f8f9fa] cursor-pointer transition-colors"
+                          className="p-2 bg-white rounded-md border border-gray-200 hover:border-[#FF8F00] hover:bg-[#fff8e1] cursor-pointer transition-colors"
                           onClick={() => {
                             // Add to cart logic would go here
                             toast({
@@ -283,7 +283,7 @@ const PrescriptionUpload = () => {
                         >
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium">{result}</p>
-                            <Button size="sm" variant="outline" className="text-[#10847e] border-[#10847e]">Add</Button>
+                            <Button size="sm" variant="outline" className="text-[#FF8F00] border-[#FF8F00]">Add</Button>
                           </div>
                         </div>
                       ))}
@@ -328,8 +328,8 @@ const PrescriptionUpload = () => {
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center cursor-pointer">
-                  <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-2">
-                    <FilePlus size={28} className="text-blue-600" />
+                  <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-2">
+                    <FilePlus size={28} className="text-[#FF8F00]" />
                   </div>
                   <p className="text-sm font-medium mb-1">Drag and drop or click to upload</p>
                   <p className="text-xs text-gray-500">Maximum file size: 5MB</p>
@@ -399,7 +399,7 @@ const PrescriptionUpload = () => {
             </Button>
             <Button 
               onClick={handleUpload}
-              className={isSuccess ? "bg-green-600 hover:bg-green-700" : "bg-[#10847e] hover:bg-[#10847e]/90"}
+              className={isSuccess ? "bg-green-600 hover:bg-green-700" : "bg-[#FF8F00] hover:bg-[#FF8F00]/90"}
               disabled={isUploading || isSuccess}
             >
               {isUploading ? (
