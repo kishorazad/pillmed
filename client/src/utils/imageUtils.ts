@@ -1,22 +1,24 @@
 /**
- * Utility function to handle product images
- * Replaces external images from pharmacy websites with a local PillNow image
- * to ensure privacy and avoid direct hotlinking from these sites
- * Also optimizes images for better performance
+ * Advanced image utility functions for optimizing image loading and web performance
+ * Handles caching, placeholder generation, lazy loading, and sanitization of external URLs
+ * Automatically blocks and replaces images from competitor pharmacy websites
  */
 
 // Default local image path (optimized)
 const DEFAULT_MEDICINE_IMAGE = '/pillnow.png';
+
+// Cache version for long-term browser caching - increment this when default images change
+const CACHE_VERSION = '2';
 
 // Low-quality image placeholders for faster initial load
 const DEFAULT_MEDICINE_PLACEHOLDER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
 // Image size constants for responsive loading
 const IMAGE_SIZES = {
-  THUMBNAIL: {width: 100, height: 100},
-  SMALL: {width: 200, height: 200},
-  MEDIUM: {width: 400, height: 400},
-  LARGE: {width: 800, height: 800}
+  THUMBNAIL: {width: 100, height: 100, quality: 70},
+  SMALL: {width: 200, height: 200, quality: 75},
+  MEDIUM: {width: 400, height: 400, quality: 80},
+  LARGE: {width: 800, height: 800, quality: 85}
 };
 
 // List of domains to block and replace with our default image
@@ -35,9 +37,33 @@ const BLOCKED_DOMAINS = [
   'medicaldialogues.in',
 ];
 
+// In-memory cache for image URL processing
+const imageUrlCache = new Map<string, string>();
+
 /**
- * Sanitizes an image URL by replacing blocked domain images with a default image
- * Adds size parameters for responsive loading when supported
+ * Gets the appropriate image format based on URL and browser support
+ * Prioritizes WebP for better compression when possible
+ */
+const getOptimalFormat = (url: string): string => {
+  // For local images, assume we can convert to WebP
+  if (!url.startsWith('http') && !url.startsWith('data:')) {
+    return 'webp';
+  }
+  
+  // For external images, keep the original format
+  if (url.includes('.jpg') || url.includes('.jpeg')) return 'jpeg';
+  if (url.includes('.png')) return 'png';
+  if (url.includes('.webp')) return 'webp';
+  if (url.includes('.gif')) return 'gif';
+  
+  // Default to WebP for local images without extension
+  return 'webp';
+};
+
+/**
+ * Enhanced image URL sanitizer with caching, optimization, and format conversion
+ * Uses best practices for image loading and performance
+ * 
  * @param imageUrl - The original image URL
  * @param size - Optional size preset for the image
  * @returns A safe image URL with optimization parameters
@@ -50,6 +76,14 @@ export const getSafeImageUrl = (
   if (!imageUrl) {
     return DEFAULT_MEDICINE_IMAGE;
   }
+  
+  // Create a cache key based on URL and size 
+  const cacheKey = `${imageUrl}|${size || 'original'}|v${CACHE_VERSION}`;
+  
+  // Check cache first to avoid reprocessing
+  if (imageUrlCache.has(cacheKey)) {
+    return imageUrlCache.get(cacheKey) as string;
+  }
 
   // Check if the URL contains any of the blocked domains
   const containsBlockedDomain = BLOCKED_DOMAINS.some(domain => 
@@ -58,17 +92,35 @@ export const getSafeImageUrl = (
   
   // Return default image if it contains a blocked domain
   if (containsBlockedDomain) {
-    return DEFAULT_MEDICINE_IMAGE;
+    const defaultWithVersion = `${DEFAULT_MEDICINE_IMAGE}?v=${CACHE_VERSION}`;
+    imageUrlCache.set(cacheKey, defaultWithVersion);
+    return defaultWithVersion;
   }
+  
+  // Process image URL with optimization parameters
+  let processedUrl = imageUrl;
   
   // If size is specified and the image is from our domain, apply size parameters for optimization
   if (size && !imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
     const dimensions = IMAGE_SIZES[size];
-    // Add a cache-busting parameter with a long expiry to improve caching
-    return `${imageUrl}?width=${dimensions.width}&height=${dimensions.height}&quality=85&v=1`;
+    const format = getOptimalFormat(imageUrl);
+    
+    // Create an optimized URL with width, height, quality and cache parameters
+    processedUrl = `${imageUrl}?width=${dimensions.width}&height=${dimensions.height}&quality=${dimensions.quality}&format=${format}&v=${CACHE_VERSION}`;
+    
+    // Cache the processed URL
+    imageUrlCache.set(cacheKey, processedUrl);
+    return processedUrl;
   }
   
-  return imageUrl;
+  // Add cache version to local images
+  if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http') && !imageUrl.includes('?')) {
+    processedUrl = `${imageUrl}?v=${CACHE_VERSION}`;
+  }
+  
+  // Store in cache and return
+  imageUrlCache.set(cacheKey, processedUrl);
+  return processedUrl;
 };
 
 /**

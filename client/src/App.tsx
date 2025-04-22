@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
@@ -207,19 +207,54 @@ function Router() {
 
 function AppContent() {
   const { fetchCart, user, tempUserId } = useStore();
+  const [componentsLoaded, setComponentsLoaded] = useState({
+    cartSidebar: false,
+    mobileNav: false,
+    contactButtons: false
+  });
   
   // Fetch cart data whenever user changes or on initial load
   useEffect(() => {
     fetchCart();
   }, [user, tempUserId, fetchCart]);
   
-  // Loading fallback component
-  const LoadingFallback = () => (
-    <div className="flex items-center justify-center p-4">
-      <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
-      <span>Loading...</span>
-    </div>
-  );
+  // Preload critical UI components after the main page loads
+  useEffect(() => {
+    // Add resource hints for important assets
+    const addResourceHint = (type: 'preload' | 'prefetch', href: string, as: string) => {
+      const link = document.createElement('link');
+      link.rel = type;
+      link.href = href;
+      link.as = as;
+      if (as === 'image') {
+        link.type = 'image/webp'; // Prefer WebP if available
+      }
+      document.head.appendChild(link);
+    };
+    
+    // Prefetch common assets that will be needed soon
+    addResourceHint('preload', '/api/categories', 'fetch');
+    addResourceHint('preload', '/api/products/featured', 'fetch');
+    
+    // Asynchronously load non-critical UI components
+    setTimeout(() => {
+      import("./components/cart/CartSidebar").then(() => {
+        setComponentsLoaded(prev => ({ ...prev, cartSidebar: true }));
+      });
+    }, 1000);
+    
+    setTimeout(() => {
+      import("./components/layout/MobileNavigation").then(() => {
+        setComponentsLoaded(prev => ({ ...prev, mobileNav: true }));
+      });
+    }, 1500);
+    
+    setTimeout(() => {
+      import("./components/contact/FloatingContactButtons").then(() => {
+        setComponentsLoaded(prev => ({ ...prev, contactButtons: true }));
+      });
+    }, 2000);
+  }, []);
   
   return (
     <div className="flex flex-col min-h-screen">
@@ -230,23 +265,28 @@ function AppContent() {
       </main>
       <Footer />
       
-      {/* Use Suspense for each lazy-loaded component */}
-      <Suspense fallback={null}>
-        <CartSidebar />
-      </Suspense>
+      {/* Conditionally render lazy-loaded components after they've been loaded */}
+      {componentsLoaded.cartSidebar && (
+        <Suspense fallback={null}>
+          <CartSidebar />
+        </Suspense>
+      )}
       
-      <Suspense fallback={null}>
-        <MobileNavigation />
-      </Suspense>
+      {componentsLoaded.mobileNav && (
+        <Suspense fallback={null}>
+          <MobileNavigation />
+        </Suspense>
+      )}
       
-      {/* WhatsApp and Call Buttons */}
-      <Suspense fallback={null}>
-        <FloatingContactButtons 
-          phoneNumber="8770762307"
-          whatsappNumber="918770762307"
-          message="Hello! I'm interested in ordering medicines from PillNow."
-        />
-      </Suspense>
+      {componentsLoaded.contactButtons && (
+        <Suspense fallback={null}>
+          <FloatingContactButtons 
+            phoneNumber="8770762307"
+            whatsappNumber="918770762307"
+            message="Hello! I'm interested in ordering medicines from PillNow."
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

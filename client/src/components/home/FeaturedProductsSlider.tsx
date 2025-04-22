@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Star, ShoppingCart } from 'lucide-react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { getSafeImageUrl } from '@/utils/imageUtils';
+import usePreload from '@/hooks/use-preload';
 
 interface Product {
   id: number;
@@ -27,6 +28,7 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
   loading = false 
 }) => {
   const { t } = useLanguage();
+  const preload = usePreload();
   const sliderRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -121,6 +123,33 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
       slider.addEventListener('scroll', checkScrollButtons);
       // Initial check
       checkScrollButtons();
+      
+      // Preload product detail images for better UX
+      if (displayProducts && displayProducts.length > 0) {
+        // Immediately preload the first 2 product images with high priority
+        displayProducts.slice(0, 2).forEach(product => {
+          if (product.imageUrl) {
+            preload.image(getSafeImageUrl(product.imageUrl, 'MEDIUM'), 'high');
+          }
+        });
+        
+        // Preload the rest with lower priority after a small delay
+        setTimeout(() => {
+          displayProducts.slice(2).forEach((product, index) => {
+            if (product.imageUrl) {
+              // Stagger the loading to avoid bandwidth contention
+              setTimeout(() => {
+                preload.image(getSafeImageUrl(product.imageUrl, 'MEDIUM'));
+              }, index * 150); // Delay increases for each product
+            }
+          });
+        }, 1000);
+        
+        // Prefetch the product detail API endpoints
+        displayProducts.slice(0, 3).forEach(product => {
+          preload.json(`/api/products/${product.id}`);
+        });
+      }
     }
     
     return () => {
@@ -128,7 +157,7 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
         slider.removeEventListener('scroll', checkScrollButtons);
       }
     };
-  }, []);
+  }, [displayProducts, preload]);
 
   const calculateDiscount = (price: number, discountedPrice?: number) => {
     if (!discountedPrice) return 0;

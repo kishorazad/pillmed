@@ -44,16 +44,30 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <div className="relative">
         <Link href={`/products/${product.id}`}>
           <div className="relative overflow-hidden w-full h-40">
-            {/* Low-quality placeholder */}
-            <div className="absolute inset-0 bg-gray-100 animate-pulse"></div>
+            {/* Low-quality placeholder with background shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-200 animate-pulse"></div>
             
-            {/* Actual image with loading optimization */}
+            {/* Actual image with advanced loading optimization */}
             <img 
               src={getSafeImageUrl(product.imageUrl, 'MEDIUM')} 
               alt={product.name} 
-              className="w-full h-40 object-contain relative z-10"
+              className="w-full h-40 object-contain relative z-10 transition-opacity duration-300"
               loading="lazy"
               decoding="async"
+              onLoad={(e) => {
+                // Remove shimmer effect once image is loaded
+                (e.target as HTMLImageElement).style.opacity = '1';
+                // Attempt to preload the product detail page image
+                if (product.id) {
+                  const link = document.createElement('link');
+                  link.rel = 'prefetch';
+                  link.href = getSafeImageUrl(product.imageUrl, 'LARGE');
+                  link.as = 'image';
+                  document.head.appendChild(link);
+                }
+              }}
+              style={{ opacity: '0' }} // Start transparent until loaded
+              fetchPriority="low"
             />
           </div>
         </Link>
