@@ -696,10 +696,15 @@ const EmailManagement: React.FC = () => {
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
                           onClick={() => setSuppressionPage(Math.max(1, suppressionPage - 1))}
                           disabled={suppressionPage === 1}
-                        />
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          <span>Previous</span>
+                        </Button>
                       </PaginationItem>
                       
                       {Array.from({ length: Math.min(5, suppressionData.pagination.pages) }, (_, i) => {
@@ -739,10 +744,15 @@ const EmailManagement: React.FC = () => {
                       )}
                       
                       <PaginationItem>
-                        <PaginationNext 
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
                           onClick={() => setSuppressionPage(Math.min(suppressionData.pagination.pages, suppressionPage + 1))}
                           disabled={suppressionPage === suppressionData.pagination.pages}
-                        />
+                        >
+                          <span>Next</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>
