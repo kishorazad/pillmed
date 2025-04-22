@@ -7,7 +7,7 @@
  * 3. Making multiple subsequent requests to verify session persistence
  */
 
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 const BASE_URL = 'http://localhost:5000';
 const TEST_USERNAME = 'admin';

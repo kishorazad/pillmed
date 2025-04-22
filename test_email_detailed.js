@@ -5,7 +5,7 @@
  * troubleshoot issues with the Resend API integration.
  */
 
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 // Config
 const BASE_URL = 'http://localhost:5000';
