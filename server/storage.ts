@@ -195,6 +195,17 @@ export interface IStorage {
   // User management methods (if not already covered)
   deleteUser(id: number): Promise<boolean>;
   
+  // Doctor & Appointment related methods
+  getDoctor(doctorId: string | number): Promise<any>;
+  getDoctorAvailabilityForDate(doctorId: string | number, date: string): Promise<any[]>;
+  checkSlotAvailability(doctorId: string | number, date: string, time: string): Promise<boolean>;
+  createAppointment(appointmentData: any): Promise<any>;
+  getAppointment(appointmentId: string): Promise<any>;
+  getDoctorAppointments(doctorId: string | number): Promise<any[]>;
+  getPatientAppointments(patientId: string | number): Promise<any[]>;
+  updateAppointmentStatus(appointmentId: string, status: string, cancellationReason?: string): Promise<any>;
+  rescheduleAppointment(appointmentId: string, date: string, time: string): Promise<any>;
+  
   // SEO related methods
   getSeoSettings(): Promise<SeoSettings | undefined>;
   saveSeoSettings(settings: SeoSettings): Promise<SeoSettings>;
