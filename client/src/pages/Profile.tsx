@@ -17,6 +17,7 @@ import { Link } from 'wouter';
 import OrderHistory from '@/components/orders/OrderHistory';
 import { Eye, EyeOff } from 'lucide-react';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
+import AddressForm from '@/components/AddressForm';
 
 // Define User type for this component
 interface User {
@@ -374,33 +375,27 @@ const Profile = () => {
                             )}
                           />
                           
-                          <FormField
-                            control={profileForm.control}
-                            name="address"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Delivery Address</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Your delivery address" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={profileForm.control}
-                            name="pincode"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Pincode</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Your area pincode" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          {/* New Address component with Google Maps integration */}
+                          <div className="space-y-2">
+                            <FormLabel>Delivery Address</FormLabel>
+                            <AddressForm 
+                              defaultAddress={{ 
+                                formattedAddress: profileForm.getValues("address") || "",
+                                postalCode: profileForm.getValues("pincode") || ""
+                              }}
+                              onAddressChange={(addressData) => {
+                                profileForm.setValue("address", addressData.formattedAddress);
+                                if (addressData.postalCode) {
+                                  profileForm.setValue("pincode", addressData.postalCode);
+                                }
+                              }}
+                              includeMap={true}
+                              form={profileForm}
+                              fieldName="address"
+                              showDetailedFields={true}
+                            />
+                            <FormMessage />
+                          </div>
                           
                           <div className="flex justify-between pt-2">
                             <Button type="submit" className="mr-2">Save Changes</Button>
