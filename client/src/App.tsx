@@ -37,6 +37,7 @@ import AdminCustomerManagement from "./pages/admin/customers";
 import AdminPharmacyManagement from "./pages/admin/pharmacies";
 import AdminDoctorManagement from "./pages/admin/doctors";
 import AdminAnalytics from "./pages/admin/analytics";
+import EmailManagement from "./pages/admin/EmailManagement";
 import PharmacyDashboard from "./pages/Pharmacy/Dashboard";
 import DoctorDashboard from "./pages/Doctor/Dashboard";
 import LaboratoryDashboard from "./pages/Laboratory/Dashboard";
@@ -166,6 +167,7 @@ function Router() {
       <RoleBasedRoute path="/admin/pharmacies" component={AdminPharmacyManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/doctors" component={AdminDoctorManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/analytics" component={AdminAnalytics} allowedRoles={['admin', 'subadmin']} />
+      <RoleBasedRoute path="/admin/email" component={EmailManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/pharmacy" component={PharmacyDashboard} allowedRoles={['pharmacy']} />
       <RoleBasedRoute path="/doctor" component={DoctorDashboard} allowedRoles={['doctor']} />
       <RoleBasedRoute path="/laboratory" component={LaboratoryDashboard} allowedRoles={['laboratory', 'hospital']} />

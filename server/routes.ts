@@ -16,6 +16,7 @@ import passwordResetRoutes from './password-reset-routes'; // Password reset rou
 import adminRoutes from './admin-routes'; // Admin panel routes
 import adminCustomerRoutes from './admin-customer-routes'; // Admin customer management routes
 import adminSeoRoutes from './admin-seo-routes'; // Admin SEO management routes
+import adminEmailRoutes from './admin-email-routes'; // Admin email tracking and management routes
 import mongodbUsersRoutes from './api-mongodb-users'; // MongoDB direct user management
 import appointmentRoutes from './appointment-routes'; // Doctor appointment booking routes
 import { z } from "zod";
@@ -106,6 +107,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount admin SEO management routes
   app.use('/api/admin', adminSeoRoutes);
+  
+  // Mount admin email management routes
+  app.use('/api/admin/email', adminEmailRoutes);
   
   // Mount doctor appointment routes
   app.use('/api/appointments', appointmentRoutes);
