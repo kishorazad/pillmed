@@ -1,17 +1,50 @@
 import { MailService } from '@sendgrid/mail';
 import { Resend } from 'resend';
 
-// Initialize SendGrid client
-const mailService = new MailService();
+// Initialize email services with better error handling and debugging
+console.log('Initializing email service...');
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Track email service availability
+let resendInitialized = false;
+let sendgridInitialized = false;
 
-// Set SendGrid API key if available
-if (process.env.SENDGRID_API_KEY) {
-  mailService.setApiKey(process.env.SENDGRID_API_KEY);
-} else if (!process.env.RESEND_API_KEY) {
-  console.warn('Neither SENDGRID_API_KEY nor RESEND_API_KEY found. Email functionality will not work.');
+// Initialize Resend client with explicit error handling
+let resend: Resend;
+try {
+  if (process.env.RESEND_API_KEY) {
+    console.log('RESEND_API_KEY found, initializing Resend client');
+    resend = new Resend(process.env.RESEND_API_KEY);
+    resendInitialized = true;
+    console.log('✅ Resend client initialized successfully');
+  } else {
+    console.warn('⚠️ RESEND_API_KEY not found, Resend email service will not be available');
+  }
+} catch (error) {
+  console.error('❌ Error initializing Resend client:', error);
+}
+
+// Initialize SendGrid client with explicit error handling
+let mailService: MailService;
+try {
+  if (process.env.SENDGRID_API_KEY) {
+    console.log('SENDGRID_API_KEY found, initializing SendGrid client');
+    mailService = new MailService();
+    mailService.setApiKey(process.env.SENDGRID_API_KEY);
+    sendgridInitialized = true;
+    console.log('✅ SendGrid client initialized successfully');
+  } else {
+    console.warn('⚠️ SENDGRID_API_KEY not found, SendGrid email service will not be available');
+  }
+} catch (error) {
+  console.error('❌ Error initializing SendGrid client:', error);
+}
+
+// Verify that at least one email service is available
+if (!resendInitialized && !sendgridInitialized) {
+  console.error('❌ NO EMAIL SERVICE AVAILABLE! Neither Resend nor SendGrid is properly configured.');
+  console.error('Email functionality will not work until at least one service is configured.');
+} else {
+  console.log(`Email service status: Resend [${resendInitialized ? 'READY' : 'NOT AVAILABLE'}], SendGrid [${sendgridInitialized ? 'READY' : 'NOT AVAILABLE'}]`);
 }
 
 /**

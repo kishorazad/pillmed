@@ -79,23 +79,32 @@ app.use(express.urlencoded({ extended: false }));
 
 // Configure session store based on MongoDB availability
 let sessionStore;
-if (global.useMongoStorage && process.env.MONGODB_URI) {
-  // Use MongoDB session store for persistence
-  sessionStore = MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    dbName: 'pillnow',
-    collectionName: 'sessions',
-    ttl: 24 * 60 * 60, // 1 day in seconds
-    autoRemove: 'native',
-    touchAfter: 24 * 3600 // Refresh session only once per day for better performance
-  });
-  console.log('MongoDB session store initialized');
+if (process.env.MONGODB_URI) {
+  try {
+    // Force MongoDB session store usage regardless of global.useMongoStorage
+    sessionStore = MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      dbName: 'pillnow',
+      collectionName: 'sessions',
+      ttl: 7 * 24 * 60 * 60, // 7 days in seconds
+      autoRemove: 'native',
+      touchAfter: 1 * 3600, // Refresh session once per hour for better security
+      crypto: {
+        secret: sessionSecret // Use the same secret for additional encryption
+      }
+    });
+    console.log('✅ MongoDB session store successfully initialized');
+  } catch (error) {
+    console.error('Failed to initialize MongoDB session store:', error);
+    console.log('⚠️ Falling back to memory session store');
+  }
 } else {
   // Fallback to memory store (not recommended for production)
-  console.log('Memory session store initialized (sessions will be lost on server restart)');
+  console.log('⚠️ Memory session store initialized (sessions will be lost on server restart)');
 }
 
-app.use(session({
+const sessionConfig: session.SessionOptions = {
+  name: 'pillnow.sid', // Custom session ID name for better security
   secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
@@ -103,9 +112,13 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 1 day
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for better user experience
+    sameSite: 'lax' // Protects against CSRF
   }
-}));
+};
+
+// Apply session middleware
+app.use(session(sessionConfig));
 
 app.use((req, res, next) => {
   const start = Date.now();
