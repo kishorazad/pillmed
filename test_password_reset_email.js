@@ -1,5 +1,5 @@
-// Instead of importing directly from the TS file, we'll use the API directly
-const fetch = require('node-fetch');
+// Using ES module syntax since package.json has "type": "module"
+import fetch from 'node-fetch';
 
 async function testPasswordResetEmail() {
   console.log("Testing Password Reset Email API...");
