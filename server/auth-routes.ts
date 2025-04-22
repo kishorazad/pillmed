@@ -2,8 +2,13 @@ import { Router, Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import fetch from 'node-fetch';
 import { randomBytes, scryptSync, createHash } from 'crypto';
-import { storage } from './storage';
+import { storage as memStorage } from './storage'; // In-memory storage
+import { mongoDBStorage } from './mongodb-storage'; // MongoDB storage
 import { sendPasswordResetOTP, sendWelcomeEmail, generateOTP } from './email-service';
+
+// Choose the appropriate storage based on global flag
+const storage = global.useMongoStorage ? mongoDBStorage : memStorage;
+console.log(`Auth routes using ${global.useMongoStorage ? 'MongoDB' : 'in-memory'} storage`);
 
 const router = Router();
 
@@ -268,6 +273,38 @@ router.post('/test-welcome-email', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Test welcome email error:', error);
     res.status(500).json({ message: 'Error processing request' });
+  }
+});
+
+/**
+ * Check if email exists (testing endpoint only)
+ * This endpoint should be disabled in production
+ */
+router.post('/check-email', async (req: Request, res: Response) => {
+  try {
+    // Only allow in development environment
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(404).json({ message: 'Endpoint not found' });
+    }
+    
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+    
+    // Check if user exists
+    const user = await storage.getUserByEmail(email);
+    
+    // Return existence status
+    res.status(200).json({ 
+      exists: !!user,
+      // Include user ID for testing only
+      userId: user ? user.id : null
+    });
+  } catch (error) {
+    console.error('Check email error:', error);
+    res.status(500).json({ message: 'Error checking email' });
   }
 });
 

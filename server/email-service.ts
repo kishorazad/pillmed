@@ -1,5 +1,7 @@
 import { MailService } from '@sendgrid/mail';
 import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 
 // Initialize email services with better error handling and debugging
 console.log('Initializing email service...');
@@ -7,6 +9,7 @@ console.log('Initializing email service...');
 // Track email service availability
 let resendInitialized = false;
 let sendgridInitialized = false;
+let zohomailInitialized = false;
 
 // Resend webhook and domain configuration
 const RESEND_WEBHOOK_SECRET = 'whsec_vCgU7bJn+iXjrIqA1lOQ5kW3WYkOiEnx';
@@ -47,12 +50,57 @@ try {
   console.error('❌ Error initializing SendGrid client:', error);
 }
 
+// Initialize Zoho Mail client with nodemailer
+let zohoTransporter: nodemailer.Transporter;
+try {
+  if (process.env.ZOHOMAIL_USERNAME && 
+      process.env.ZOHOMAIL_PASSWORD && 
+      process.env.ZOHOMAIL_HOST && 
+      process.env.ZOHOMAIL_PORT) {
+    console.log('ZOHOMAIL credentials found, initializing Zoho Mail client');
+    
+    const port = parseInt(process.env.ZOHOMAIL_PORT);
+    const secure = port === 465; // Use secure for port 465, otherwise false
+    
+    zohoTransporter = nodemailer.createTransport({
+      host: process.env.ZOHOMAIL_HOST,
+      port: port,
+      secure: secure,
+      auth: {
+        user: process.env.ZOHOMAIL_USERNAME,
+        pass: process.env.ZOHOMAIL_PASSWORD,
+      },
+      debug: true, // Enable extra logging for troubleshooting
+    });
+    
+    // Verify connection
+    zohoTransporter.verify((error) => {
+      if (error) {
+        console.error('❌ Error verifying Zoho Mail connection:', error);
+        zohomailInitialized = false;
+      } else {
+        zohomailInitialized = true;
+        console.log('✅ Zoho Mail client initialized and verified successfully');
+        // Log final email service status once ZohoMail initialization is complete
+        console.log(`✅ FINAL EMAIL SERVICE STATUS: Resend [${resendInitialized ? 'READY' : 'NOT AVAILABLE'}], SendGrid [${sendgridInitialized ? 'READY' : 'NOT AVAILABLE'}], ZohoMail [READY]`);
+      }
+    });
+  } else {
+    console.warn('⚠️ ZOHOMAIL credentials not complete, Zoho Mail service will not be available');
+  }
+} catch (error) {
+  console.error('❌ Error initializing Zoho Mail client:', error);
+}
+
 // Verify that at least one email service is available
-if (!resendInitialized && !sendgridInitialized) {
-  console.error('❌ NO EMAIL SERVICE AVAILABLE! Neither Resend nor SendGrid is properly configured.');
+if (!resendInitialized && !sendgridInitialized && !zohomailInitialized) {
+  console.error('❌ NO EMAIL SERVICE AVAILABLE! Neither Resend, SendGrid, nor Zoho Mail is properly configured.');
   console.error('Email functionality will not work until at least one service is configured.');
 } else {
-  console.log(`Email service status: Resend [${resendInitialized ? 'READY' : 'NOT AVAILABLE'}], SendGrid [${sendgridInitialized ? 'READY' : 'NOT AVAILABLE'}]`);
+  // Initial status
+console.log(`Email service status: Resend [${resendInitialized ? 'READY' : 'NOT AVAILABLE'}], SendGrid [${sendgridInitialized ? 'READY' : 'NOT AVAILABLE'}], ZohoMail [INITIALIZING...]`);
+
+// We'll log the final status once ZohoMail is fully initialized
 }
 
 /**
@@ -74,7 +122,7 @@ export async function sendEmail(to: string, subject: string, text: string, html?
     
     // Debug information for all email sending attempts
     console.log(`📧 [${timestamp}] EMAIL REQUEST: to=${originalToEmail}, FORCED TO=${to}, subject="${subject}", fromEmail=${fromEmail}`);
-    console.log(`📧 [${timestamp}] EMAIL SERVICES: Resend=${resendInitialized ? 'READY' : 'NOT AVAILABLE'}, SendGrid=${sendgridInitialized ? 'READY' : 'NOT AVAILABLE'}`);
+    console.log(`📧 [${timestamp}] EMAIL SERVICES: Resend=${resendInitialized ? 'READY' : 'NOT AVAILABLE'}, SendGrid=${sendgridInitialized ? 'READY' : 'NOT AVAILABLE'}, ZohoMail=${zohomailInitialized ? 'READY' : 'NOT AVAILABLE'}`);
     
     // Add email debugging information to subject/content for better traceability
     subject = `[TEST TO: ${originalToEmail}] ${subject}`;
@@ -223,16 +271,27 @@ export async function sendEmail(to: string, subject: string, text: string, html?
           return sendWithSendGrid(to, subject, text, html, fromEmail);
         }
         
+        // Fall back to ZohoMail if available
+        if (process.env.ZOHOMAIL_USERNAME && zohomailInitialized) {
+          console.log(`📧 [${timestamp}] RESEND ERROR: Falling back to ZohoMail`);
+          return sendWithZohoMail(to, subject, text, html, fromEmail);
+        }
+        
         console.error(`📧 [${timestamp}] RESEND ERROR: No fallback available, email will not be sent`);
         return false;
       }
     } 
     // Use SendGrid if Resend is not configured
-    else if (process.env.SENDGRID_API_KEY) {
+    else if (process.env.SENDGRID_API_KEY && sendgridInitialized) {
       return sendWithSendGrid(to, subject, text, html, fromEmail);
     } 
+    // Use ZohoMail if neither Resend nor SendGrid is configured
+    else if (process.env.ZOHOMAIL_USERNAME && zohomailInitialized) {
+      console.log(`📧 [${timestamp}] Using ZohoMail as primary sender since Resend and SendGrid are not available`);
+      return sendWithZohoMail(to, subject, text, html, fromEmail);
+    }
     else {
-      console.error('Cannot send email: Neither RESEND_API_KEY nor SENDGRID_API_KEY configured');
+      console.error('Cannot send email: Neither Resend, SendGrid, nor ZohoMail is properly configured');
       return false;
     }
   } catch (error) {
@@ -258,6 +317,55 @@ async function sendWithSendGrid(to: string, subject: string, text: string, html:
     return true;
   } catch (error) {
     console.error('Error sending email via SendGrid:', error);
+    
+    // Try ZohoMail as a last resort
+    if (zohomailInitialized) {
+      console.log(`SendGrid failed, falling back to ZohoMail for delivery to ${to}`);
+      return sendWithZohoMail(to, subject, text, html, fromEmail);
+    }
+    
+    return false;
+  }
+}
+
+/**
+ * Send an email using ZohoMail (helper function)
+ */
+async function sendWithZohoMail(to: string, subject: string, text: string, html: string | undefined, fromEmail: string): Promise<boolean> {
+  try {
+    const timestamp = new Date().toISOString();
+    console.log(`📧 [${timestamp}] ZOHOMAIL: Attempting to send email to ${to} with subject "${subject}"`);
+    
+    // Use the configured Zoho Mail username as the sender if no fromEmail is provided
+    // Ensure we have a valid sender email
+    if (!fromEmail && !process.env.ZOHOMAIL_USERNAME) {
+      console.error(`📧 [${timestamp}] ZOHOMAIL ERROR: No sender email address provided`);
+      throw new Error('No sender email address provided');
+    }
+    
+    const sender = fromEmail || process.env.ZOHOMAIL_USERNAME as string;
+    if (!sender.includes('@')) {
+      console.error(`📧 [${timestamp}] ZOHOMAIL ERROR: Invalid sender email address: ${sender}`);
+      throw new Error(`Invalid sender email address: ${sender}`);
+    }
+    
+    const mailOptions = {
+      from: sender,
+      to: to,
+      subject: subject,
+      text: text,
+      html: html || text
+    };
+    
+    // Send email with Zoho Mail
+    const info = await zohoTransporter.sendMail(mailOptions);
+    
+    console.log(`📧 [${timestamp}] ZOHOMAIL: Email sent successfully to ${to}`);
+    console.log(`📧 [${timestamp}] ZOHOMAIL: Message ID: ${info.messageId}`);
+    
+    return true;
+  } catch (error) {
+    console.error('Error sending email via ZohoMail:', error);
     return false;
   }
 }
