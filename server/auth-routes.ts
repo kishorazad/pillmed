@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import fetch from 'node-fetch';
-import { randomBytes, scryptSync, createHash } from 'crypto';
+import { randomBytes, scryptSync, createHash, timingSafeEqual } from 'crypto';
 import { storage as memStorage, IStorage } from './storage'; // In-memory storage
 import { mongoDBStorage } from './mongodb-storage'; // MongoDB storage
 import { mongoDBService } from './services/mongodb-service'; // MongoDB service
-import { sendPasswordResetOTP, sendWelcomeEmail, generateOTP } from './email-service';
+import { sendPasswordResetOTP, sendWelcomeEmail, generateOTP, sendLoginOTP } from './email-service';
 
 // Helper function to get the appropriate storage at runtime
 function getStorage(): IStorage {
@@ -19,6 +19,12 @@ const router = Router();
 // Google OAuth client
 const googleClient = new OAuth2Client();
 
+// OTP storage - In production this should be in Redis or a database
+const otpStore = new Map<string, { otp: string; expires: number; userId?: number; }>();
+
+// Store active login sessions - In production this should be in Redis or a database
+const activeLoginSessions = new Map<string, { userId: number; expires: number; }>(); 
+
 // Helper function to generate a secure password
 function generateSecurePassword(): string {
   return randomBytes(16).toString('hex');
@@ -29,6 +35,19 @@ function hashPassword(password: string): string {
   const salt = randomBytes(16).toString('hex');
   const hash = scryptSync(password, salt, 64).toString('hex');
   return `${hash}.${salt}`;
+}
+
+// Helper function to verify a password
+function verifyPassword(password: string, hashedPassword: string): boolean {
+  try {
+    const [hash, salt] = hashedPassword.split('.');
+    const hashBuffer = Buffer.from(hash, 'hex');
+    const suppliedHashBuffer = scryptSync(password, salt, 64);
+    return timingSafeEqual(hashBuffer, suppliedHashBuffer);
+  } catch (error) {
+    console.error('Password verification error:', error);
+    return false;
+  }
 }
 
 /**
@@ -326,6 +345,226 @@ router.post('/check-email', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Check email error:', error);
     res.status(500).json({ message: 'Error checking email' });
+  }
+});
+
+/**
+ * Regular login with username/email and password
+ */
+router.post('/login', async (req: Request, res: Response) => {
+  try {
+    console.log('Processing login request');
+    const { username, email, password } = req.body;
+    
+    if ((!username && !email) || !password) {
+      return res.status(400).json({ message: 'Username/email and password are required' });
+    }
+    
+    // Use dynamic storage selection
+    const storage = getStorage();
+    console.log(`Login using ${global.useMongoStorage ? 'MongoDB' : 'in-memory'} storage`);
+    
+    // Find user by username or email
+    let user;
+    if (username) {
+      console.log(`Attempting to find user by username: ${username}`);
+      user = await storage.getUserByUsername(username);
+    } else if (email) {
+      console.log(`Attempting to find user by email: ${email}`);
+      user = await storage.getUserByEmail(email);
+    }
+    
+    // If user not found or password doesn't match
+    if (!user) {
+      console.log('User not found');
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    console.log(`User found with ID: ${user.id}`);
+    
+    // Verify password
+    const passwordValid = verifyPassword(password, user.password);
+    if (!passwordValid) {
+      console.log('Password verification failed');
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    console.log('Password verification successful');
+    
+    // Set user session
+    if (req.session) {
+      req.session.userId = user.id;
+      req.session.isAuthenticated = true;
+      console.log(`Session established for user ID: ${user.id}`);
+    }
+    
+    // Return user data (excluding password)
+    const { password: _, ...userData } = user;
+    console.log('Login successful');
+    
+    res.status(200).json(userData);
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Authentication failed' });
+  }
+});
+
+/**
+ * Logout endpoint
+ */
+router.post('/logout', (req: Request, res: Response) => {
+  try {
+    if (req.session) {
+      // Destroy the session
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Error destroying session:', err);
+          return res.status(500).json({ message: 'Logout failed' });
+        }
+        
+        res.status(200).json({ message: 'Logged out successfully' });
+      });
+    } else {
+      res.status(200).json({ message: 'Already logged out' });
+    }
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ message: 'Logout failed' });
+  }
+});
+
+/**
+ * Get current user
+ */
+router.get('/me', async (req: Request, res: Response) => {
+  try {
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Use dynamic storage selection
+    const storage = getStorage();
+    
+    // Get user data
+    const user = await storage.getUser(req.session.userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Return user data without password
+    const { password: _, ...userData } = user;
+    res.status(200).json(userData);
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({ message: 'Failed to get user data' });
+  }
+});
+
+/**
+ * Request OTP login
+ * Generates and sends an OTP for login via email
+ */
+router.post('/request-login-otp', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+    
+    // Use dynamic storage selection
+    const storage = getStorage();
+    
+    // Check if user exists
+    const user = await storage.getUserByEmail(email);
+    
+    if (!user) {
+      // For security reasons, still return success even if user doesn't exist
+      return res.status(200).json({ 
+        message: 'If an account with that email exists, a login code has been sent',
+        success: false
+      });
+    }
+    
+    // Generate OTP
+    const otp = generateOTP(6);
+    
+    // Store OTP with expiration (15 minutes)
+    const expiresAt = Date.now() + 15 * 60 * 1000;
+    otpStore.set(email, { otp, expires: expiresAt, userId: user.id });
+    
+    // Send login OTP email
+    const emailSent = await sendLoginOTP(email, otp);
+    
+    if (emailSent) {
+      console.log(`Login OTP ${otp} sent to ${email} for user ID ${user.id}`);
+      
+      res.status(200).json({ 
+        message: 'Login code sent to your email',
+        success: true,
+        // Include OTP for testing purposes only
+        testOtp: process.env.NODE_ENV === 'production' ? undefined : otp
+      });
+    } else {
+      console.error(`Failed to send login OTP to ${email}`);
+      res.status(500).json({ message: 'Failed to send login code', success: false });
+    }
+  } catch (error) {
+    console.error('Request login OTP error:', error);
+    res.status(500).json({ message: 'Error processing request', success: false });
+  }
+});
+
+/**
+ * Verify OTP login
+ * Validates the OTP sent to email and logs in the user
+ */
+router.post('/verify-login-otp', async (req: Request, res: Response) => {
+  try {
+    const { email, otp } = req.body;
+    
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+    
+    // Check if OTP exists and is valid
+    const otpData = otpStore.get(email);
+    
+    if (!otpData || otpData.otp !== otp) {
+      return res.status(401).json({ message: 'Invalid or expired OTP' });
+    }
+    
+    // Check if OTP is expired
+    if (otpData.expires < Date.now()) {
+      // Delete expired OTP
+      otpStore.delete(email);
+      return res.status(401).json({ message: 'OTP has expired' });
+    }
+    
+    // OTP is valid, get the user
+    const storage = getStorage();
+    const user = await storage.getUser(otpData.userId as number);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Clear the OTP
+    otpStore.delete(email);
+    
+    // Set user session
+    if (req.session) {
+      req.session.userId = user.id;
+      req.session.isAuthenticated = true;
+    }
+    
+    // Return user data (excluding password)
+    const { password: _, ...userData } = user;
+    res.status(200).json(userData);
+  } catch (error) {
+    console.error('Verify login OTP error:', error);
+    res.status(500).json({ message: 'Authentication failed' });
   }
 });
 
