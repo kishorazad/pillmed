@@ -94,19 +94,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
+      console.log('Attempting login for user:', credentials.username);
+      
+      // Get the temp user ID to transfer cart
+      const { tempUserId } = useStore.getState();
+      
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({ 
+          ...credentials,
+          tempUserId // Include tempUserId for cart transfer
+        }),
         credentials: 'include' // Important for cookies
       });
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Login error:', errorData);
         throw new Error(errorData.message || 'Login failed');
       }
       
       const userData = await response.json();
+      console.log('Login successful, user data received:', {
+        id: userData.id,
+        username: userData.username,
+        role: userData.role
+      });
+      
       return userData;
     },
     onSuccess: (userData: User) => {
@@ -121,37 +136,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome back, ${userData.name || userData.username}!`,
       });
       
-      // Redirect based on user role
-      if (userData.role) {
-        const role = userData.role.toLowerCase();
-        
-        // Small delay to ensure session is properly saved
-        setTimeout(() => {
-          switch (role) {
-            case 'admin':
-              window.location.href = '/admin';
-              break;
-            case 'doctor':
-              window.location.href = '/doctor';
-              break;
-            case 'chemist':
-              window.location.href = '/chemist';
-              break;
-            case 'pharmacy':
-              window.location.href = '/pharmacy';
-              break;
-            case 'hospital':
-            case 'laboratory':
-              window.location.href = '/laboratory';
-              break;
-            case 'delivery':
-              window.location.href = '/delivery';
-              break;
-            default:
-              window.location.href = '/profile';
+      // Fetch user data to verify session is working
+      setTimeout(() => {
+        refetchUser().then(result => {
+          console.log('Session verification after login:', result.data ? 'Session valid' : 'Session invalid');
+          
+          // Redirect based on user role - only if session is still valid
+          if (result.data && userData.role) {
+            const role = userData.role.toLowerCase();
+            
+            switch (role) {
+              case 'admin':
+                window.location.href = '/admin';
+                break;
+              case 'doctor':
+                window.location.href = '/doctor';
+                break;
+              case 'chemist':
+                window.location.href = '/chemist';
+                break;
+              case 'pharmacy':
+                window.location.href = '/pharmacy';
+                break;
+              case 'hospital':
+              case 'laboratory':
+                window.location.href = '/laboratory';
+                break;
+              case 'delivery':
+                window.location.href = '/delivery';
+                break;
+              default:
+                window.location.href = '/profile';
+            }
           }
-        }, 500);
-      }
+        });
+      }, 500); // Small delay to ensure session is properly saved
     },
     onError: (error: Error) => {
       toast({
@@ -212,37 +231,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome, ${userData.name}!`,
       });
       
-      // Redirect based on user role
-      if (userData.role) {
-        const role = userData.role.toLowerCase();
-        
-        // Small delay to ensure session is properly saved
-        setTimeout(() => {
-          switch (role) {
-            case 'admin':
-              window.location.href = '/admin';
-              break;
-            case 'doctor':
-              window.location.href = '/doctor';
-              break;
-            case 'chemist':
-              window.location.href = '/chemist';
-              break;
-            case 'pharmacy':
-              window.location.href = '/pharmacy';
-              break;
-            case 'hospital':
-            case 'laboratory':
-              window.location.href = '/laboratory';
-              break;
-            case 'delivery':
-              window.location.href = '/delivery';
-              break;
-            default:
-              window.location.href = '/profile';
+      // Fetch user data to verify session is working
+      setTimeout(() => {
+        refetchUser().then(result => {
+          console.log('Session verification after registration:', result.data ? 'Session valid' : 'Session invalid');
+          
+          // Redirect based on user role - only if session is still valid
+          if (result.data && userData.role) {
+            const role = userData.role.toLowerCase();
+            
+            switch (role) {
+              case 'admin':
+                window.location.href = '/admin';
+                break;
+              case 'doctor':
+                window.location.href = '/doctor';
+                break;
+              case 'chemist':
+                window.location.href = '/chemist';
+                break;
+              case 'pharmacy':
+                window.location.href = '/pharmacy';
+                break;
+              case 'hospital':
+              case 'laboratory':
+                window.location.href = '/laboratory';
+                break;
+              case 'delivery':
+                window.location.href = '/delivery';
+                break;
+              default:
+                window.location.href = '/profile';
+            }
+          } else {
+            // Session is not valid - likely lost during registration process
+            console.error('Session lost after registration, redirecting to login page');
+            toast({
+              title: "Registration completed",
+              description: "Please log in with your new credentials",
+              variant: "default"
+            });
+            
+            window.location.href = '/login';
           }
-        }, 500);
-      }
+        });
+      }, 500); // Small delay to ensure session is properly saved
     },
     onError: (error: Error) => {
       console.error('Register mutation error:', error);
@@ -257,16 +290,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      console.log('Attempting logout');
+      
       const response = await fetch('/api/logout', {
         method: 'POST',
-        credentials: 'include' // Important for cookies
+        credentials: 'include', // Important for cookies
+        cache: 'no-store' // Ensure no caching
       });
       
+      console.log('Logout response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Logout failed');
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Logout error:', errorData);
+        throw new Error(errorData.message || 'Logout failed');
       }
+      
+      // Return the response data
+      const data = await response.json().catch(() => ({ success: true }));
+      console.log('Logout successful:', data);
+      
+      return data;
     },
     onSuccess: () => {
+      console.log('Logout mutation completed successfully');
+      
       // Clear user from query cache
       queryClient.setQueryData(['/api/user'], null);
       
@@ -281,8 +329,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been successfully logged out",
       });
       
-      // Redirect to home page
-      window.location.href = '/';
+      // Small delay to ensure cookie is properly cleared before redirect
+      setTimeout(() => {
+        // Verify session cleared by checking user endpoint
+        fetch('/api/session-check', { credentials: 'include' })
+          .then(res => res.json())
+          .then(sessionInfo => {
+            console.log('Session check after logout:', sessionInfo);
+            
+            // Redirect to home page regardless of session check outcome
+            window.location.href = '/';
+          })
+          .catch(() => {
+            // Redirect anyway if check fails
+            window.location.href = '/';
+          });
+      }, 300);
     },
     onError: (error: Error) => {
       toast({

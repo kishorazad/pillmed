@@ -979,45 +979,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Session cookie before destroy:`, req.session.cookie);
       console.log(`User in session before destroy:`, (req.session as any).user);
       
-      // First regenerate the session to enhance security
-      req.session.regenerate((regErr) => {
-        if (regErr) {
-          console.error("Error regenerating session during logout:", regErr);
-          // Continue with destruction anyway
+      // Simplified and more reliable logout process
+      req.session.destroy(err => {
+        if (err) {
+          console.error("Error destroying session:", err);
+          return res.status(500).json({ message: "Error logging out" });
         }
         
-        // Clear user data from session 
-        (req.session as any).user = null;
+        console.log(`Session ${sessionID} successfully destroyed`);
         
-        // Save the cleared session before destroying
-        req.session.save((saveErr) => {
-          if (saveErr) {
-            console.error("Error saving cleared session:", saveErr);
-            // Continue with destruction anyway
-          }
-          
-          // Destroy the session completely
-          req.session.destroy(err => {
-            if (err) {
-              console.error("Error destroying session:", err);
-              return res.status(500).json({ message: "Error logging out" });
-            }
-            
-            console.log(`Session ${sessionID} successfully destroyed`);
-            
-            // Clear cookie with the correct name and all necessary cookie options
-            res.clearCookie('pillnow.sid', {
-              path: '/', 
-              httpOnly: true,
-              secure: false, // Match the cookie setting from session config
-              sameSite: 'lax',
-              maxAge: 0 // Immediate expiration
-            });
-            
-            // Ensure the browser receives a 200 OK status
-            res.status(200).json({ success: true, message: "Logged out successfully" });
-          });
+        // Clear cookie with the correct name and all necessary cookie options
+        res.clearCookie('pillnow.sid', {
+          path: '/', 
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production', // Match the cookie setting from session config
+          sameSite: 'lax',
+          maxAge: 0 // Immediate expiration
         });
+        
+        // Ensure the browser receives a 200 OK status
+        res.status(200).json({ success: true, message: "Logged out successfully" });
       });
     } else {
       console.log("No active session to clear");
@@ -1307,9 +1288,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: user.name
       };
       
-      // Add additional debug information to session
-      (req.session as any).loginTime = new Date().toISOString();
-      (req.session as any).userAgent = req.headers['user-agent'];
+      // Store the user data before session regeneration
+      const userData = {
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          email: user.email,
+          name: user.name
+        },
+        loginTime: new Date().toISOString(),
+        userAgent: req.headers['user-agent']
+      };
       
       // Force regenerate session ID to prevent session fixation
       req.session.regenerate((regenerateErr) => {
@@ -1317,6 +1307,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('Session regeneration error during login:', regenerateErr);
           return res.status(500).json({ message: "Error creating secure session" });
         }
+        
+        // Restore user data to the new session
+        (req.session as any).user = userData.user;
+        (req.session as any).loginTime = userData.loginTime;
+        (req.session as any).userAgent = userData.userAgent;
+        
+        // Configure session cookie
+        req.session.cookie.path = '/';
         
         // Now save the session with the new session ID
         req.session.save((saveErr) => {
