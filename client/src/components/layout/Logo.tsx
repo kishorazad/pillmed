@@ -15,14 +15,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'medium' }) => {
   return (
     <Link href="/">
       <div className={`flex items-center ${className} cursor-pointer`}>
-        <img 
-          src="/pillnow.png" 
-          alt="PillNow Logo" 
-          className={`${getSizeClass()}`}
-          width="500"
-          height="89"
-          style={{ objectFit: 'contain' }}
-        />
+        <span className="text-orange-500 font-bold text-xl">PILL<span className="text-amber-400">NOW</span></span>
       </div>
     </Link>
   );
