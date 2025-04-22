@@ -13,7 +13,9 @@ import {
   LogOut,
   Pill,
   Building,
-  Stethoscope
+  Stethoscope,
+  Mail,
+  MailWarning
 } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
 import { useAuth } from "@/lib/auth-provider";
@@ -62,6 +64,11 @@ const AdminNavigation = () => {
       label: 'Medicine Management',
       icon: <Pill className="h-5 w-5" />,
       href: '/admin/medicines'
+    },
+    {
+      label: 'Email Management',
+      icon: <Mail className="h-5 w-5" />,
+      href: '/admin/email'
     },
     {
       label: 'Analytics',
