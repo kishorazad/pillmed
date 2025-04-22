@@ -29,9 +29,17 @@ export async function sendEmail(to: string, subject: string, text: string, html?
     // Try sending with Resend first if configured
     if (process.env.RESEND_API_KEY) {
       try {
+        // Use Resend's test email in development environment (required by Resend for unverified domains)
+        const recipient = process.env.NODE_ENV === 'production' ? to : 'delivered@resend.dev';
+        
+        // If using test recipient, log the original intended recipient for reference
+        if (recipient !== to) {
+          console.log(`Email would be sent to: ${to} (using test recipient in development: ${recipient})`);
+        }
+        
         const data = await resend.emails.send({
           from: fromEmail,
-          to,
+          to: recipient,
           subject,
           text,
           html: html || text,
