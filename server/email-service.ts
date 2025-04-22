@@ -8,6 +8,11 @@ console.log('Initializing email service...');
 let resendInitialized = false;
 let sendgridInitialized = false;
 
+// Resend webhook and domain configuration
+const RESEND_WEBHOOK_SECRET = 'whsec_vCgU7bJn+iXjrIqA1lOQ5kW3WYkOiEnx';
+const VERIFIED_DOMAIN = 'pillnow.com';
+const USE_VERIFIED_DOMAIN = true; // Set to true now that domain is verified
+
 // Initialize Resend client with explicit error handling
 let resend: Resend;
 try {
@@ -16,6 +21,8 @@ try {
     resend = new Resend(process.env.RESEND_API_KEY);
     resendInitialized = true;
     console.log('✅ Resend client initialized successfully');
+    console.log(`✅ Using verified domain: ${VERIFIED_DOMAIN}`);
+    console.log('✅ Resend webhook secret configured');
   } else {
     console.warn('⚠️ RESEND_API_KEY not found, Resend email service will not be available');
   }
@@ -65,12 +72,15 @@ export async function sendEmail(to: string, subject: string, text: string, html?
         console.log(`📧 RESEND: Attempting to send email to ${to} with subject "${subject}"`);
         console.log(`📧 RESEND: API key exists and client initialized: ${!!resend}`);
         
-        // Use Resend's test email in development environment (required by Resend for unverified domains)
-        const recipient = process.env.NODE_ENV === 'production' ? to : 'delivered@resend.dev';
+        // Use the real recipient since our domain is now verified
+        let recipient = to;
         
-        // If using test recipient, log the original intended recipient for reference
-        if (recipient !== to) {
+        // Only use test email if domain is not verified and we're in development mode
+        if (!USE_VERIFIED_DOMAIN && process.env.NODE_ENV !== 'production') {
+          recipient = 'delivered@resend.dev';
           console.log(`📧 RESEND: Email would be sent to: ${to} (using test recipient in development: ${recipient})`);
+        } else {
+          console.log(`📧 RESEND: Email will be sent to the actual recipient: ${to}`);
         }
         
         console.log(`📧 RESEND: Making API call with data: {
