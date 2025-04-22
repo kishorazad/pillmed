@@ -2,13 +2,17 @@ import { Router, Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import fetch from 'node-fetch';
 import { randomBytes, scryptSync, createHash } from 'crypto';
-import { storage as memStorage } from './storage'; // In-memory storage
+import { storage as memStorage, IStorage } from './storage'; // In-memory storage
 import { mongoDBStorage } from './mongodb-storage'; // MongoDB storage
+import { mongoDBService } from './services/mongodb-service'; // MongoDB service
 import { sendPasswordResetOTP, sendWelcomeEmail, generateOTP } from './email-service';
 
-// Choose the appropriate storage based on global flag
-const storage = global.useMongoStorage ? mongoDBStorage : memStorage;
-console.log(`Auth routes using ${global.useMongoStorage ? 'MongoDB' : 'in-memory'} storage`);
+// Helper function to get the appropriate storage at runtime
+function getStorage(): IStorage {
+  const storage = global.useMongoStorage ? mongoDBStorage : memStorage;
+  console.log(`Auth routes using ${global.useMongoStorage ? 'MongoDB' : 'in-memory'} storage (type: ${storage.constructor.name})`);
+  return storage;
+}
 
 const router = Router();
 
@@ -50,6 +54,10 @@ router.post('/google', async (req: Request, res: Response) => {
     if (!payload) {
       return res.status(401).json({ message: 'Invalid token' });
     }
+    
+    // Use dynamic storage selection
+    const storage = getStorage();
+    console.log('Auth routes using storage type:', storage.constructor.name);
     
     // Check if user exists
     const existingUser = await storage.getUserByEmail(payload.email || '');
@@ -108,6 +116,9 @@ router.post('/facebook', async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Invalid Facebook token' });
     }
     
+    // Use dynamic storage selection
+    const storage = getStorage();
+    
     // Check if user exists
     const existingUser = await storage.getUserByEmail(user.email || '');
     
@@ -165,6 +176,9 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
       .update(`${verificationId}:${otp}`)
       .digest('hex');
     
+    // Use dynamic storage selection
+    const storage = getStorage();
+    
     // Check if user exists by phone
     const existingUser = await storage.getUserByPhone(phoneNumber);
     
@@ -213,6 +227,9 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
     }
+    
+    // Use dynamic storage selection
+    const storage = getStorage();
     
     // Check if user exists
     const user = await storage.getUserByEmail(email);
@@ -292,6 +309,10 @@ router.post('/check-email', async (req: Request, res: Response) => {
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
     }
+    
+    // Use dynamic storage selection
+    const storage = getStorage();
+    console.log('check-email endpoint using storage:', storage.constructor.name);
     
     // Check if user exists
     const user = await storage.getUserByEmail(email);
