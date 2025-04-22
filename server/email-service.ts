@@ -1,13 +1,17 @@
 import { MailService } from '@sendgrid/mail';
+import { Resend } from 'resend';
 
 // Initialize SendGrid client
 const mailService = new MailService();
 
-// Set API key if available
+// Initialize Resend client
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Set SendGrid API key if available
 if (process.env.SENDGRID_API_KEY) {
   mailService.setApiKey(process.env.SENDGRID_API_KEY);
-} else {
-  console.warn('SENDGRID_API_KEY not found. Email functionality will not work.');
+} else if (!process.env.RESEND_API_KEY) {
+  console.warn('Neither SENDGRID_API_KEY nor RESEND_API_KEY found. Email functionality will not work.');
 }
 
 /**

@@ -11,7 +11,7 @@ function hashPassword(password) {
 async function updateAdminPassword() {
   const uri = process.env.MONGODB_URI;
   // Change this to your desired new password
-  const newPassword = "admin123"; 
+  const newPassword = "admin456"; // Changing from admin123 to admin456
   
   try {
     console.log("Connecting to MongoDB...");
@@ -22,8 +22,8 @@ async function updateAdminPassword() {
     const database = client.db("pillnow");
     const users = database.collection("users");
     
-    // Find admin user by username (you can change 'admin' to your admin's username)
-    const user = await users.findOne({ username: "admin" });
+    // Find admin user by username "papaji"
+    const user = await users.findOne({ username: "papaji" });
     
     if (!user) {
       console.log("Admin user not found in database");
