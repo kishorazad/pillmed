@@ -978,8 +978,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log(`Session ${sessionID} successfully destroyed`);
         
-        // Clear any session cookie as well
-        res.clearCookie('connect.sid');
+        // Clear any session cookie using the custom name we set in sessionConfig
+        res.clearCookie('pillnow.sid', {
+          path: '/', 
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
+        });
         
         // Ensure the browser receives a 200 OK status
         res.status(200).json({ success: true, message: "Logged out successfully" });
@@ -1221,15 +1226,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid username or password" });
       }
       
-      // Set user in session immediately to speed up response
-      console.log(`Login successful for user ${user.username}, setting session`);
+      // Set user in session and explicitly save the session
+      console.log(`Login successful for user ${user.username}, setting session: ${req.sessionID}`);
       (req.session as any).user = user;
       
-      // Don't return the password
-      const { password: _, ...userWithoutPassword } = user;
-      
-      // Send response immediately for better user experience
-      res.json(userWithoutPassword);
+      // Force the session to be saved before responding
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error during login:', err);
+          return res.status(500).json({ message: "Error creating session" });
+        }
+        
+        console.log(`Session saved successfully for user ${user.username}, session ID: ${req.sessionID}`);
+        
+        // Don't return the password
+        const { password: _, ...userWithoutPassword } = user;
+        
+        // Send response after session is saved
+        res.json(userWithoutPassword);
+      });
       
       // Perform background tasks after sending the response
       

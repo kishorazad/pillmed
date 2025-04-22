@@ -60,15 +60,26 @@ export async function sendEmail(to: string, subject: string, text: string, html?
     const fromEmail = process.env.EMAIL_FROM || 'no-reply@pillnow.com';
     
     // Try sending with Resend first if configured
-    if (process.env.RESEND_API_KEY) {
+    if (process.env.RESEND_API_KEY && resendInitialized) {
       try {
+        console.log(`📧 RESEND: Attempting to send email to ${to} with subject "${subject}"`);
+        console.log(`📧 RESEND: API key exists and client initialized: ${!!resend}`);
+        
         // Use Resend's test email in development environment (required by Resend for unverified domains)
         const recipient = process.env.NODE_ENV === 'production' ? to : 'delivered@resend.dev';
         
         // If using test recipient, log the original intended recipient for reference
         if (recipient !== to) {
-          console.log(`Email would be sent to: ${to} (using test recipient in development: ${recipient})`);
+          console.log(`📧 RESEND: Email would be sent to: ${to} (using test recipient in development: ${recipient})`);
         }
+        
+        console.log(`📧 RESEND: Making API call with data: {
+          from: ${fromEmail},
+          to: ${recipient},
+          subject: ${subject},
+          textLength: ${text?.length || 0},
+          htmlLength: ${html?.length || 0}
+        }`);
         
         const data = await resend.emails.send({
           from: fromEmail,
@@ -78,19 +89,26 @@ export async function sendEmail(to: string, subject: string, text: string, html?
           html: html || text,
         });
         
-        console.log(`Email sent successfully with Resend to ${to}`);
+        console.log(`📧 RESEND: API response received:`, data);
+        console.log(`📧 RESEND: Email sent successfully with Resend to ${to}`);
+        
         // Optional ID logging if available
         if (data && typeof data === 'object' && 'id' in data) {
-          console.log(`Resend Email ID: ${data.id}`);
+          console.log(`📧 RESEND: Email ID: ${data.id}`);
         }
+        
         return true;
       } catch (resendError) {
-        console.error('Error sending email via Resend:', resendError);
+        console.error('📧 RESEND ERROR: Error sending email via Resend:', resendError);
+        console.error('📧 RESEND ERROR: Full error details:', JSON.stringify(resendError, null, 2));
         
         // Fall back to SendGrid if available
-        if (process.env.SENDGRID_API_KEY) {
+        if (process.env.SENDGRID_API_KEY && sendgridInitialized) {
+          console.log('📧 RESEND ERROR: Falling back to SendGrid');
           return sendWithSendGrid(to, subject, text, html, fromEmail);
         }
+        
+        console.error('📧 RESEND ERROR: No fallback available, email will not be sent');
         return false;
       }
     } 
