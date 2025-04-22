@@ -105,6 +105,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount admin SEO management routes
   app.use('/api/admin', adminSeoRoutes);
   
+  // Mount doctor appointment routes
+  app.use('/api/appointments', appointmentRoutes);
+  
   // Setup SEO routes for better search engine visibility
   setupSeoRoutes(app);
   

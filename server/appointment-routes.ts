@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { sendAppointmentConfirmation } from './email-service';
 import { storage } from './storage';
-import { mongoDBStorage } from './mongo-storage';
+import { mongoDBStorage } from './mongodb-storage';
 
 const router = express.Router();
 
