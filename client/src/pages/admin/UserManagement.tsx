@@ -337,14 +337,14 @@ const UserManagement = () => {
           />
         </div>
         <Select 
-          value={roleFilter} 
+          value={roleFilter || "all"} 
           onValueChange={setRoleFilter}
-          defaultValue="">
+          defaultValue="all">
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All roles</SelectItem>
+            <SelectItem value="all">All roles</SelectItem>
             {roleOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
@@ -352,8 +352,8 @@ const UserManagement = () => {
             ))}
           </SelectContent>
         </Select>
-        {roleFilter && (
-          <Button variant="outline" size="icon" onClick={() => setRoleFilter("")}>
+        {roleFilter && roleFilter !== "all" && (
+          <Button variant="outline" size="icon" onClick={() => setRoleFilter("all")}>
             <X className="h-4 w-4" />
           </Button>
         )}

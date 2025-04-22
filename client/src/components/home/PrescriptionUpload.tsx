@@ -150,6 +150,8 @@ const PrescriptionUpload = () => {
       const formData = new FormData();
       formData.append('prescription', fileObj);
       formData.append('userName', name || 'Guest User');
+      formData.append('userPhone', phone || '');
+      formData.append('userAddress', address || '');
       formData.append('notes', notes || '');
       
       // Send to the backend API

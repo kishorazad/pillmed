@@ -162,7 +162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user ID from the request (or default to 1 if not authenticated)
       const userId = req.body.userId || (req.user?.id || 1);
       const userName = req.body.userName || req.user?.username || 'Guest User';
-      console.log(`User ID: ${userId}, User Name: ${userName}`);
+      const userPhone = req.body.userPhone || '';
+      const userAddress = req.body.userAddress || '';
+      console.log(`User ID: ${userId}, User Name: ${userName}, Phone: ${userPhone}`);
       
       // Create a new prescription record in MongoDB
       const storage = global.useMongoStorage ? mongoDBStorage : memStorage;
@@ -197,6 +199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: newId,
           userId: parseInt(userId.toString()),
           userName: userName,
+          userPhone: userPhone,
+          userAddress: userAddress,
           uploadDate: new Date(),
           status: 'pending',
           imageUrl: imageUrl,
