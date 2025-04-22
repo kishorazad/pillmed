@@ -53,24 +53,21 @@ declare global {
     const excelSuccess = await importMedicinesFromExcel();
     if (excelSuccess) {
       console.log('Imported medicine data from Excel successfully');
-      return;
     }
   } catch (excelError) {
     console.error('Failed to import medicine data from Excel, trying CSV');
-  }
-  
-  // If Excel import failed or returned false, try CSV
-  try {
-    const csvSuccess = await importMedicinesFromCSV();
-    if (csvSuccess === true) {
-      console.log('Imported medicine data from CSV successfully');
-      return;
+    
+    // If Excel import failed, try CSV
+    try {
+      const csvSuccess = await importMedicinesFromCSV();
+      if (csvSuccess === true) {
+        console.log('Imported medicine data from CSV successfully');
+      }
+    } catch (csvError) {
+      console.error('Failed to import medicine data from CSV');
+      console.warn('Warning: Could not import medicine data from either Excel or CSV');
     }
-  } catch (csvError) {
-    console.error('Failed to import medicine data from CSV');
   }
-  
-  console.warn('Warning: Could not import medicine data from either Excel or CSV');
 })();
 
 const app = express();
