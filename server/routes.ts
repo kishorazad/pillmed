@@ -6,6 +6,7 @@ import { mongoDBService } from "./services/mongodb-service"; // MongoDB service 
 import { insertCartItemSchema, insertUserSchema } from "@shared/schema";
 import { processHealthQuery, getMedicationInfo, analyzeMedicationInteractions } from "./ai-service";
 import { sendNotificationToUser, sendNotificationToAllUsers } from './notification-service';
+import { sendWelcomeEmail, sendPasswordResetConfirmation, sendPasswordResetOTP } from './email-service';
 import cacheService from './cache-service'; // Cache service for reducing database load
 import { getPincodeData, isValidPincodeFormat, isServiceablePincode, getDeliveryEstimate, initializePincodeService } from './pincode-service';
 import authRoutes from './auth-routes'; // Authentication routes for social login
@@ -2833,6 +2834,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching cache stats:", error);
       res.status(500).json({ error: "Failed to fetch cache statistics" });
+    }
+  });
+  
+  // Test email endpoints for debugging
+  app.post("/api/test-welcome-email", async (req: Request, res: Response) => {
+    try {
+      const { email, name } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+      
+      console.log(`📧 TEST: Sending welcome email to ${email} for user ${name || 'Test User'}`);
+      
+      const success = await sendWelcomeEmail(email, name || 'Test User');
+      
+      if (success) {
+        res.status(200).json({ 
+          success: true, 
+          message: "Welcome email sent successfully",
+          details: {
+            recipient: email,
+            name: name || 'Test User',
+            timestamp: new Date().toISOString()
+          }
+        });
+      } else {
+        res.status(500).json({ success: false, message: "Failed to send welcome email" });
+      }
+    } catch (error) {
+      console.error("Error in test welcome email endpoint:", error);
+      res.status(500).json({ error: "Server error sending welcome email" });
+    }
+  });
+  
+  app.post("/api/test-password-reset-confirmation", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+      
+      console.log(`📧 TEST: Sending password reset confirmation email to ${email}`);
+      
+      const success = await sendPasswordResetConfirmation(email);
+      
+      if (success) {
+        res.status(200).json({ 
+          success: true, 
+          message: "Password reset confirmation email sent successfully",
+          details: {
+            recipient: email,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } else {
+        res.status(500).json({ success: false, message: "Failed to send password reset confirmation email" });
+      }
+    } catch (error) {
+      console.error("Error in test password reset confirmation endpoint:", error);
+      res.status(500).json({ error: "Server error sending password reset confirmation email" });
     }
   });
   
