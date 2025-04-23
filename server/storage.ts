@@ -902,6 +902,11 @@ export class MemStorage implements IStorage {
     return Array.from(this.orders.values());
   }
   
+  async getAllOrders(): Promise<Order[]> {
+    // This method provides all orders with additional data for sales dashboard analysis
+    return Array.from(this.orders.values());
+  }
+  
   async getOrderById(id: number): Promise<Order | undefined> {
     return this.orders.get(id);
   }

@@ -16,7 +16,9 @@ import {
   Stethoscope,
   Mail,
   MailWarning,
-  MessageSquare
+  MessageSquare,
+  LineChart,
+  TrendingUp
 } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
 import { useAuth } from "@/lib/auth-provider";
@@ -90,6 +92,11 @@ const AdminNavigation = () => {
       label: 'Analytics',
       icon: <BarChart3 className="h-5 w-5" />,
       href: '/admin/analytics'
+    },
+    {
+      label: 'Sales Dashboard',
+      icon: <TrendingUp className="h-5 w-5" />,
+      href: '/admin/sales-dashboard'
     },
     {
       label: 'Notifications',

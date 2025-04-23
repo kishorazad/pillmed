@@ -45,6 +45,7 @@ const AdminHealthTipsManagement = lazy(() => import("./pages/admin/health-tips")
 const AdminTestimonialsManagement = lazy(() => import("./pages/admin/testimonials"));
 const AdminDoctorManagement = lazy(() => import("./pages/admin/doctors"));
 const AdminAnalytics = lazy(() => import("./pages/admin/analytics"));
+const AdminSalesDashboard = lazy(() => import("./pages/admin/sales-dashboard"));
 const EmailManagement = lazy(() => import("./pages/admin/EmailManagement"));
 const PharmacyDashboard = lazy(() => import("./pages/Pharmacy/Dashboard"));
 const DoctorDashboard = lazy(() => import("./pages/Doctor/Dashboard"));
@@ -223,6 +224,7 @@ function Router() {
       <RoleBasedRoute path="/admin/pharmacies" component={AdminPharmacyManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/doctors" component={AdminDoctorManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/analytics" component={AdminAnalytics} allowedRoles={['admin', 'subadmin']} />
+      <RoleBasedRoute path="/admin/sales-dashboard" component={AdminSalesDashboard} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/email" component={EmailManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/pharmacy" component={PharmacyDashboard} allowedRoles={['pharmacy']} />
       <RoleBasedRoute path="/doctor" component={DoctorDashboard} allowedRoles={['doctor']} />
