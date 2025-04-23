@@ -1,22 +1,103 @@
 import express, { Request, Response } from 'express';
 import { IStorage } from './storage';
 import { mongoDBStorage } from './mongodb-storage';
+import session from 'express-session';
+
+// Add custom properties to session
+declare module 'express-session' {
+  interface Session {
+    user?: any;
+    passport?: {
+      user: any;
+    };
+  }
+}
+
+// Extend the Express Request interface to include our custom properties
+declare global {
+  namespace Express {
+    interface Request {
+      adminUser?: any;
+    }
+  }
+}
+
+// Define types for the orders with items
+interface OrderItem {
+  productId: number;
+  quantity: number;
+  price: number;
+}
+
+interface SalesOrder {
+  id: number;
+  userId: number;
+  orderDate: Date | null;
+  status: string | null;
+  totalAmount: number;
+  shippingAddress: string;
+  paymentMethod: string;
+  trackingNumber: string | null;
+  items?: OrderItem[];
+  createdAt?: Date; // Some orders might have this instead of orderDate
+}
+
+// Define the sales data item interface for type safety
+interface SalesDataItem {
+  orderId: number;
+  productId: number;
+  productName: string;
+  price: number;
+  quantity: number;
+  revenue: number;
+  date: string; // Date in YYYY-MM-DD format
+  category?: string; // Category might not be available for all products
+}
 
 const router = express.Router();
 
 // Ensure only admins can access these routes
-function isAdminOrSubadmin(req: Request, res: Response, next: Function) {
+async function isAdminOrSubadmin(req: Request, res: Response, next: Function) {
   // Check for session data which indicates a user is logged in
-  if (!req.session || !req.session.user) {
-    return res.status(401).json({ message: 'Authentication required' });
+  if (!req.session) {
+    return res.status(401).json({ message: 'Authentication required - No session' });
   }
   
-  const user = req.session.user;
-  if (!user || (user.role !== 'admin' && user.role !== 'subadmin')) {
-    return res.status(403).json({ message: 'Admin access required' });
+  try {
+    // The session might store user data differently than the standard passport approach
+    const user = req.session.user || req.session?.passport?.user;
+    
+    if (!user) {
+      return res.status(401).json({ message: 'Authentication required - No user in session' });
+    }
+    
+    // Log the user data to help with debugging
+    console.log('Session user data for admin route:', user);
+    
+    // Fetch user details from database if we only have an ID
+    const storage: IStorage = global.useMongoStorage ? mongoDBStorage : req.app.locals.storage;
+    
+    // Get the user object or ID depending on how it's stored
+    const userId = typeof user === 'object' ? user.id : user;
+    
+    // Get the complete user object from storage
+    const userDetails = await storage.getUser(userId);
+    
+    if (!userDetails) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+    
+    if (userDetails.role !== 'admin' && userDetails.role !== 'subadmin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    // Store the user details in request for later use
+    req.adminUser = userDetails;
+    next();
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    return res.status(500).json({ message: 'Authentication error' });
   }
-  
-  next();
 }
 
 // Get all products with enhanced details
@@ -28,7 +109,7 @@ router.get('/products', isAdminOrSubadmin, async (req: Request, res: Response) =
     const products = await storage.getProducts();
     
     // Get sales data to enhance product information
-    const allOrders = await storage.getAllOrders();
+    const allOrders = await storage.getAllOrders() as SalesOrder[];
     
     // Calculate sales metrics for each product
     const productSalesMap = new Map();
@@ -87,7 +168,7 @@ router.get('/sales', isAdminOrSubadmin, async (req: Request, res: Response) => {
     startDate.setDate(startDate.getDate() - timeRange);
     
     // Get all orders within the date range
-    const allOrders = await storage.getAllOrders();
+    const allOrders = await storage.getAllOrders() as SalesOrder[];
     
     // Get all products for reference
     const products = await storage.getProducts();
@@ -103,7 +184,9 @@ router.get('/sales', isAdminOrSubadmin, async (req: Request, res: Response) => {
       // Skip orders without items or outside date range
       if (!order.items || !Array.isArray(order.items)) return;
       
-      const orderDate = new Date(order.orderDate || order.createdAt);
+      // Handle date carefully to avoid type errors
+      const dateValue = order.orderDate || (order.createdAt ? order.createdAt : new Date());
+      const orderDate = new Date(dateValue);
       if (orderDate < startDate || orderDate > endDate) return;
       
       order.items.forEach(item => {
@@ -136,7 +219,7 @@ router.get('/stats', isAdminOrSubadmin, async (req: Request, res: Response) => {
     const storage: IStorage = global.useMongoStorage ? mongoDBStorage : req.app.locals.storage;
     
     // Get all orders
-    const allOrders = await storage.getAllOrders();
+    const allOrders = await storage.getAllOrders() as SalesOrder[];
     
     // Calculate basic metrics
     const totalRevenue = allOrders.reduce((sum, order) => {
