@@ -291,13 +291,22 @@ class MongoDBStorage implements IStorage {
     const collection = mongoDBService.getCollection(this.collections.users);
     if (!collection) return undefined;
 
-    const result = await collection.findOneAndUpdate(
-      { id: id },
-      { $set: { password } },
-      { returnDocument: 'after' }
-    );
+    console.log(`Updating password for user ID: ${id}`);
+    console.log(`New hashed password format: ${password}`);
 
-    return result as User | undefined;
+    try {
+      const result = await collection.findOneAndUpdate(
+        { id: id },
+        { $set: { password } },
+        { returnDocument: 'after' }
+      );
+
+      console.log(`Password updated successfully for user ID: ${id}`);
+      return result as User | undefined;
+    } catch (error) {
+      console.error(`Error updating password for user ID ${id}:`, error);
+      return undefined;
+    }
   }
 
   async deleteUser(id: number): Promise<boolean> {

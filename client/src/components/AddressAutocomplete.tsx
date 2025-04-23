@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 
-// Define libraries as a memoized constant to prevent rerendering
-const libraries = useMemo(() => ["places"] as ("places")[], []);
+// Define libraries outside component to prevent rerendering
+// This avoids the hook error since we're not using useMemo outside of a component
+const libraries = ["places"] as ("places")[];
 
 interface AddressAutocompleteProps {
   onAddressSelect: (address: AddressData) => void;
