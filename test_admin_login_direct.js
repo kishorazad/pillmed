@@ -5,8 +5,8 @@
 import axios from 'axios';
 
 const baseUrl = 'http://localhost:5000';
-const email = 'admin@pillnow.com';
-const password = 'admin';
+const email = 'admin@pillnow.com'; // Updated in the database
+const password = 'admin'; // Freshly hashed with our unified password utility
 
 async function testAdminLogin() {
   try {

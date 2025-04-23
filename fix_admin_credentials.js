@@ -1,122 +1,84 @@
-import { MongoClient, ObjectId } from "mongodb";
-import { scryptSync, randomBytes } from "crypto";
+/**
+ * Script to fix admin user credentials for the PillNow platform
+ */
 
-// Function to hash password with salt
+import { MongoClient } from 'mongodb';
+import crypto from 'crypto';
+
+const uri = process.env.MONGODB_URI || 'mongodb+srv://brijkishorazad:u6w2inq13CaOzzMO@cluster0.ncw79xh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const dbName = 'pillnow';
+
 function hashPassword(password) {
-  const salt = randomBytes(16).toString('hex');
-  const hash = scryptSync(password, salt, 64).toString('hex');
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto
+    .scryptSync(password, salt, 64)
+    .toString('hex');
   return `${hash}.${salt}`;
 }
 
 async function listAllUsersAndFixAdmin() {
-  const uri = process.env.MONGODB_URI;
+  const client = new MongoClient(uri);
   
   try {
-    console.log("Connecting to MongoDB...");
-    const client = new MongoClient(uri);
     await client.connect();
+    console.log('Connected to MongoDB');
     
-    console.log("Connected successfully to MongoDB");
-    const database = client.db("pillnow");
-    const users = database.collection("users");
+    const database = client.db(dbName);
+    const users = database.collection('users');
     
-    // List all users to debug
-    console.log("Listing all users in the database:");
+    // List all users
+    console.log('Listing all users:');
     const allUsers = await users.find({}).toArray();
     
-    console.log(`Found ${allUsers.length} users:`);
-    allUsers.forEach((user, index) => {
-      console.log(`${index + 1}. Username: ${user.username}, Role: ${user.role}, Email: ${user.email || 'N/A'}`);
+    allUsers.forEach(user => {
+      console.log(`- ${user.username} (${user.email}): role=${user.role || 'none'}`);
     });
     
-    // Find admin user by role
-    const adminUsers = await users.find({ role: "admin" }).toArray();
+    // Find the admin user by role
+    const adminUser = allUsers.find(user => user.role === 'admin');
     
-    if (adminUsers.length === 0) {
-      console.log("No admin users found. Creating a new admin user...");
+    if (adminUser) {
+      console.log('\nAdmin user found:');
+      console.log(`Username: ${adminUser.username}, Email: ${adminUser.email}`);
       
-      // Define admin credentials
-      const adminUsername = "admin";
-      const adminPassword = "admin123";
-      const hashedPassword = hashPassword(adminPassword);
-      
-      // Create new admin user
-      const result = await users.insertOne({
-        username: adminUsername,
-        password: hashedPassword,
-        role: "admin",
-        email: "admin@pillnow.com",
-        name: "Administrator",
-        createdAt: new Date()
-      });
-      
-      if (result.insertedId) {
-        console.log(`New admin user created successfully.`);
-        console.log(`Username: ${adminUsername}, Password: ${adminPassword}`);
-      } else {
-        console.log("Failed to create new admin user");
-      }
-    } else {
-      console.log(`Found ${adminUsers.length} admin users. Resetting passwords for all admins...`);
-      
-      // Reset password for all admin users
-      const adminPassword = "admin123";
-      const hashedPassword = hashPassword(adminPassword);
-      
-      for (const admin of adminUsers) {
-        const updateResult = await users.updateOne(
-          { _id: admin._id },
-          { $set: { 
-              password: hashedPassword,
-              username: admin.username === "papaji" ? "admin" : admin.username // Rename papaji to admin if exists
-            } 
-          }
-        );
-        
-        if (updateResult.modifiedCount === 1) {
-          console.log(`Password reset successful for admin: ${admin.username}`);
-          console.log(`New credentials: Username: ${admin.username === "papaji" ? "admin" : admin.username}, Password: ${adminPassword}`);
-        } else {
-          console.log(`Failed to reset password for admin: ${admin.username}`);
+      // Update the admin user's email and password
+      const hashedPassword = hashPassword('admin');
+      const result = await users.updateOne(
+        { _id: adminUser._id },
+        { 
+          $set: { 
+            password: hashedPassword,
+            email: 'admin@pillnow.com'
+          } 
         }
-      }
-    }
-    
-    // Also make sure there is a fallback subadmin user
-    const subadminUsers = await users.find({ role: "subadmin" }).toArray();
-    
-    if (subadminUsers.length === 0) {
-      console.log("No subadmin users found. Creating a new subadmin user...");
+      );
       
-      // Define subadmin credentials
-      const subadminUsername = "subadmin";
-      const subadminPassword = "subadmin123";
-      const hashedPassword = hashPassword(subadminPassword);
-      
-      // Create new subadmin user
-      const result = await users.insertOne({
-        username: subadminUsername,
-        password: hashedPassword,
-        role: "subadmin",
-        email: "subadmin@pillnow.com",
-        name: "Sub Administrator",
+      console.log('Admin credentials updated:', result.modifiedCount > 0);
+    } else {
+      // Create a new admin user with a unique username
+      const adminUser = {
+        id: Math.floor(Math.random() * 10000) + 1000, // Random ID to avoid conflicts
+        username: 'pillnow_admin',
+        password: hashPassword('admin'),
+        name: 'Admin User',
+        email: 'admin@pillnow.info', // Using the provided email address
+        phone: '1234567890',
+        role: 'admin',
+        status: 'active',
+        profileImageUrl: null,
         createdAt: new Date()
-      });
+      };
       
-      if (result.insertedId) {
-        console.log(`New subadmin user created successfully.`);
-        console.log(`Username: ${subadminUsername}, Password: ${subadminPassword}`);
-      } else {
-        console.log("Failed to create new subadmin user");
-      }
+      const result = await users.insertOne(adminUser);
+      console.log('New admin user created:', result.acknowledged);
     }
     
-    await client.close();
-    console.log("MongoDB connection closed");
   } catch (error) {
-    console.error("Error updating admin credentials:", error);
+    console.error('Error:', error);
+  } finally {
+    await client.close();
+    console.log('\nMongoDB connection closed');
   }
 }
 
-console.log("Starting admin credentials fix script...");
 listAllUsersAndFixAdmin();
