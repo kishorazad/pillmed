@@ -324,7 +324,7 @@ const HospitalDetail: React.FC = () => {
         {t('back')}
       </Button>
       
-      {/* Hero image with hospital logo */}
+      {/* Hero image */}
       <div className="relative h-[250px] md:h-[400px] rounded-xl overflow-hidden mb-6">
         <img 
           src={hospital.images[0]} 
@@ -334,20 +334,6 @@ const HospitalDetail: React.FC = () => {
             (e.target as HTMLImageElement).src = '/hospital-placeholder.jpg';
           }}
         />
-        
-        {/* Hospital logo in bottom-left corner */}
-        <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 p-2 rounded-lg shadow-md">
-          <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-white rounded-lg overflow-hidden">
-            <img 
-              src={`/hospital-logo-${hospital.id}.png`} 
-              alt={`${hospital.name} logo`}
-              className="max-w-full max-h-full object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/hospital-logo-default.png';
-              }}
-            />
-          </div>
-        </div>
         
         {hospital.isEmergency && (
           <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
