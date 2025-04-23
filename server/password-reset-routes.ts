@@ -1,24 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { storage } from './storage';
 import { mongoDBStorage } from './mongodb-storage';
-import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
-import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
 import { sendPasswordResetOTP, sendPasswordResetConfirmation, sendPasswordResetToken } from './email-service';
+import { hashPassword, verifyPassword, logPasswordDetails } from './utils/password-util';
 
 const router = Router();
-const scryptAsync = promisify(scrypt);
 
 // Helper to get the appropriate storage service
 function getStorageService() {
   return global.useMongoStorage ? mongoDBStorage : storage;
-}
-
-// Hash password using scrypt
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString('hex');
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString('hex')}.${salt}`;
 }
 
 // Generate a 6-digit OTP

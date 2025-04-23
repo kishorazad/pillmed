@@ -1,11 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import fetch from 'node-fetch';
-import { randomBytes, scryptSync, createHash, timingSafeEqual } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import { storage as memStorage, IStorage } from './storage'; // In-memory storage
 import { mongoDBStorage } from './mongodb-storage'; // MongoDB storage
 import { mongoDBService } from './services/mongodb-service'; // MongoDB service
 import { sendPasswordResetOTP, sendWelcomeEmail, generateOTP, sendLoginOTP } from './email-service';
+import { hashPassword, verifyPassword, logPasswordDetails } from './utils/password-util';
 
 // Helper function to get the appropriate storage at runtime
 function getStorage(): IStorage {
@@ -28,26 +29,6 @@ const activeLoginSessions = new Map<string, { userId: number; expires: number; }
 // Helper function to generate a secure password
 function generateSecurePassword(): string {
   return randomBytes(16).toString('hex');
-}
-
-// Helper function to hash a password
-function hashPassword(password: string): string {
-  const salt = randomBytes(16).toString('hex');
-  const hash = scryptSync(password, salt, 64).toString('hex');
-  return `${hash}.${salt}`;
-}
-
-// Helper function to verify a password
-function verifyPassword(password: string, hashedPassword: string): boolean {
-  try {
-    const [hash, salt] = hashedPassword.split('.');
-    const hashBuffer = Buffer.from(hash, 'hex');
-    const suppliedHashBuffer = scryptSync(password, salt, 64);
-    return timingSafeEqual(hashBuffer, suppliedHashBuffer);
-  } catch (error) {
-    console.error('Password verification error:', error);
-    return false;
-  }
 }
 
 /**
@@ -382,8 +363,13 @@ router.post('/login', async (req: Request, res: Response) => {
     
     console.log(`User found with ID: ${user.id}`);
     
-    // Verify password
-    const passwordValid = verifyPassword(password, user.password);
+    // Log password details for debugging (only in development)
+    if (process.env.NODE_ENV !== 'production') {
+      logPasswordDetails('login-attempt', password, user.password);
+    }
+    
+    // Verify password using async version
+    const passwordValid = await verifyPassword(password, user.password);
     if (!passwordValid) {
       console.log('Password verification failed');
       return res.status(401).json({ message: 'Invalid credentials' });
