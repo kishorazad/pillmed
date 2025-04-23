@@ -1110,6 +1110,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phone,
         address,
         pincode,
+        city,
+        state,
         profileImageUrl
       } = req.body;
       
@@ -1120,6 +1122,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (phone !== undefined) updateData.phone = phone;
       if (address !== undefined) updateData.address = address;
       if (pincode !== undefined) updateData.pincode = pincode;
+      if (city !== undefined) updateData.city = city;
+      if (state !== undefined) updateData.state = state;
       if (profileImageUrl !== undefined) updateData.profileImageUrl = profileImageUrl;
       
       console.log("Using storage:", global.useMongoStorage ? "MongoDB" : "Memory");

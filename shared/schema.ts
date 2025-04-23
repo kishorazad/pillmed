@@ -11,6 +11,8 @@ export const users = pgTable("users", {
   phone: text("phone"),
   address: text("address"),
   pincode: text("pincode"),
+  city: text("city"),
+  state: text("state"),
   role: text("role").default("customer"), // customer, admin, pharmacy, doctor, laboratory
   status: text("status").default("active"), // active, pending, suspended
   profileImageUrl: text("profile_image_url"),
