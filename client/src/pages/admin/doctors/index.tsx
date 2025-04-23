@@ -151,7 +151,7 @@ const AdminDoctorManagement = () => {
   const [specialtyFilter, setSpecialtyFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState('all');
-
+  
   // Lazy loading optimization - only load and render what's needed
   const [tabsInitialized, setTabsInitialized] = useState({
     all: true, // Initialize the "all" tab since it's the default
@@ -159,7 +159,7 @@ const AdminDoctorManagement = () => {
     approved: false,
     rejected: false
   });
-
+  
   // Update initialized tabs when tab changes
   useEffect(() => {
     setTabsInitialized(prev => ({
@@ -182,26 +182,26 @@ const AdminDoctorManagement = () => {
       const searchParams = new URLSearchParams();
       searchParams.append('page', currentPage.toString());
       searchParams.append('limit', '10');
-
+      
       if (searchTerm) {
         searchParams.append('search', searchTerm);
       }
-
+      
       if (statusFilter && statusFilter !== 'all') {
         searchParams.append('status', statusFilter);
       }
-
+      
       if (specialtyFilter && specialtyFilter !== 'all') {
         searchParams.append('specialty', specialtyFilter);
       }
-
+      
       // Performance optimization: Cache results for 1 minute when no search/filter applied
       const useCache = !searchTerm && (!statusFilter || statusFilter === 'all') && (!specialtyFilter || specialtyFilter === 'all');
-
+      
       // This API doesn't exist yet, so we're returning mock data for now
       // Eventually replace with actual API call
       // const response = await fetch(`/api/admin/doctors?${searchParams.toString()}`);
-
+      
       // Mock data for preview purposes
       const mockData: DoctorsResponse = {
         doctors: [
@@ -361,7 +361,7 @@ const AdminDoctorManagement = () => {
         limit: 10,
         totalPages: 3
       };
-
+      
       return mockData;
     }
   });
@@ -404,23 +404,23 @@ const AdminDoctorManagement = () => {
         return <Badge variant="outline">Unknown</Badge>;
     }
   };
-
+  
   // Get rating stars
   const getRatingStars = (rating?: number) => {
     if (!rating) return "Not rated";
-
+    
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
     const starArray = [];
-
+    
     for (let i = 0; i < fullStars; i++) {
       starArray.push(<Star key={`full-${i}`} className="h-4 w-4 fill-yellow-400 text-yellow-400" />);
     }
-
+    
     if (hasHalfStar) {
       starArray.push(<StarHalf key="half" className="h-4 w-4 fill-yellow-400 text-yellow-400" />);
     }
-
+    
     return (
       <div className="flex items-center">
         <div className="flex mr-1">
@@ -445,7 +445,7 @@ const AdminDoctorManagement = () => {
               className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
             />
           </PaginationItem>
-
+          
           {Array.from({ length: Math.min(data.totalPages, 5) }, (_, i) => {
             const pageNumber = i + 1;
             // Show first page, current page, and pages around current
@@ -453,7 +453,7 @@ const AdminDoctorManagement = () => {
               pageNumber === 1 || 
               pageNumber === data.totalPages || 
               (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1);
-
+            
             if (!shouldShowPage) {
               if (pageNumber === 2 || pageNumber === data.totalPages - 1) {
                 return (
@@ -464,7 +464,7 @@ const AdminDoctorManagement = () => {
               }
               return null;
             }
-
+            
             return (
               <PaginationItem key={pageNumber}>
                 <PaginationLink
@@ -508,7 +508,7 @@ const AdminDoctorManagement = () => {
             <p className="text-xs text-muted-foreground mt-2">78% are actively practicing</p>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardContent className="p-6">
             <div className="flex justify-between items-center">
@@ -524,7 +524,7 @@ const AdminDoctorManagement = () => {
             <p className="text-xs text-muted-foreground mt-2">+12% from previous month</p>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardContent className="p-6">
             <div className="flex justify-between items-center">
@@ -540,7 +540,7 @@ const AdminDoctorManagement = () => {
             <p className="text-xs text-muted-foreground mt-2">34% of total appointments</p>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardContent className="p-6">
             <div className="flex justify-between items-center">
@@ -582,7 +582,7 @@ const AdminDoctorManagement = () => {
             </Button>
           </Link>
         </div>
-
+        
         {/* Stats Overview */}
         <StatsCards />
 
@@ -763,9 +763,8 @@ const AdminDoctorManagement = () => {
                     {renderPagination()}
                   </>
                 )}
-                </CardContent>
-              </Card>
-            )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="pending" className="space-y-4">
@@ -777,77 +776,76 @@ const AdminDoctorManagement = () => {
                     Doctors waiting for verification and approval
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Doctor</TableHead>
-                          <TableHead>Specialty</TableHead>
-                          <TableHead>Documents</TableHead>
-                          <TableHead>Submission Date</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Doctor</TableHead>
+                        <TableHead>Specialty</TableHead>
+                        <TableHead>Documents</TableHead>
+                        <TableHead>Submission Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data?.doctors.filter(d => d.status === 'pending').map((doctor) => (
+                        <TableRow key={doctor.id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={doctor.photoUrl} alt={doctor.name} />
+                                <AvatarFallback>{doctor.name.substr(0, 2)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium">{doctor.name}</div>
+                                <div className="text-xs text-muted-foreground">{doctor.email}</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              {doctor.specialty || doctor.doctorDetails?.specialty || "Not specified"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                              <span>4 Documents</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                              <span>5 days ago</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button variant="outline" size="sm" className="h-8">
+                                <FileText className="h-3.5 w-3.5 mr-1" />
+                                Review
+                              </Button>
+                              <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700">
+                                <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                                Approve
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {data?.doctors.filter(d => d.status === 'pending').map((doctor) => (
-                          <TableRow key={doctor.id}>
-                            <TableCell>
-                              <div className="flex items-center space-x-3">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={doctor.photoUrl} alt={doctor.name} />
-                                  <AvatarFallback>{doctor.name.substr(0, 2)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="font-medium">{doctor.name}</div>
-                                  <div className="text-xs text-muted-foreground">{doctor.email}</div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                {doctor.specialty || doctor.doctorDetails?.specialty || "Not specified"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center">
-                                <FileText className="h-4 w-4 mr-2 text-blue-500" />
-                                <span>4 Documents</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center">
-                                <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                                <span>5 days ago</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
-                                <Button variant="outline" size="sm" className="h-8">
-                                  <FileText className="h-3.5 w-3.5 mr-1" />
-                                  Review
-                                </Button>
-                                <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700">
-                                  <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                                  Approve
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        {!data?.doctors.some(d => d.status === 'pending') && (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                              No pending approvals at the moment
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                      ))}
+                      {!data?.doctors.some(d => d.status === 'pending') && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            No pending approvals at the moment
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="approved" className="space-y-4">
@@ -859,71 +857,70 @@ const AdminDoctorManagement = () => {
                     Active and verified doctor accounts
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Doctor</TableHead>
-                          <TableHead>Specialty</TableHead>
-                          <TableHead>Experience</TableHead>
-                          <TableHead>Rating</TableHead>
-                          <TableHead>Patients</TableHead>
-                          <TableHead>Consultations</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Doctor</TableHead>
+                        <TableHead>Specialty</TableHead>
+                        <TableHead>Experience</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Patients</TableHead>
+                        <TableHead>Consultations</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data?.doctors.filter(d => d.status === 'approved').map((doctor) => (
+                        <TableRow key={doctor.id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={doctor.photoUrl} alt={doctor.name} />
+                                <AvatarFallback>{doctor.name.substr(0, 2)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium">{doctor.name}</div>
+                                <div className="text-xs text-muted-foreground">{doctor.email}</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              {doctor.specialty || doctor.doctorDetails?.specialty || "Not specified"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{doctor.experience || doctor.doctorDetails?.experience || "N/A"} years</TableCell>
+                          <TableCell>{getRatingStars(doctor.rating)}</TableCell>
+                          <TableCell>{doctor.totalPatients?.toLocaleString() || "N/A"}</TableCell>
+                          <TableCell>{doctor.totalAppointments?.toLocaleString() || "N/A"}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button variant="outline" size="sm" className="h-8">
+                                <UserCog className="h-3.5 w-3.5 mr-1" />
+                                Manage
+                              </Button>
+                              <Button variant="outline" size="sm" className="h-8">
+                                <BarChart3 className="h-3.5 w-3.5 mr-1" />
+                                Stats
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {data?.doctors.filter(d => d.status === 'approved').map((doctor) => (
-                          <TableRow key={doctor.id}>
-                            <TableCell>
-                              <div className="flex items-center space-x-3">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={doctor.photoUrl} alt={doctor.name} />
-                                  <AvatarFallback>{doctor.name.substr(0, 2)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="font-medium">{doctor.name}</div>
-                                  <div className="text-xs text-muted-foreground">{doctor.email}</div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                {doctor.specialty || doctor.doctorDetails?.specialty || "Not specified"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{doctor.experience || doctor.doctorDetails?.experience || "N/A"} years</TableCell>
-                            <TableCell>{getRatingStars(doctor.rating)}</TableCell>
-                            <TableCell>{doctor.totalPatients?.toLocaleString() || "N/A"}</TableCell>
-                            <TableCell>{doctor.totalAppointments?.toLocaleString() || "N/A"}</TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
-                                <Button variant="outline" size="sm" className="h-8">
-                                  <UserCog className="h-3.5 w-3.5 mr-1" />
-                                  Manage
-                                </Button>
-                                <Button variant="outline" size="sm" className="h-8">
-                                  <BarChart3 className="h-3.5 w-3.5 mr-1" />
-                                  Stats
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        {!data?.doctors.some(d => d.status === 'approved') && (
-                          <TableRow>
-                            <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                              No approved doctors match your search criteria
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                      ))}
+                      {!data?.doctors.some(d => d.status === 'approved') && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                            No approved doctors match your search criteria
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="rejected" className="space-y-4">
@@ -935,74 +932,73 @@ const AdminDoctorManagement = () => {
                     Doctors that didn't meet verification criteria
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Doctor</TableHead>
-                          <TableHead>Specialty</TableHead>
-                          <TableHead>Rejection Reason</TableHead>
-                          <TableHead>Rejected Date</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Doctor</TableHead>
+                        <TableHead>Specialty</TableHead>
+                        <TableHead>Rejection Reason</TableHead>
+                        <TableHead>Rejected Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data?.doctors.filter(d => d.status === 'rejected').map((doctor) => (
+                        <TableRow key={doctor.id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={doctor.photoUrl} alt={doctor.name} />
+                                <AvatarFallback>{doctor.name.substr(0, 2)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium">{doctor.name}</div>
+                                <div className="text-xs text-muted-foreground">{doctor.email}</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              {doctor.specialty || doctor.doctorDetails?.specialty || "Not specified"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-red-600">Invalid license documentation</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                              <span>14 days ago</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button variant="outline" size="sm" className="h-8">
+                                <MessageSquare className="h-3.5 w-3.5 mr-1" />
+                                Contact
+                              </Button>
+                              <Button size="sm" className="h-8">
+                                <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                                Reconsider
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {data?.doctors.filter(d => d.status === 'rejected').map((doctor) => (
-                          <TableRow key={doctor.id}>
-                            <TableCell>
-                              <div className="flex items-center space-x-3">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={doctor.photoUrl} alt={doctor.name} />
-                                  <AvatarFallback>{doctor.name.substr(0, 2)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="font-medium">{doctor.name}</div>
-                                  <div className="text-xs text-muted-foreground">{doctor.email}</div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                {doctor.specialty || doctor.doctorDetails?.specialty || "Not specified"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-red-600">Invalid license documentation</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center">
-                                <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                                <span>14 days ago</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
-                                <Button variant="outline" size="sm" className="h-8">
-                                  <MessageSquare className="h-3.5 w-3.5 mr-1" />
-                                  Contact
-                                </Button>
-                                <Button size="sm" className="h-8">
-                                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
-                                  Reconsider
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        {!data?.doctors.some(d => d.status === 'rejected') && (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                              No rejected doctors found
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                      ))}
+                      {!data?.doctors.some(d => d.status === 'rejected') && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            No rejected doctors found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
