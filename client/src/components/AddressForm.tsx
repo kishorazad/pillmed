@@ -30,9 +30,38 @@ export default function AddressForm({
   const [mapVisible, setMapVisible] = useState<boolean>(false);
 
   const handleAddressSelect = (newAddress: AddressData) => {
+    console.log('New address selected:', newAddress);
+    
+    // Update the local state with the selected address
     setAddress(newAddress);
+    
+    // Notify parent component about the address change
     onAddressChange(newAddress);
+    
+    // Show the map when an address is selected
     setMapVisible(true);
+    
+    // If form integration is enabled, update all the related form fields
+    if (form && fieldName) {
+      // Update the main address field
+      form.setValue(fieldName, newAddress.formattedAddress);
+      
+      // Update related fields if available
+      if (newAddress.postalCode) {
+        form.setValue("pincode", newAddress.postalCode);
+      }
+      
+      if (newAddress.locality) {
+        form.setValue("city", newAddress.locality);
+      }
+      
+      if (newAddress.administrativeAreaLevel1) {
+        form.setValue("state", newAddress.administrativeAreaLevel1);
+      }
+      
+      // Trigger validation after setting values
+      form.trigger([fieldName, "pincode", "city", "state"]);
+    }
   };
 
   const handleMarkerDragEnd = (location: google.maps.LatLngLiteral) => {
@@ -45,14 +74,79 @@ export default function AddressForm({
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ location }, (results, status) => {
         if (status === 'OK' && results && results[0]) {
-          const formattedAddress = results[0].formatted_address;
-          const newAddressWithFormatted = { ...newAddress, formattedAddress };
-          setAddress(newAddressWithFormatted);
-          onAddressChange(newAddressWithFormatted);
+          console.log('Geocoding result:', results[0]);
           
-          // Update form field if using react-hook-form
+          const formattedAddress = results[0].formatted_address;
+          const addressComponents = results[0].address_components || [];
+          
+          // Extract detailed information from address components
+          const updatedAddress: AddressData = { 
+            ...newAddress,
+            formattedAddress
+          };
+          
+          for (const component of addressComponents) {
+            const types = component.types;
+            
+            if (types.includes('street_number')) {
+              updatedAddress.streetNumber = component.long_name;
+            } else if (types.includes('route')) {
+              updatedAddress.route = component.long_name;
+            } else if (types.includes('locality')) {
+              updatedAddress.locality = component.long_name;
+            } else if (types.includes('administrative_area_level_1')) {
+              updatedAddress.administrativeAreaLevel1 = component.long_name;
+            } else if (types.includes('country')) {
+              updatedAddress.country = component.long_name;
+            } else if (types.includes('postal_code')) {
+              updatedAddress.postalCode = component.long_name;
+            }
+          }
+          
+          // Fallback for postal code extraction if not found in components
+          if (!updatedAddress.postalCode) {
+            const pincodeMatch = formattedAddress.match(/\b(\d{6})\b/);
+            if (pincodeMatch && pincodeMatch[1]) {
+              updatedAddress.postalCode = pincodeMatch[1];
+            }
+          }
+          
+          // Update state and notify parent
+          setAddress(updatedAddress);
+          onAddressChange(updatedAddress);
+          
+          // Update form fields if using react-hook-form
           if (form && fieldName) {
             form.setValue(fieldName, formattedAddress);
+            
+            // Update related fields
+            if (updatedAddress.postalCode) {
+              form.setValue("pincode", updatedAddress.postalCode);
+            }
+            
+            if (updatedAddress.locality) {
+              try {
+                form.setValue("city", updatedAddress.locality);
+              } catch (err) {
+                console.log('Failed to set city field:', err);
+              }
+            }
+            
+            if (updatedAddress.administrativeAreaLevel1) {
+              try {
+                form.setValue("state", updatedAddress.administrativeAreaLevel1);
+              } catch (err) {
+                console.log('Failed to set state field:', err);
+              }
+            }
+            
+            // Trigger validation
+            try {
+              form.trigger(fieldName);
+              form.trigger("pincode");
+            } catch (err) {
+              console.log('Error triggering validation:', err);
+            }
           }
         }
       });

@@ -29,6 +29,8 @@ interface User {
   phone?: string;
   address?: string;
   pincode?: string;
+  city?: string;
+  state?: string;
   role?: string;
   profileImageUrl?: string;
 }
@@ -40,6 +42,8 @@ const profileSchema = z.object({
   phone: z.string().min(10, { message: 'Phone number must be at least 10 digits' }).optional(),
   address: z.string().min(5, { message: 'Address must be at least 5 characters' }).optional(),
   pincode: z.string().min(6, { message: 'Pincode must be at least 6 characters' }).optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -88,6 +92,8 @@ const Profile = () => {
       phone: auth.user?.phone || '',
       address: auth.user?.address || '',
       pincode: auth.user?.pincode || '',
+      city: auth.user?.city || '',
+      state: auth.user?.state || '',
     },
   });
   
@@ -121,6 +127,8 @@ const Profile = () => {
         phone: auth.user.phone || '',
         address: auth.user.address || '',
         pincode: auth.user.pincode || '',
+        city: auth.user.city || '',
+        state: auth.user.state || '',
       });
     }
   }, [auth.user, profileForm]);
@@ -384,13 +392,27 @@ const Profile = () => {
                             <AddressForm 
                               defaultAddress={{ 
                                 formattedAddress: profileForm.getValues("address") || "",
-                                postalCode: profileForm.getValues("pincode") || ""
+                                postalCode: profileForm.getValues("pincode") || "",
+                                locality: profileForm.getValues("city") || "",
+                                administrativeAreaLevel1: profileForm.getValues("state") || ""
                               }}
                               onAddressChange={(addressData) => {
+                                console.log('Address data received in profile form:', addressData);
                                 profileForm.setValue("address", addressData.formattedAddress);
+                                
+                                // Update all related fields
                                 if (addressData.postalCode) {
                                   profileForm.setValue("pincode", addressData.postalCode);
                                 }
+                                if (addressData.locality) {
+                                  profileForm.setValue("city", addressData.locality);
+                                }
+                                if (addressData.administrativeAreaLevel1) {
+                                  profileForm.setValue("state", addressData.administrativeAreaLevel1);
+                                }
+                                
+                                // Trigger validation after setting values
+                                profileForm.trigger(["address", "pincode", "city", "state"]);
                               }}
                               includeMap={true}
                               form={profileForm}
