@@ -426,6 +426,48 @@ router.delete('/users/:id', async (req: Request, res: Response) => {
   }
 });
 
+// Reset user password (admin only)
+router.post('/users/:id/reset-password', async (req: Request, res: Response) => {
+  try {
+    const storage: IStorage = global.useMongoStorage ? mongoDBStorage : req.app.locals.storage;
+    
+    const userId = parseInt(req.params.id);
+    const { newPassword } = req.body;
+    
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    
+    // Check if user exists
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Hash the new password
+    const crypto = await import('crypto');
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.scryptSync(newPassword, salt, 64).toString('hex');
+    const hashedPassword = `${hash}.${salt}`;
+    
+    // Update the user's password
+    const updated = await storage.updateUser(userId, { password: hashedPassword });
+    
+    if (!updated) {
+      return res.status(500).json({ message: "Failed to reset password" });
+    }
+    
+    // Log the action (for audit purposes)
+    const adminUser = (req.session as any)?.user;
+    console.log(`Admin ${adminUser.username} (ID: ${adminUser.id}) reset password for user ${user.username} (ID: ${userId})`);
+    
+    res.json({ success: true, message: "Password reset successfully" });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ message: 'Error resetting password' });
+  }
+});
+
 // Perform bulk actions on users
 router.post('/users/bulk-action', async (req: Request, res: Response) => {
   try {

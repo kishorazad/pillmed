@@ -178,22 +178,25 @@ router.get('/sales', isAdminOrSubadmin, async (req: Request, res: Response) => {
     }, {} as { [key: number]: any });
     
     // Transform orders into sales data
-    const salesData = [];
+    const salesData: SalesDataItem[] = [];
     
-    allOrders.forEach(order => {
+    // Process orders and generate sales data items
+    for (const order of allOrders) {
       // Skip orders without items or outside date range
-      if (!order.items || !Array.isArray(order.items)) return;
+      if (!order.items || !Array.isArray(order.items)) continue;
       
       // Handle date carefully to avoid type errors
       const dateValue = order.orderDate || (order.createdAt ? order.createdAt : new Date());
       const orderDate = new Date(dateValue);
-      if (orderDate < startDate || orderDate > endDate) return;
+      if (orderDate < startDate || orderDate > endDate) continue;
       
-      order.items.forEach(item => {
+      // Process each item in the order
+      for (const item of order.items) {
         const product = productsById[item.productId];
-        if (!product) return;
+        if (!product) continue;
         
-        salesData.push({
+        // Create a strongly typed sales data item
+        const salesItem: SalesDataItem = {
           orderId: order.id,
           productId: item.productId,
           productName: product.name,
@@ -202,9 +205,11 @@ router.get('/sales', isAdminOrSubadmin, async (req: Request, res: Response) => {
           revenue: (item.price || product.price) * (item.quantity || 1),
           date: orderDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
           category: product.category
-        });
-      });
-    });
+        };
+        
+        salesData.push(salesItem);
+      }
+    }
     
     res.json(salesData);
   } catch (error) {
@@ -239,10 +244,10 @@ router.get('/stats', isAdminOrSubadmin, async (req: Request, res: Response) => {
     const productSalesMap = new Map();
     
     // Process orders to calculate sales by product
-    allOrders.forEach(order => {
-      if (!order.items || !Array.isArray(order.items)) return;
+    for (const order of allOrders) {
+      if (!order.items || !Array.isArray(order.items)) continue;
       
-      order.items.forEach(item => {
+      for (const item of order.items) {
         const productId = item.productId;
         const quantity = item.quantity || 1;
         
@@ -251,11 +256,11 @@ router.get('/stats', isAdminOrSubadmin, async (req: Request, res: Response) => {
         } else {
           productSalesMap.set(productId, quantity);
         }
-      });
-    });
+      }
+    }
     
     // Process products to calculate sales by category
-    products.forEach(product => {
+    for (const product of products) {
       // Use categoryId and map to a category name if needed
       const categoryId = product.categoryId || 0;
       const categoryName = `Category ${categoryId}`; // Simplified for now
@@ -266,7 +271,7 @@ router.get('/stats', isAdminOrSubadmin, async (req: Request, res: Response) => {
       } else {
         categoryMap.set(categoryName, sales);
       }
-    });
+    }
     
     // Convert maps to arrays for the response
     const categorySales = Array.from(categoryMap.entries()).map(([category, sales]) => ({
