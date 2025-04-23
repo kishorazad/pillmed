@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useMemo } from 'react';
-import { GoogleMap, useLoadScript, Marker, Autocomplete } from '@react-google-maps/api';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useLoadScript, Autocomplete } from '@react-google-maps/api';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 
-const libraries: ("places")[] = ["places"];
+// Define libraries as a memoized constant to prevent rerendering
+const libraries = useMemo(() => ["places"] as ("places")[], []);
 
 interface AddressAutocompleteProps {
   onAddressSelect: (address: AddressData) => void;
@@ -38,16 +38,25 @@ export default function AddressAutocomplete({
   className = "",
   error
 }: AddressAutocompleteProps) {
-  const { isLoaded, loadError } = useLoadScript({
+  // Memoize options for useLoadScript to prevent rerenders
+  const mapsOptions = useMemo(() => ({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
     libraries,
     loading: "async"
-  });
+  }), [libraries]);
+
+  const { isLoaded, loadError } = useLoadScript(mapsOptions);
 
   const [inputValue, setInputValue] = useState(defaultValue);
   const [addressComponents, setAddressComponents] = useState<AddressData>({
     formattedAddress: defaultValue
   });
+  
+  // Memoize the autocomplete options to prevent rerenders
+  const autocompleteOptions = useMemo(() => ({
+    fields: ["formatted_address", "geometry.location", "address_components"],
+    componentRestrictions: { country: "in" } // Restrict to India
+  }), []);
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -151,10 +160,7 @@ export default function AddressAutocomplete({
       <Autocomplete
         onLoad={onAutocompleteLoad}
         onPlaceChanged={handlePlaceSelect}
-        options={{ 
-          fields: ["formatted_address", "geometry.location", "address_components"],
-          componentRestrictions: { country: "in" } // Restrict to India
-        }}
+        options={autocompleteOptions}
       >
         <Input
           ref={inputRef}

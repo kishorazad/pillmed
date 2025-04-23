@@ -17,6 +17,7 @@ interface Hospital {
   phone: string;
   website: string;
   email: string;
+  logoUrl?: string;
   openHours: {
     [key: string]: string;
   };
@@ -60,6 +61,7 @@ const hospitalData: Record<string, Hospital> = {
     phone: '1800-123-4567',
     website: 'www.citygeneralhospital.com',
     email: 'info@citygeneralhospital.com',
+    logoUrl: '/hospital-logo-1.jpg',
     openHours: {
       'Monday': '9:00 AM - 9:00 PM',
       'Tuesday': '9:00 AM - 9:00 PM',
