@@ -111,7 +111,10 @@ const Checkout = () => {
             shippingAddress,
             totalAmount: cartTotal,
             paymentMethod: data.paymentMethod,
-            items
+            items,
+            // Include email and name for guest checkout
+            email: data.email,
+            customerName: data.name
           })
         });
         

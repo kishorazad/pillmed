@@ -2657,11 +2657,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new order
   app.post("/api/orders", async (req: Request, res: Response) => {
     try {
-      const { userId, shippingAddress, totalAmount, items, paymentMethod } = req.body;
+      const { userId, shippingAddress, totalAmount, items, paymentMethod, email, customerName } = req.body;
       
       // Create the order
       const order = await dbStorage.createOrder({
-        userId,
+        userId: userId || 0, // Use 0 for guest orders if no userId provided
         shippingAddress,
         totalAmount,
         paymentMethod: paymentMethod || 'credit_card',
@@ -2690,19 +2690,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Clear the user's cart after successful order
-      await dbStorage.clearCart(userId);
+      // Clear the user's cart if they're logged in
+      if (userId) {
+        await dbStorage.clearCart(userId);
+      }
       
-      // Get user info for the email
-      const user = await dbStorage.getUser(userId);
-      if (user && user.email) {
+      // Get email info - either from logged in user or from request
+      let recipientEmail = email; // From request body (guest checkout)
+      let recipientName = customerName || "Valued Customer"; // From request body or default
+      
+      // If userId is provided, try to get user details
+      if (userId) {
+        const user = await dbStorage.getUser(userId);
+        if (user) {
+          recipientEmail = user.email || recipientEmail;
+          recipientName = user.name || user.username || recipientName;
+        }
+      }
+      
+      // Send email confirmation if we have an email address
+      if (recipientEmail) {
         // Import and use the email service
         const { sendOrderConfirmation } = await import('./email-service');
         
         // Prepare order data for email
         const orderData = {
           orderNumber: `ORD${order.id}`,
-          customerName: user.name || user.username,
+          customerName: recipientName,
           estimatedDelivery: '2-3 business days',
           items: enhancedItems,
           subtotal: totalAmount,
@@ -2712,18 +2726,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           address: shippingAddress
         };
         
-        console.log(`Sending order confirmation email to ${user.email} for order ${order.id}`);
+        console.log(`Sending order confirmation email to ${recipientEmail} for order ${order.id}`);
         
         // Send the order confirmation email
         try {
-          const emailResult = await sendOrderConfirmation(user.email, orderData);
+          const emailResult = await sendOrderConfirmation(recipientEmail, orderData);
           console.log(`Order confirmation email result: ${emailResult ? 'Success' : 'Failed'}`);
         } catch (emailError) {
           console.error('Error sending order confirmation email:', emailError);
           // Don't fail the order creation if email fails
         }
       } else {
-        console.warn(`No email found for user ${userId}. Cannot send order confirmation.`);
+        console.warn(`No email provided for order ${order.id}. Cannot send order confirmation.`);
       }
       
       res.status(201).json(order);
