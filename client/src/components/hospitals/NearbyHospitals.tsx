@@ -259,7 +259,6 @@ const NearbyHospitals: React.FC = () => {
         <div 
           ref={scrollContainerRef}
           className="flex overflow-x-auto no-scrollbar gap-4 pb-4"
-          onScroll={checkScrollButtons}
           style={{ scrollSnapType: 'x mandatory' }}
         >
           {hospitals.map((hospital) => (
