@@ -232,7 +232,7 @@ const HospitalDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState('about');
 
   useEffect(() => {
-    // Simulating API call with a delay
+    // Simulating API call with a minimal delay (optimized for better user experience)
     setLoading(true);
     
     const fetchHospitalData = async () => {
@@ -240,7 +240,7 @@ const HospitalDetail: React.FC = () => {
         // In a real app, this would be an API call using the ID
         // await fetch(`/api/hospitals/${params?.id}`)
         
-        // For demo, use the static data with timeout to simulate loading
+        // For demo, use the static data with a very short timeout to optimize loading
         setTimeout(() => {
           if (params?.id && hospitalData[params.id]) {
             setHospital(hospitalData[params.id]);
@@ -252,7 +252,7 @@ const HospitalDetail: React.FC = () => {
             });
           }
           setLoading(false);
-        }, 800);
+        }, 300); // Reduced loading time from 800ms to 300ms for better user experience
       } catch (error) {
         console.error('Error fetching hospital data:', error);
         setLoading(false);
@@ -487,6 +487,40 @@ const HospitalDetail: React.FC = () => {
             </div>
             
             <div className="md:col-span-1">
+              {/* Hospital offers section */}
+              {hospital.offers && hospital.offers.length > 0 && (
+                <Card className="mb-6">
+                  <CardContent className="pt-6">
+                    <h3 className="text-xl font-semibold mb-4 flex items-center text-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a4 4 0 118 0v7M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v12a2 2 0 002 2h10a2 2 0 002-2V8" />
+                      </svg>
+                      Special Offers
+                    </h3>
+                    <div className="space-y-4">
+                      {hospital.offers.map((offer, index) => (
+                        <div 
+                          key={index} 
+                          className={`p-3 rounded-lg border ${offer.isHighlighted ? 'border-primary bg-primary/5' : 'border-gray-200'}`}
+                        >
+                          <h4 className={`font-semibold ${offer.isHighlighted ? 'text-primary' : 'text-gray-900'}`}>
+                            {offer.title}
+                          </h4>
+                          <p className="text-sm text-gray-600 mt-1">{offer.description}</p>
+                          {offer.validUntil && (
+                            <div className="mt-2 flex items-center text-xs text-gray-500">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              Valid until: {new Date(offer.validUntil).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Opening hours card */}
               <Card>
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-semibold mb-4 flex items-center">

@@ -23,6 +23,12 @@ interface Hospital {
   distance: string;
   specialties: string[];
   isEmergency: boolean;
+  offers?: {
+    title: string;
+    description: string;
+    validUntil?: string;
+    isHighlighted?: boolean;
+  }[];
 }
 
 const NearbyHospitals: React.FC = () => {
@@ -52,7 +58,20 @@ const NearbyHospitals: React.FC = () => {
       phone: '1800-123-4567',
       distance: '2.4 km',
       specialties: ['Emergency Care', 'Cardiology', 'Neurology'],
-      isEmergency: true
+      isEmergency: true,
+      offers: [
+        {
+          title: 'Free OPD Consultation',
+          description: 'Get a free OPD consultation with our specialists every Monday',
+          validUntil: '2025-06-30',
+          isHighlighted: true
+        },
+        {
+          title: '20% Off on Health Packages',
+          description: 'Special discount on all preventive health checkup packages',
+          validUntil: '2025-05-31'
+        }
+      ]
     },
     {
       id: 2,
@@ -61,7 +80,15 @@ const NearbyHospitals: React.FC = () => {
       phone: '1800-765-4321',
       distance: '3.8 km',
       specialties: ['Orthopedics', 'Pediatrics', 'General Surgery'],
-      isEmergency: true
+      isEmergency: true,
+      offers: [
+        {
+          title: 'Free OPD Week',
+          description: 'Complimentary OPD consultations for all specialties from May 10-17',
+          validUntil: '2025-05-17',
+          isHighlighted: true
+        }
+      ]
     },
     {
       id: 3,
@@ -298,6 +325,18 @@ const NearbyHospitals: React.FC = () => {
                 <Phone className="h-3 w-3 inline mr-1" />
                 {hospital.phone}
               </p>
+              
+              {/* Display highlighted offer if available */}
+              {hospital.offers && hospital.offers.length > 0 && hospital.offers.some(offer => offer.isHighlighted) && (
+                <div className="my-2">
+                  {hospital.offers.filter(offer => offer.isHighlighted).slice(0, 1).map((offer, index) => (
+                    <div key={index} className="bg-primary/10 border border-primary/30 rounded-md px-2 py-1.5 text-xs">
+                      <p className="font-medium text-primary">{offer.title}</p>
+                      <p className="text-gray-600 line-clamp-1 md:line-clamp-2 text-[10px] md:text-xs">{offer.description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
               
               <div className="flex flex-wrap gap-1 mt-2 hidden md:flex">
                 {hospital.specialties.slice(0, 3).map((specialty, index) => (
