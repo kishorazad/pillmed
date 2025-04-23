@@ -354,14 +354,16 @@ const AdminDoctorManagement = () => {
 
   // Handle status filter change
   const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
+    // If "all" is selected, set empty string to remove filter
+    setStatusFilter(value === 'all' ? '' : value);
     setCurrentPage(1); // Reset to first page on filter change
     refetch();
   };
 
   // Handle specialty filter change
   const handleSpecialtyFilterChange = (value: string) => {
-    setSpecialtyFilter(value);
+    // If "all" is selected, set empty string to remove filter
+    setSpecialtyFilter(value === 'all' ? '' : value);
     setCurrentPage(1); // Reset to first page on filter change
     refetch();
   };
@@ -588,7 +590,7 @@ const AdminDoctorManagement = () => {
                   <SelectValue placeholder="Filter by specialty" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Specialties</SelectItem>
+                  <SelectItem value="all">All Specialties</SelectItem>
                   {specialties.map(specialty => (
                     <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
                   ))}
@@ -601,7 +603,7 @@ const AdminDoctorManagement = () => {
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
