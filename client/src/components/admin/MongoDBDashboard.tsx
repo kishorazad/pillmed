@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useQuery } from '@tanstack/react-query';
+import OptimizedImage from './OptimizedImage';
 import { 
   Loader2, 
   Database, 
@@ -403,15 +404,15 @@ const MongoDBDashboard = () => {
                             <TableRow key={prescription.id}>
                               <TableCell className="font-medium">{prescription.id}</TableCell>
                               <TableCell>
-                                {prescription.imageUrl && (
-                                  <div className="w-12 h-12 rounded border overflow-hidden">
-                                    <img 
-                                      src={prescription.imageUrl} 
-                                      alt="Prescription" 
-                                      className="w-full h-full object-cover" 
-                                    />
-                                  </div>
-                                )}
+                                <div className="w-12 h-12 rounded border overflow-hidden">
+                                  <OptimizedImage 
+                                    src={prescription.imageUrl} 
+                                    alt="Prescription" 
+                                    className="w-full h-full object-cover"
+                                    size="THUMBNAIL"
+                                    fallbackText="Rx"
+                                  />
+                                </div>
                               </TableCell>
                               <TableCell>
                                 <div className="font-medium">{prescription.userName || prescription.userFullName}</div>
@@ -454,15 +455,15 @@ const MongoDBDashboard = () => {
                                       </DialogDescription>
                                     </DialogHeader>
                                     <div className="grid gap-4 py-4">
-                                      {prescription.imageUrl && (
-                                        <div className="mx-auto max-w-full max-h-[300px] overflow-hidden rounded-md border">
-                                          <img
-                                            src={prescription.imageUrl}
-                                            alt="Prescription"
-                                            className="w-full h-full object-contain"
-                                          />
-                                        </div>
-                                      )}
+                                      <div className="mx-auto max-w-full max-h-[300px] overflow-hidden rounded-md border">
+                                  <OptimizedImage 
+                                    src={prescription.imageUrl}
+                                    alt="Prescription"
+                                    className="w-full h-full object-contain"
+                                    size="MEDIUM"
+                                    fallbackText="No prescription image available"
+                                  />
+                                </div>
                                       <div className="grid grid-cols-2 gap-4">
                                         <div>
                                           <h4 className="font-medium text-sm">User Information</h4>
@@ -602,15 +603,15 @@ const MongoDBDashboard = () => {
                           <TableCell className="font-medium">{product.id}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              {product.imageUrl && (
-                                <div className="w-8 h-8 rounded overflow-hidden bg-gray-100">
-                                  <img 
+                              <div className="w-8 h-8 rounded overflow-hidden bg-gray-100">
+                                  <OptimizedImage 
                                     src={product.imageUrl} 
-                                    alt={product.name} 
-                                    className="w-full h-full object-cover" 
+                                    alt={product.name || 'Product'} 
+                                    className="w-full h-full object-cover"
+                                    size="THUMBNAIL"
+                                    fallbackText="Rx"
                                   />
                                 </div>
-                              )}
                               <span>{product.name}</span>
                             </div>
                           </TableCell>
