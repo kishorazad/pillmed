@@ -15,7 +15,8 @@ import {
   Building,
   Stethoscope,
   Mail,
-  MailWarning
+  MailWarning,
+  MessageSquare
 } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
 import { useAuth } from "@/lib/auth-provider";
@@ -51,6 +52,11 @@ const AdminNavigation = () => {
       href: '/admin/customers'
     },
     {
+      label: 'Products',
+      icon: <ShoppingBag className="h-5 w-5" />,
+      href: '/admin/products'
+    },
+    {
       label: 'Pharmacy Management',
       icon: <Building className="h-5 w-5" />,
       href: '/admin/pharmacies'
@@ -64,6 +70,16 @@ const AdminNavigation = () => {
       label: 'Medicine Management',
       icon: <Pill className="h-5 w-5" />,
       href: '/admin/medicines'
+    },
+    {
+      label: 'Health Tips',
+      icon: <FilePieChart className="h-5 w-5" />,
+      href: '/admin/health-tips'
+    },
+    {
+      label: 'Testimonials',
+      icon: <MessageSquare className="h-5 w-5" />,
+      href: '/admin/testimonials'
     },
     {
       label: 'Email Management',

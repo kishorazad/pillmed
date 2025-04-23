@@ -29,6 +29,7 @@ interface AppState {
   tempUserId: number;
   searchQuery: string;
   pincode: string | null;
+  loading: boolean;
   
   // Actions
   openCart: () => void;
@@ -42,6 +43,7 @@ interface AppState {
   setSearchQuery: (query: string) => void;
   setPincode: (pincode: string) => void;
   fetchCart: (userId?: number) => Promise<void>;
+  setLoading: (loading: boolean) => void;
 }
 
 // Create a store with Zustand
@@ -53,6 +55,7 @@ export const useStore = create<AppState>((set, get) => ({
   tempUserId: 1, // Temp user ID for demo purposes
   searchQuery: '',
   pincode: null,
+  loading: false,
   
   // Cart actions
   openCart: () => set({ cartOpen: true }),
@@ -206,4 +209,7 @@ export const useStore = create<AppState>((set, get) => ({
   
   // Pincode actions
   setPincode: (pincode) => set({ pincode }),
+  
+  // Loading state
+  setLoading: (loading) => set({ loading }),
 }));
