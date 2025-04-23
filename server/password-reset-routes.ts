@@ -4,7 +4,7 @@ import { mongoDBStorage } from './mongodb-storage';
 import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
-import { sendPasswordResetOTP, sendPasswordResetConfirmation } from './email-service';
+import { sendPasswordResetOTP, sendPasswordResetConfirmation, sendPasswordResetToken } from './email-service';
 
 const router = Router();
 const scryptAsync = promisify(scrypt);
@@ -259,14 +259,13 @@ router.post('/request-token', async (req: Request, res: Response) => {
       used: false
     });
     
-    // Typically, we would send an email with a link that includes the token
-    // The link would direct the user to a page where they can reset their password
-    // Something like: https://yourdomain.com/reset-password?token=<TOKEN>
+    // Generate a reset link with the token
+    const resetLink = `https://pillnow.app/reset-password?token=${token}`;
     console.log(`Generated password reset token for ${email}: ${token}`);
+    console.log(`Password reset link: ${resetLink}`);
     
-    // For now, we'll just log the token for testing
-    // In a real implementation, we would send an email with the reset link
-    console.log(`Password reset link: https://pillnow.app/reset-password?token=${token}`);
+    // Send the password reset email with the token link
+    await sendPasswordResetToken(email, token, resetLink);
     
     return res.json({ success: true, message: 'If your email is registered, you will receive a password reset link' });
   } catch (error) {

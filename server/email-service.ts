@@ -568,6 +568,53 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<boo
  * @param email Recipient email address
  * @returns Promise resolving to true if successful
  */
+/**
+ * Send a password reset token via email
+ * @param email Recipient email address
+ * @param token Reset token for verification
+ * @param resetLink Full URL to the password reset page with token
+ * @returns Promise resolving to true if successful
+ */
+export async function sendPasswordResetToken(email: string, token: string, resetLink: string): Promise<boolean> {
+  const subject = 'Reset Your PillNow Password';
+  const text = `
+    You requested to reset your PillNow account password.
+    
+    Click the link below to reset your password:
+    ${resetLink}
+    
+    This link will expire in 24 hours.
+    
+    If you did not request this reset, please ignore this email or contact support if you have concerns.
+    
+    Thank you,
+    The PillNow Team
+  `;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+      <h2 style="color: #FF8F00; text-align: center;">PillNow Password Reset</h2>
+      <p>Dear user,</p>
+      <p>We received a request to reset your password for your PillNow account.</p>
+      <p>Click the button below to reset your password:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${resetLink}" style="background-color: #FF8F00; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">Reset Password</a>
+      </div>
+      <p>Or copy and paste this link into your browser:</p>
+      <p style="background-color: #f8f8f8; padding: 10px; border-radius: 4px; word-break: break-all;">
+        ${resetLink}
+      </p>
+      <p>This link will expire in <strong>24 hours</strong>.</p>
+      <p>If you did not request this password reset, please ignore this email or contact our support team if you have concerns.</p>
+      <p style="margin-top: 40px; font-size: 12px; color: #888; text-align: center;">
+        &copy; ${new Date().getFullYear()} PillNow. All rights reserved.
+      </p>
+    </div>
+  `;
+  
+  return sendEmail(email, subject, text, html);
+}
+
 export async function sendPasswordResetConfirmation(email: string): Promise<boolean> {
   const subject = 'Your PillNow Password Has Been Reset';
   const text = `
