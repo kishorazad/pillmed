@@ -7,6 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import HospitalImageCarousel from '@/components/HospitalImageCarousel';
+import HospitalLogo from '@/components/HospitalLogo';
+import BookHospitalAppointment from '@/components/BookHospitalAppointment';
 
 // Hospital type for detailed view
 interface Hospital {
@@ -326,35 +329,48 @@ const HospitalDetail: React.FC = () => {
         {t('back')}
       </Button>
       
-      {/* Hero image */}
-      <div className="relative h-[250px] md:h-[400px] rounded-xl overflow-hidden mb-6">
-        <img 
-          src={hospital.images[0]} 
-          alt={hospital.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/hospital-placeholder.jpg';
-          }}
+      {/* Hospital Logo Banner */}
+      <div className="flex items-center gap-4 mb-6">
+        <HospitalLogo 
+          name={hospital.name} 
+          logoUrl={hospital.logoUrl} 
+          className="h-16 w-16 md:h-24 md:w-24 flex-shrink-0"
         />
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{hospital.name}</h1>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {hospital.specialties.slice(0, 3).map((specialty, index) => (
+              <Badge key={index} variant="secondary" className="rounded-full">
+                {specialty}
+              </Badge>
+            ))}
+            {hospital.specialties.length > 3 && (
+              <Badge variant="outline" className="rounded-full">
+                +{hospital.specialties.length - 3} more
+              </Badge>
+            )}
+          </div>
+        </div>
         
         {hospital.isEmergency && (
-          <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
+          <div className="ml-auto bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
             <Heart className="h-4 w-4 mr-1" />
             {t('emergency_services')}
           </div>
         )}
       </div>
       
-      {/* Hospital name and basic info */}
+      {/* Image Carousel */}
+      <div className="mb-6">
+        <HospitalImageCarousel 
+          images={hospital.images} 
+          alt={hospital.name}
+          className="w-full rounded-xl overflow-hidden"
+        />
+      </div>
+      
+      {/* Hospital location and contact info */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{hospital.name}</h1>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {hospital.specialties.map((specialty, index) => (
-            <Badge key={index} variant="secondary" className="rounded-full">
-              {specialty}
-            </Badge>
-          ))}
-        </div>
         <div className="flex flex-col md:flex-row md:items-center gap-4 text-gray-600">
           <div className="flex items-center">
             <MapPin className="h-5 w-5 mr-2 text-gray-500" />
@@ -612,48 +628,61 @@ const HospitalDetail: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="doctors" className="mt-4">
-          <h3 className="text-xl font-semibold mb-4">{t('doctors_at_hospital')}</h3>
-          {hospital.doctors.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {hospital.doctors.map((doctor) => (
-                <Card key={doctor.id} className="bg-white hover:shadow-md transition-shadow">
-                  <CardContent className="p-0">
-                    <div className="flex flex-col sm:flex-row">
-                      <div className="h-[120px] w-full sm:w-[120px] overflow-hidden">
-                        <img 
-                          src={doctor.image} 
-                          alt={doctor.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/doctor-placeholder.jpg';
-                          }}
-                        />
-                      </div>
-                      <div className="p-4 flex-1">
-                        <h4 className="font-semibold text-lg mb-1">{doctor.name}</h4>
-                        <p className="text-gray-600 text-sm mb-3">{doctor.specialty}</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="w-full"
-                          onClick={() => window.location.href = `/doctors/${doctor.id}`}
-                        >
-                          {t('view_profile')}
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <h3 className="text-xl font-semibold mb-4">{t('doctors_at_hospital')}</h3>
+              {hospital.doctors.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {hospital.doctors.map((doctor) => (
+                    <Card key={doctor.id} className="bg-white hover:shadow-md transition-shadow">
+                      <CardContent className="p-0">
+                        <div className="flex flex-col sm:flex-row">
+                          <div className="h-[120px] w-full sm:w-[120px] overflow-hidden">
+                            <img 
+                              src={doctor.image} 
+                              alt={doctor.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/doctor-placeholder.jpg';
+                              }}
+                            />
+                          </div>
+                          <div className="p-4 flex-1">
+                            <h4 className="font-semibold text-lg mb-1">{doctor.name}</h4>
+                            <p className="text-gray-600 text-sm mb-3">{doctor.specialty}</p>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="w-full"
+                              onClick={() => window.location.href = `/doctors/${doctor.id}`}
+                            >
+                              {t('view_profile')}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">{t('no_doctors_listed')}</p>
+                  <Button variant="outline" onClick={() => setActiveTab('about')}>
+                    {t('view_hospital_info')}
+                  </Button>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">{t('no_doctors_listed')}</p>
-              <Button variant="outline" onClick={() => setActiveTab('about')}>
-                {t('view_hospital_info')}
-              </Button>
+            
+            {/* Book appointment component in sidebar */}
+            <div className="md:col-span-1">
+              <BookHospitalAppointment 
+                hospitalId={hospital.id}
+                hospitalName={hospital.name}
+                specialties={hospital.specialties}
+              />
             </div>
-          )}
+          </div>
         </TabsContent>
       </Tabs>
 

@@ -5,8 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "wouter";
 import { Loader2 } from "lucide-react";
 
 interface BookHospitalAppointmentProps {
@@ -20,8 +18,8 @@ const BookHospitalAppointment = ({
   hospitalName,
   specialties 
 }: BookHospitalAppointmentProps) => {
-  const { user } = useAuth();
-  const [_, navigate] = useNavigate();
+  // We'll use local state since we don't have the auth hook yet
+  const [user, setUser] = useState<any | null>(null);
   const { toast } = useToast();
   
   const today = new Date();
@@ -51,7 +49,7 @@ const BookHospitalAppointment = ({
         description: "Please log in to book an appointment",
         variant: "destructive"
       });
-      navigate("/auth");
+      window.location.href = "/auth";
       return;
     }
 
