@@ -6,11 +6,12 @@ const router = express.Router();
 
 // Ensure only admins can access these routes
 function isAdminOrSubadmin(req: Request, res: Response, next: Function) {
-  if (!req.isAuthenticated()) {
+  // Check for session data which indicates a user is logged in
+  if (!req.session || !req.session.user) {
     return res.status(401).json({ message: 'Authentication required' });
   }
   
-  const user = req.user;
+  const user = req.session.user;
   if (!user || (user.role !== 'admin' && user.role !== 'subadmin')) {
     return res.status(403).json({ message: 'Admin access required' });
   }
@@ -147,8 +148,8 @@ router.get('/stats', isAdminOrSubadmin, async (req: Request, res: Response) => {
     // Get all products
     const products = await storage.getProducts();
     
-    // Count products with low stock
-    const lowStockProducts = products.filter(product => product.stock < 10).length;
+    // Count products with low stock (using inStock property)
+    const lowStockProducts = products.filter(product => product.inStock === false).length;
     
     // Calculate sales by category
     const categoryMap = new Map();
@@ -172,13 +173,15 @@ router.get('/stats', isAdminOrSubadmin, async (req: Request, res: Response) => {
     
     // Process products to calculate sales by category
     products.forEach(product => {
-      const category = product.category || 'Uncategorized';
+      // Use categoryId and map to a category name if needed
+      const categoryId = product.categoryId || 0;
+      const categoryName = `Category ${categoryId}`; // Simplified for now
       const sales = productSalesMap.get(product.id) || 0;
       
-      if (categoryMap.has(category)) {
-        categoryMap.set(category, categoryMap.get(category) + sales);
+      if (categoryMap.has(categoryName)) {
+        categoryMap.set(categoryName, categoryMap.get(categoryName) + sales);
       } else {
-        categoryMap.set(category, sales);
+        categoryMap.set(categoryName, sales);
       }
     });
     
