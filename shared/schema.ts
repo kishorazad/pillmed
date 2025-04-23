@@ -26,6 +26,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   phone: true,
   address: true,
   pincode: true,
+  city: true,
+  state: true,
   role: true,
   status: true,
   profileImageUrl: true,
