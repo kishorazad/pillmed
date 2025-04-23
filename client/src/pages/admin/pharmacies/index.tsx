@@ -121,7 +121,7 @@ const AdminPharmacyManagement = () => {
         searchParams.append('search', searchTerm);
       }
       
-      if (statusFilter) {
+      if (statusFilter && statusFilter !== 'all') {
         searchParams.append('status', statusFilter);
       }
       
@@ -269,7 +269,7 @@ const AdminPharmacyManagement = () => {
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
