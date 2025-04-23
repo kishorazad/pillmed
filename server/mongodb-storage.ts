@@ -835,6 +835,54 @@ class MongoDBStorage implements IStorage {
     }
   }
 
+  // ---------- Orders ----------
+  // Get all orders for analytics and sales dashboard
+  async getAllOrders(): Promise<Order[]> {
+    try {
+      console.log('MongoDB: Fetching all orders for sales dashboard analysis');
+      if (!this.isConnected(this.collections.orders)) {
+        console.log('MongoDB: Not connected to orders collection');
+        return [];
+      }
+      
+      const collection = mongoDBService.getCollection(this.collections.orders);
+      const orders = await collection.find({}).toArray();
+      
+      // Get all order items
+      const orderItems = await this.getAllOrderItems();
+      
+      // Map order items to respective orders
+      const ordersWithItems = orders.map(order => {
+        const items = orderItems.filter(item => item.orderId === order.id);
+        return {
+          ...order,
+          items
+        };
+      });
+      
+      console.log(`MongoDB: Found ${ordersWithItems.length} orders with items data`);
+      return ordersWithItems;
+    } catch (error) {
+      console.error('MongoDB: Error fetching all orders:', error);
+      return [];
+    }
+  }
+  
+  // Get all order items for analytics purposes
+  async getAllOrderItems(): Promise<any[]> {
+    try {
+      if (!this.isConnected('orderItems')) {
+        return [];
+      }
+      
+      const collection = mongoDBService.getCollection('orderItems');
+      return await collection.find({}).toArray();
+    } catch (error) {
+      console.error('MongoDB: Error fetching all order items:', error);
+      return [];
+    }
+  }
+
   // ---------- Pharmacy Orders ----------
 
   async getPharmacyOrders(pharmacyId: number): Promise<any[]> {
