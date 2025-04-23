@@ -1,67 +1,69 @@
-import { MongoClient } from "mongodb";
-import { scryptSync, randomBytes } from "crypto";
+/**
+ * Script to create an admin user if one doesn't exist
+ */
 
-// Function to hash password with salt
+import { MongoClient } from 'mongodb';
+import crypto from 'crypto';
+
+const uri = process.env.MONGODB_URI || 'mongodb+srv://brijkishorazad:u6w2inq13CaOzzMO@cluster0.ncw79xh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const dbName = 'pillnow';
+
 function hashPassword(password) {
-  const salt = randomBytes(16).toString('hex');
-  const hash = scryptSync(password, salt, 64).toString('hex');
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto
+    .scryptSync(password, salt, 64)
+    .toString('hex');
   return `${hash}.${salt}`;
 }
 
 async function createAdminUser() {
-  // Set your admin credentials here
-  const adminUsername = "admin2"; // Change this to your desired username
-  const adminPassword = "admin123"; // Change this to your desired password
-  const adminEmail = "admin2@pillnow.com"; // Change this to your desired email
-  const adminName = "Administrator 2"; // Change this to your desired name
-  
-  const uri = process.env.MONGODB_URI;
+  const client = new MongoClient(uri);
   
   try {
-    console.log("Connecting to MongoDB...");
-    const client = new MongoClient(uri);
     await client.connect();
+    console.log('Connected to MongoDB');
     
-    console.log("Connected successfully to MongoDB");
-    const database = client.db("pillnow");
-    const users = database.collection("users");
+    const database = client.db(dbName);
+    const users = database.collection('users');
     
-    // Check if username already exists
-    const existingUser = await users.findOne({ username: adminUsername });
+    // Check if admin user exists
+    const adminUser = await users.findOne({ email: 'admin@pillnow.com' });
     
-    if (existingUser) {
-      console.log(`Username ${adminUsername} already exists. Please choose a different username.`);
-      await client.close();
-      return;
-    }
-    
-    // Hash the password
-    const hashedPassword = hashPassword(adminPassword);
-    
-    // Create the admin user
-    const result = await users.insertOne({
-      username: adminUsername,
-      password: hashedPassword,
-      role: "admin", // or "subadmin" if creating a subadmin
-      email: adminEmail,
-      name: adminName,
-      createdAt: new Date()
-    });
-    
-    if (result.insertedId) {
-      console.log(`New admin user created successfully.`);
-      console.log(`Username: ${adminUsername}`);
-      console.log(`Password: ${adminPassword}`);
-      console.log(`Email: ${adminEmail}`);
-      console.log(`Role: admin`);
+    if (adminUser) {
+      console.log('Admin user exists:', adminUser);
+      
+      // Update the admin user's password
+      const hashedPassword = hashPassword('admin');
+      const result = await users.updateOne(
+        { email: 'admin@pillnow.com' },
+        { $set: { password: hashedPassword } }
+      );
+      
+      console.log('Admin password updated:', result.modifiedCount > 0);
     } else {
-      console.log("Failed to create new admin user");
+      // Create admin user
+      const adminUser = {
+        id: 1,
+        username: 'admin',
+        password: hashPassword('admin'),
+        name: 'Admin User',
+        email: 'admin@pillnow.com',
+        phone: '1234567890',
+        role: 'admin',
+        status: 'active',
+        profileImageUrl: null,
+        createdAt: new Date()
+      };
+      
+      const result = await users.insertOne(adminUser);
+      console.log('Admin user created:', result.insertedId);
     }
     
-    await client.close();
-    console.log("MongoDB connection closed");
   } catch (error) {
-    console.error("Error creating admin user:", error);
+    console.error('Error:', error);
+  } finally {
+    await client.close();
+    console.log('MongoDB connection closed');
   }
 }
 

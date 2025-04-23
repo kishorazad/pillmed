@@ -1,101 +1,69 @@
-import { MongoClient } from 'mongodb';
-import { randomBytes, scryptSync } from 'crypto';
+/**
+ * Script to check users in the MongoDB database
+ */
 
-// Helper function to hash a password
+import { MongoClient } from 'mongodb';
+import crypto from 'crypto';
+
+const uri = process.env.MONGODB_URI || 'mongodb+srv://brijkishorazad:u6w2inq13CaOzzMO@cluster0.ncw79xh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const dbName = 'pillnow';
+
 function hashPassword(password) {
-  const salt = randomBytes(16).toString('hex');
-  const hash = scryptSync(password, salt, 64).toString('hex');
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto
+    .scryptSync(password, salt, 64)
+    .toString('hex');
   return `${hash}.${salt}`;
 }
 
-// Helper function to verify a password
 function verifyPassword(password, hashedPassword) {
-  try {
-    const [hash, salt] = hashedPassword.split('.');
-    const hashVerify = scryptSync(password, salt, 64).toString('hex');
-    return hash === hashVerify;
-  } catch (error) {
-    console.error('Error verifying password:', error);
-    return false;
-  }
+  const [hash, salt] = hashedPassword.split('.');
+  const hashVerify = crypto
+    .scryptSync(password, salt, 64)
+    .toString('hex');
+  return hash === hashVerify;
 }
 
 async function checkUsers() {
-  if (!process.env.MONGODB_URI) {
-    console.error('MONGODB_URI environment variable not set');
-    return;
-  }
-
-  const client = new MongoClient(process.env.MONGODB_URI);
+  const client = new MongoClient(uri);
   
   try {
     await client.connect();
     console.log('Connected to MongoDB');
     
-    const db = client.db('pillnow');
-    const users = db.collection('users');
+    const database = client.db(dbName);
+    const users = database.collection('users');
     
-    // List all users
+    // Find all users
     const allUsers = await users.find({}).toArray();
     console.log(`Found ${allUsers.length} users in the database`);
     
-    allUsers.forEach(user => {
-      console.log(`User: ${user.username}, Role: ${user.role}, Password format: ${user.password.includes('.') ? 'Hashed' : 'Plain'}`);
-    });
-    
-    // Update predefined users with correct passwords
-    const userCredentials = [
-      { username: 'admin', password: 'admin123', role: 'admin' },
-      { username: 'user1', password: 'password123', role: 'customer' },
-      { username: 'doctor1', password: 'doctor123', role: 'doctor' },
-      { username: 'pharmacy1', password: 'pharmacy123', role: 'pharmacy' },
-      { username: 'chemist1', password: 'chemist123', role: 'chemist' },
-      { username: 'lab1', password: 'lab123', role: 'laboratory' },
-      { username: 'hospital1', password: 'hospital123', role: 'hospital' }
-    ];
-    
-    // Create or update these users
-    let created = 0;
-    let updated = 0;
-    
-    for (const credentials of userCredentials) {
-      const user = await users.findOne({ username: credentials.username });
+    // Check admin user
+    const adminUser = await users.findOne({ email: 'admin@pillnow.com' });
+    if (adminUser) {
+      console.log('\nAdmin User:');
+      console.log({
+        id: adminUser.id,
+        username: adminUser.username,
+        email: adminUser.email,
+        role: adminUser.role,
+        passwordLength: adminUser.password ? adminUser.password.length : 0
+      });
       
-      if (user) {
-        // Update the user's password if needed
-        const hashedPassword = hashPassword(credentials.password);
-        await users.updateOne(
-          { _id: user._id },
-          { $set: { password: hashedPassword } }
-        );
-        console.log(`Updated password for ${credentials.username}`);
-        updated++;
-      } else {
-        // Create the user if they don't exist
-        const newUser = {
-          username: credentials.username,
-          password: hashPassword(credentials.password),
-          name: credentials.username,
-          email: `${credentials.username}@example.com`,
-          role: credentials.role,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        
-        await users.insertOne(newUser);
-        console.log(`Created user ${credentials.username} with role ${credentials.role}`);
-        created++;
-      }
+      // Test admin password
+      const testPassword = 'admin';
+      const passwordValid = verifyPassword(testPassword, adminUser.password);
+      console.log(`Admin password '${testPassword}' is valid:`, passwordValid);
+    } else {
+      console.log('Admin user not found!');
     }
     
-    console.log(`Summary: Created ${created} users, updated ${updated} users`);
-    
   } catch (error) {
-    console.error('Error checking/updating users:', error);
+    console.error('Error:', error);
   } finally {
     await client.close();
-    console.log('Disconnected from MongoDB');
+    console.log('\nMongoDB connection closed');
   }
 }
 
-checkUsers().catch(console.error);
+checkUsers();
