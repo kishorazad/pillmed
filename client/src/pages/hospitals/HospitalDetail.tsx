@@ -42,6 +42,12 @@ interface Hospital {
     specialty: string;
     image: string;
   }[];
+  offers?: {
+    title: string;
+    description: string;
+    validUntil?: string;
+    isHighlighted?: boolean;
+  }[];
 }
 
 // Sample detailed hospital data (would come from API)
@@ -79,6 +85,24 @@ const hospitalData: Record<string, Hospital> = {
       facilities: 4.6,
       waitTime: 3.9
     },
+    offers: [
+      {
+        title: 'Free OPD Consultation',
+        description: 'Get a free OPD consultation with our specialists every Monday',
+        validUntil: '2025-06-30',
+        isHighlighted: true
+      },
+      {
+        title: '20% Off on Health Packages',
+        description: 'Special discount on all preventive health checkup packages',
+        validUntil: '2025-05-31'
+      },
+      {
+        title: 'Senior Citizen Benefits',
+        description: 'Special priority and discounts for senior citizens',
+        isHighlighted: true
+      }
+    ],
     doctors: [
       {
         id: 101,
@@ -133,6 +157,24 @@ const hospitalData: Record<string, Hospital> = {
       facilities: 4.4,
       waitTime: 3.7
     },
+    offers: [
+      {
+        title: 'Free OPD Week',
+        description: 'Complimentary OPD consultations for all specialties from May 10-17',
+        validUntil: '2025-05-17',
+        isHighlighted: true
+      },
+      {
+        title: '15% Discount on Lab Tests',
+        description: 'Special discount on all diagnostic lab tests for new patients',
+        validUntil: '2025-06-30'
+      },
+      {
+        title: 'Health Card Benefits',
+        description: 'Free health card with special year-round benefits',
+        isHighlighted: true
+      }
+    ],
     doctors: [
       {
         id: 201,
