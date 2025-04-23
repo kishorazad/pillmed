@@ -1,17 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Heart, Brain, Lungs, Stethoscope, Bone, Clock, Video, FileText, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Heart, Activity, Stethoscope, Bone, Clock, Video, FileText, ChevronRight, ChevronLeft } from 'lucide-react';
 import { usePreload } from '@/hooks/use-preload';
 import UserMdIcon from '@/components/icons/UserMdIcon';
 import FemaleIcon from '@/components/icons/FemaleIcon';
+import BrainIcon from '@/components/icons/BrainIcon';
+import LungsIcon from '@/components/icons/LungsIcon';
 
 const ConsultDoctors = () => {
-  // Updated array of specialty items with Lucide icons
+  // Updated array of specialty items with custom icons
   const specialties = [
     { icon: Heart, color: 'text-red-500', bgColor: 'bg-red-100', name: 'Cardiology' },
-    { icon: Brain, color: 'text-blue-500', bgColor: 'bg-blue-100', name: 'Neurology' },
-    { icon: Lungs, color: 'text-green-500', bgColor: 'bg-green-100', name: 'Pulmonology' },
+    { icon: BrainIcon, color: 'text-blue-500', bgColor: 'bg-blue-100', name: 'Neurology' },
+    { icon: LungsIcon, color: 'text-green-500', bgColor: 'bg-green-100', name: 'Pulmonology' },
     { icon: Stethoscope, color: 'text-purple-500', bgColor: 'bg-purple-100', name: 'General' },
     { icon: Bone, color: 'text-amber-500', bgColor: 'bg-amber-100', name: 'Orthopedics' },
     { icon: FemaleIcon, color: 'text-pink-500', bgColor: 'bg-pink-100', name: 'Gynecology' }

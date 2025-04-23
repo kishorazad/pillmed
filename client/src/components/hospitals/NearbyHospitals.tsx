@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../LanguageSwitcher';
 import { MapPin, Phone, Heart, Upload, Plus, ArrowRightIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { Link } from 'wouter';
 import { 
   Dialog, 
   DialogContent, 
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { usePreload } from '@/hooks/use-preload';
 
 interface Hospital {
   id: number;
@@ -30,18 +32,35 @@ const NearbyHospitals: React.FC = () => {
   const [open, setOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+  const preload = usePreload();
+  
+  // Check if scroll buttons should be shown
+  const checkScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      setShowLeftArrow(scrollContainerRef.current.scrollLeft > 10);
+      setShowRightArrow(scrollContainerRef.current.scrollLeft < scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth - 10);
+    }
+  };
   
   const handleScrollLeft = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+      scrollContainerRef.current.scrollBy({ left: -90, behavior: 'smooth' });
     }
   };
   
   const handleScrollRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+      scrollContainerRef.current.scrollBy({ left: 90, behavior: 'smooth' });
     }
   };
+  
+  // Preload hospital detail page data
+  useEffect(() => {
+    // Preload hospitals data
+    preload.json('/api/hospitals');
+  }, [preload]);
   
   // Sample hospital data - would be replaced with API data
   const hospitals: Hospital[] = [
@@ -239,60 +258,36 @@ const NearbyHospitals: React.FC = () => {
         
         <div 
           ref={scrollContainerRef}
-          className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory"
-          style={{ 
-            scrollbarWidth: 'none', 
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch'
-          }}
+          className="flex overflow-x-auto no-scrollbar gap-4 pb-4"
+          onScroll={checkScrollButtons}
+          style={{ scrollSnapType: 'x mandatory' }}
         >
           {hospitals.map((hospital) => (
-            <div 
+            <Link 
               key={hospital.id} 
-              className={`snap-start min-w-[300px] md:min-w-[350px] flex-shrink-0 rounded-lg shadow-sm p-4 ${hospital.isEmergency ? 'bg-red-50 border-l-4 border-red-500' : 'bg-white'} transition-shadow hover:shadow-md flex flex-col`}
+              href={`/hospitals/${hospital.id}`}
             >
-              <div className="flex justify-between items-start">
-                <h3 className="text-lg font-semibold">{hospital.name}</h3>
-                <div className="text-sm text-gray-500 flex items-center">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  {hospital.distance}
+              <div 
+                className={`flex-none w-[90px] h-[118px] flex flex-col items-center justify-center ${hospital.isEmergency ? 'bg-red-50 border-l-4 border-red-500' : 'bg-white'} rounded-lg shadow-sm p-2 transition-shadow hover:shadow-md`}
+                style={{ scrollSnapAlign: 'start' }}
+              >
+                <div className="w-[88.4px] h-[72.33px] flex items-center justify-center">
+                  {hospital.isEmergency ? (
+                    <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center">
+                      <Heart className="h-7 w-7 text-red-500" />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
+                      <MapPin className="h-7 w-7 text-blue-500" />
+                    </div>
+                  )}
                 </div>
+                <h4 className="text-xs font-medium text-center line-clamp-1 mt-1">
+                  {hospital.name}
+                </h4>
+                <span className="text-[10px] text-gray-500">{hospital.distance}</span>
               </div>
-              
-              {hospital.isEmergency && (
-                <div className="inline-flex items-center mt-1 mb-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded w-fit">
-                  <Heart className="h-3 w-3 mr-1" />
-                  {t('emergency_care')}
-                </div>
-              )}
-              
-              <p className="text-sm text-gray-600 mt-2 mb-1 line-clamp-1">
-                <MapPin className="h-3 w-3 inline mr-1" />
-                {hospital.address}
-              </p>
-              
-              <p className="text-sm text-gray-600 mb-3">
-                <Phone className="h-3 w-3 inline mr-1" />
-                {hospital.phone}
-              </p>
-              
-              <div className="flex flex-wrap gap-1 mt-2">
-                {hospital.specialties.slice(0, 3).map((specialty, index) => (
-                  <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                    {specialty}
-                  </span>
-                ))}
-                {hospital.specialties.length > 3 && (
-                  <span className="text-xs text-gray-500">+{hospital.specialties.length - 3} {t('more')}</span>
-                )}
-              </div>
-              
-              <div className="mt-auto pt-3 flex justify-end">
-                <a href={`tel:${hospital.phone.replace(/[^\d]/g, '')}`} className="text-primary text-sm font-medium hover:underline">
-                  {t('call_now')}
-                </a>
-              </div>
-            </div>
+            </Link>
           ))}
         </div>
         
