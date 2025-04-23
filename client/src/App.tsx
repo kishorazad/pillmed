@@ -78,6 +78,8 @@ interface RoleBasedRouteProps {
 
 function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedRouteProps) {
   const { user, isLoading } = useAuth();
+  // Use this to properly handle suspense transitions
+  const [isPending, startTransition] = useTransition();
   
   // Show loading state while checking authentication
   if (isLoading) {
@@ -127,8 +129,21 @@ function RoleBasedRoute({ path, component: Component, allowedRoles }: RoleBasedR
     );
   }
   
-  // If we get here, the user is authenticated and has the correct role
-  return <Route path={path}><Component /></Route>;
+  // If we get here, the user is authenticated and has the correct role - wrap with Suspense and startTransition
+  return (
+    <Route path={path}>
+      <div className={`transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}>
+        <Suspense fallback={
+          <div className="flex items-center justify-center p-4 min-h-[50vh]">
+            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+            <span>Loading admin panel...</span>
+          </div>
+        }>
+          {createElement(Component)}
+        </Suspense>
+      </div>
+    </Route>
+  );
 }
 
 function Router() {
