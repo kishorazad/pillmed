@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +18,29 @@ const BookHospitalAppointment = ({
   hospitalName,
   specialties 
 }: BookHospitalAppointmentProps) => {
-  // We'll use local state since we don't have the auth hook yet
+  // Use local state for authentication
   const [user, setUser] = useState<any | null>(null);
   const { toast } = useToast();
+  
+  // Check for user authentication when component mounts
+  useEffect(() => {
+    // Fetch user data from API
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/user');
+        if (response.ok) {
+          const userData = await response.json();
+          if (userData && userData.id) {
+            setUser(userData);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+      }
+    };
+    
+    checkAuth();
+  }, []);
   
   const today = new Date();
   const oneMonthFromNow = new Date();
@@ -126,7 +146,7 @@ const BookHospitalAppointment = ({
       setSymptoms("");
       
       // Redirect to appointments page
-      navigate("/appointments");
+      window.location.href = "/appointments";
     } catch (error) {
       console.error("Appointment booking error:", error);
       toast({
