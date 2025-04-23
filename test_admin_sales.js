@@ -1,14 +1,13 @@
 /**
  * Test script for admin sales dashboard access
  */
-import fetch from 'node-fetch';
-import fetchCookie from 'node-fetch-cookies';
+import { fetch, CookieJar } from 'node-fetch-cookies';
 
 async function testAdminSalesDashboard() {
   console.log('Testing admin sales dashboard access...');
   
   // Create a cookie jar to store and send cookies between requests
-  const cookieJar = createCookieJar();
+  const cookieJar = new CookieJar();
   
   try {
     // Admin credentials
@@ -20,7 +19,7 @@ async function testAdminSalesDashboard() {
     console.log(`Step 1: Login with username: ${credentials.username}`);
     
     // Login and store cookies
-    const loginResponse = await fetch(cookieJar, 'http://localhost:5000/api/login', {
+    const loginResponse = await fetch(cookieJar, 'https://pillnow.vrajshah.repl.co/api/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -41,7 +40,7 @@ async function testAdminSalesDashboard() {
     
     // Now try to access the product demand endpoint
     console.log('\nStep 2: Accessing sales dashboard product demand data...');
-    const demandResponse = await fetch(cookieJar, 'http://localhost:5000/api/admin/products', {
+    const demandResponse = await fetch(cookieJar, 'https://pillnow.vrajshah.repl.co/api/admin/products', {
       headers: {
         'Accept': 'application/json'
       }
@@ -63,7 +62,7 @@ async function testAdminSalesDashboard() {
     
     // Access the sales stats endpoint
     console.log('\nStep 3: Accessing sales dashboard stats data...');
-    const statsResponse = await fetch(cookieJar, 'http://localhost:5000/api/admin/stats', {
+    const statsResponse = await fetch(cookieJar, 'https://pillnow.vrajshah.repl.co/api/admin/stats', {
       headers: {
         'Accept': 'application/json'
       }
