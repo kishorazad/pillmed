@@ -205,121 +205,85 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
             {loading ? (
               // Loading skeleton
               Array(4).fill(0).map((_, i) => (
-                <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden flex-none md:min-w-[250px] md:max-w-[250px] w-[90px] h-[118px]">
-                  {/* Mobile skeleton */}
-                  <div className="md:hidden flex flex-col items-center justify-center h-full w-full p-2">
-                    <div className="w-[88.4px] h-[72.33px] bg-gray-200 animate-pulse rounded-md mb-2"></div>
-                    <div className="w-full h-4 bg-gray-200 animate-pulse rounded"></div>
-                    <div className="w-3/4 h-3 bg-gray-200 animate-pulse rounded mt-1"></div>
+                <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden min-w-[250px] max-w-[250px] flex-none">
+                  <div className="px-4 pt-4 h-40 flex justify-center">
+                    <div className="w-full h-full bg-gray-200 animate-pulse rounded-md"></div>
                   </div>
-                  
-                  {/* Desktop skeleton */}
-                  <div className="hidden md:block">
-                    <div className="px-4 pt-4 h-40 flex justify-center">
-                      <div className="w-full h-full bg-gray-200 animate-pulse rounded-md"></div>
+                  <div className="p-4">
+                    <div className="h-4 bg-gray-200 animate-pulse rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 animate-pulse rounded w-3/4 mb-3"></div>
+                    <div className="flex items-center mb-2">
+                      <div className="h-4 bg-gray-200 animate-pulse rounded w-16"></div>
                     </div>
-                    <div className="p-4">
-                      <div className="h-4 bg-gray-200 animate-pulse rounded mb-2"></div>
-                      <div className="h-4 bg-gray-200 animate-pulse rounded w-3/4 mb-3"></div>
-                      <div className="flex items-center mb-2">
-                        <div className="h-4 bg-gray-200 animate-pulse rounded w-16"></div>
-                      </div>
-                      <div className="h-6 bg-gray-200 animate-pulse rounded w-24 mb-3"></div>
-                      <div className="h-8 bg-gray-200 animate-pulse rounded"></div>
-                    </div>
+                    <div className="h-6 bg-gray-200 animate-pulse rounded w-24 mb-3"></div>
+                    <div className="h-8 bg-gray-200 animate-pulse rounded"></div>
                   </div>
                 </div>
               ))
             ) : displayProducts.map((product) => (
               <div 
                 key={product.id} 
-                className="bg-white rounded-lg shadow-sm overflow-hidden flex-none transition-shadow hover:shadow-md md:min-w-[250px] md:max-w-[250px] w-[90px] h-[118px]"
+                className="bg-white rounded-lg shadow-sm overflow-hidden min-w-[250px] max-w-[250px] flex-none transition-shadow hover:shadow-md"
               >
                 <Link href={`/products/${product.id}`}>
-                  {/* Mobile View - Simple Card (90x118) */}
-                  <div className="md:hidden flex flex-col items-center h-full w-full">
-                    <div className="w-[88.4px] h-[72.33px] flex items-center justify-center">
-                      <img 
-                        src={getSafeImageUrl(product.imageUrl, 'SMALL') || "/pillnow.png"} 
-                        alt={product.name} 
-                        className="max-h-full max-w-full object-contain"
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="px-1 flex flex-col items-center">
-                      <h3 className="text-xs font-medium text-center line-clamp-1 mt-1">{product.name}</h3>
-                      {product.discountedPrice ? (
-                        <div className="flex items-baseline mt-0.5">
-                          <span className="text-xs font-semibold">₹{(product.discountedPrice as number).toFixed(0)}</span>
-                          <span className="text-[8px] text-gray-500 line-through ml-1">₹{product.price.toFixed(0)}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs font-semibold mt-0.5">₹{product.price.toFixed(0)}</span>
-                      )}
-                    </div>
+                  <div className="relative px-4 pt-4 flex justify-center h-40">
+                    <img 
+                      src={getSafeImageUrl(product.imageUrl) || "/pillnow.png"} 
+                      alt={product.name} 
+                      className="h-full object-contain"
+                    />
+                    {product.discountedPrice && (
+                      <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                        {calculateDiscount(product.price, product.discountedPrice as number)}% {t('off')}
+                      </div>
+                    )}
+                    {product.tags && product.tags.length > 0 && (
+                      <div className="absolute top-2 left-2 flex flex-col gap-1">
+                        {product.tags.map((tag, index) => (
+                          <span 
+                            key={index} 
+                            className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Desktop View - Full Product Card */}
-                  <div className="hidden md:block">
-                    <div className="relative px-4 pt-4 flex justify-center h-40">
-                      <img 
-                        src={getSafeImageUrl(product.imageUrl) || "/pillnow.png"} 
-                        alt={product.name} 
-                        className="h-full object-contain"
-                      />
-                      {product.discountedPrice && (
-                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                          {calculateDiscount(product.price, product.discountedPrice as number)}% {t('off')}
+                  <div className="p-4">
+                    <h3 className="font-medium text-sm mb-1 line-clamp-2 h-10">{product.name}</h3>
+                    
+                    {product.rating && (
+                      <div className="flex items-center mb-2">
+                        <div className="flex items-center bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">
+                          <Star className="h-3 w-3 mr-1 fill-current" />
+                          <span>{product.rating}</span>
                         </div>
-                      )}
-                      {product.tags && product.tags.length > 0 && (
-                        <div className="absolute top-2 left-2 flex flex-col gap-1">
-                          {product.tags.map((tag, index) => (
-                            <span 
-                              key={index} 
-                              className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                        {product.ratingCount && (
+                          <span className="text-xs text-gray-500 ml-2">{product.ratingCount} {t('ratings')}</span>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="flex items-baseline">
+                      {product.discountedPrice ? (
+                        <>
+                          <span className="text-lg font-semibold">₹{(product.discountedPrice as number).toFixed(2)}</span>
+                          <span className="text-gray-500 text-sm line-through ml-2">₹{product.price.toFixed(2)}</span>
+                        </>
+                      ) : (
+                        <span className="text-lg font-semibold">₹{product.price.toFixed(2)}</span>
                       )}
                     </div>
                     
-                    <div className="p-4">
-                      <h3 className="font-medium text-sm mb-1 line-clamp-2 h-10">{product.name}</h3>
-                      
-                      {product.rating && (
-                        <div className="flex items-center mb-2">
-                          <div className="flex items-center bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">
-                            <Star className="h-3 w-3 mr-1 fill-current" />
-                            <span>{product.rating}</span>
-                          </div>
-                          {product.ratingCount && (
-                            <span className="text-xs text-gray-500 ml-2">{product.ratingCount} {t('ratings')}</span>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="flex items-baseline">
-                        {product.discountedPrice ? (
-                          <>
-                            <span className="text-lg font-semibold">₹{(product.discountedPrice as number).toFixed(2)}</span>
-                            <span className="text-gray-500 text-sm line-through ml-2">₹{product.price.toFixed(2)}</span>
-                          </>
-                        ) : (
-                          <span className="text-lg font-semibold">₹{product.price.toFixed(2)}</span>
-                        )}
-                      </div>
-                      
-                      <Button 
-                        className="mt-3 w-full flex items-center justify-center"
-                        size="sm"
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        {t('add_to_cart')}
-                      </Button>
-                    </div>
+                    <Button 
+                      className="mt-3 w-full flex items-center justify-center"
+                      size="sm"
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      {t('add_to_cart')}
+                    </Button>
                   </div>
                 </Link>
               </div>
