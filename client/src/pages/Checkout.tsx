@@ -124,8 +124,10 @@ const Checkout = () => {
         
         const orderData = await response.json();
         
-        // Set order ID from server response
-        setOrderId(`ORD${orderData.id}`);
+        // Set order ID from server response with proper padding
+        // Format the order ID with leading zeros for better readability
+        const formattedId = String(orderData.id).padStart(6, '0');
+        setOrderId(`ORD${formattedId}`);
         
         // Clear the cart and set order as complete
         await clearCart();
