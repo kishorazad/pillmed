@@ -280,11 +280,18 @@ class MongoDBStorage implements IStorage {
 
     console.log(`Updating user in MongoDB for user ID: ${id}`);
     console.log(`Update data:`, JSON.stringify(userData));
+    
+    // Ensure phone is stored as string
+    const processedUserData = { ...userData };
+    if (processedUserData.phone !== undefined) {
+      processedUserData.phone = String(processedUserData.phone);
+      console.log(`Processed phone number: ${processedUserData.phone}`);
+    }
 
     try {
       const result = await collection.findOneAndUpdate(
         { id: id },
-        { $set: userData },
+        { $set: processedUserData },
         { returnDocument: 'after' }
       );
 
@@ -294,6 +301,12 @@ class MongoDBStorage implements IStorage {
       }
 
       console.log(`MongoDB updateUser: Successfully updated user with ID: ${id}`);
+      // Log the updated document to verify phone number
+      console.log(`Updated user document:`, JSON.stringify({
+        ...result,
+        password: "[REDACTED]"
+      }));
+      
       return result as User;
     } catch (error) {
       console.error(`MongoDB updateUser error for user ID ${id}:`, error);
