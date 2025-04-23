@@ -982,6 +982,131 @@ class MongoDBStorage implements IStorage {
     }
   }
 
+  // Create a new order with proper ID formatting
+  async createOrder(order: Partial<Order>): Promise<Order> {
+    console.log('MongoDB: Creating new order');
+    
+    if (!this.isConnected(this.collections.orders)) {
+      console.warn('MongoDB not connected for createOrder. Will fall back to in-memory storage.');
+      throw new Error('MongoDB not connected for order creation');
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.orders);
+    if (!collection) {
+      console.error('MongoDB collection not available for createOrder');
+      throw new Error('Failed to get orders collection');
+    }
+
+    try {
+      // Generate a numeric ID for compatibility with in-memory storage
+      const lastOrder = await collection.find().sort({ id: -1 }).limit(1).toArray();
+      const id = lastOrder.length > 0 ? lastOrder[0].id + 1 : 1;
+      
+      // Create new order with proper fields
+      const newOrder: Order = {
+        ...order as any,
+        id,
+        status: order.status || 'processing',
+        orderDate: order.orderDate || new Date(),
+        trackingNumber: order.trackingNumber || null
+      };
+      
+      console.log(`MongoDB: Creating order with ID: ${id}`);
+      const result = await collection.insertOne(newOrder);
+      
+      if (!result.acknowledged) {
+        console.error('MongoDB: Failed to insert order - operation not acknowledged');
+        throw new Error('Failed to insert order - operation not acknowledged');
+      }
+      
+      console.log(`MongoDB: Successfully created order with ID: ${id}`);
+      return newOrder as Order;
+    } catch (error) {
+      console.error('MongoDB: Error creating order:', error);
+      throw error; // Rethrow to allow fallback to in-memory storage
+    }
+  }
+  
+  // Create a new order item
+  async createOrderItem(orderItem: Partial<any>): Promise<any> {
+    console.log(`MongoDB: Creating order item for order ${orderItem.orderId}`);
+    
+    if (!this.isConnected('orderItems')) {
+      console.warn('MongoDB not connected for createOrderItem. Will fall back to in-memory storage.');
+      throw new Error('MongoDB not connected for order item creation');
+    }
+
+    const collection = mongoDBService.getCollection('orderItems');
+    if (!collection) {
+      console.error('MongoDB collection not available for createOrderItem');
+      throw new Error('Failed to get orderItems collection');
+    }
+
+    try {
+      // Generate a numeric ID for the order item
+      const lastItem = await collection.find().sort({ id: -1 }).limit(1).toArray();
+      const id = lastItem.length > 0 ? lastItem[0].id + 1 : 1;
+      
+      const newOrderItem = {
+        ...orderItem,
+        id
+      };
+      
+      const result = await collection.insertOne(newOrderItem);
+      
+      if (!result.acknowledged) {
+        console.error('MongoDB: Failed to insert order item - operation not acknowledged');
+        throw new Error('Failed to insert order item - operation not acknowledged');
+      }
+      
+      console.log(`MongoDB: Successfully created order item with ID: ${id} for order ${orderItem.orderId}`);
+      return newOrderItem;
+    } catch (error) {
+      console.error('MongoDB: Error creating order item:', error);
+      throw error; // Rethrow to allow fallback to in-memory storage
+    }
+  }
+  
+  // Update order status
+  async updateOrderStatus(id: number, status: string): Promise<Order | undefined> {
+    console.log(`MongoDB: Updating order status for order ID: ${id} to ${status}`);
+    
+    if (!this.isConnected(this.collections.orders)) {
+      console.warn('MongoDB not connected for updateOrderStatus. Will fall back to in-memory storage.');
+      return undefined;
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.orders);
+    if (!collection) {
+      console.error('MongoDB collection not available for updateOrderStatus');
+      return undefined;
+    }
+
+    try {
+      const result = await collection.findOneAndUpdate(
+        { id: id },
+        { 
+          $set: { 
+            status,
+            updatedAt: new Date()
+          } 
+        },
+        { returnDocument: 'after' }
+      );
+
+      if (!result) {
+        console.error(`MongoDB: No order found or updated with ID: ${id}`);
+        return undefined;
+      }
+
+      console.log(`MongoDB: Successfully updated order status for ID: ${id} to ${status}`);
+      return result as Order;
+    } catch (error) {
+      console.error(`MongoDB: Error updating order status for ID ${id}:`, error);
+      return undefined;
+    }
+  }
+
   // ---------- Pharmacy Orders ----------
 
   async getPharmacyOrders(pharmacyId: number): Promise<any[]> {
