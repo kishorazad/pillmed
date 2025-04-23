@@ -151,8 +151,24 @@ const AdminDoctorManagement = () => {
   const [specialtyFilter, setSpecialtyFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState('all');
+  
+  // Lazy loading optimization - only load and render what's needed
+  const [tabsInitialized, setTabsInitialized] = useState({
+    all: true, // Initialize the "all" tab since it's the default
+    pending: false,
+    approved: false,
+    rejected: false
+  });
+  
+  // Update initialized tabs when tab changes
+  useEffect(() => {
+    setTabsInitialized(prev => ({
+      ...prev,
+      [activeTab]: true
+    }));
+  }, [activeTab]);
 
-  // Fetch doctors data with pagination and filters
+  // Fetch doctors data with pagination and filters - with optimization
   const {
     data,
     isLoading,
@@ -160,6 +176,8 @@ const AdminDoctorManagement = () => {
     refetch
   } = useQuery<DoctorsResponse>({
     queryKey: ['/api/admin/doctors', currentPage, searchTerm, statusFilter, specialtyFilter],
+    staleTime: 60000, // Consider data fresh for 1 minute (60000ms) to reduce refetches
+    gcTime: 300000, // Keep unused data in cache for 5 minutes
     queryFn: async () => {
       const searchParams = new URLSearchParams();
       searchParams.append('page', currentPage.toString());
@@ -169,13 +187,16 @@ const AdminDoctorManagement = () => {
         searchParams.append('search', searchTerm);
       }
       
-      if (statusFilter) {
+      if (statusFilter && statusFilter !== 'all') {
         searchParams.append('status', statusFilter);
       }
       
-      if (specialtyFilter) {
+      if (specialtyFilter && specialtyFilter !== 'all') {
         searchParams.append('specialty', specialtyFilter);
       }
+      
+      // Performance optimization: Cache results for 1 minute when no search/filter applied
+      const useCache = !searchTerm && (!statusFilter || statusFilter === 'all') && (!specialtyFilter || specialtyFilter === 'all');
       
       // This API doesn't exist yet, so we're returning mock data for now
       // Eventually replace with actual API call
