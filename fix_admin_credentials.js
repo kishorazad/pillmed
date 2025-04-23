@@ -42,13 +42,13 @@ async function listAllUsersAndFixAdmin() {
       console.log(`Username: ${adminUser.username}, Email: ${adminUser.email}`);
       
       // Update the admin user's email and password
-      const hashedPassword = hashPassword('admin');
+      const hashedPassword = hashPassword('admin123');
       const result = await users.updateOne(
         { _id: adminUser._id },
         { 
           $set: { 
             password: hashedPassword,
-            email: 'admin@pillnow.com'
+            email: 'admin@pillnow.info'
           } 
         }
       );
@@ -59,7 +59,7 @@ async function listAllUsersAndFixAdmin() {
       const adminUser = {
         id: Math.floor(Math.random() * 10000) + 1000, // Random ID to avoid conflicts
         username: 'pillnow_admin',
-        password: hashPassword('admin'),
+        password: hashPassword('admin123'),
         name: 'Admin User',
         email: 'admin@pillnow.info', // Using the provided email address
         phone: '1234567890',
