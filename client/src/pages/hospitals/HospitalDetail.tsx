@@ -655,47 +655,7 @@ const HospitalDetail: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Special offers and Free OPD section outside tabs for better visibility */}
-      {hospital.offers && hospital.offers.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-xl font-semibold mb-4">{t('special_offers')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {hospital.offers.map((offer, index) => (
-              <Card key={index} className={`${offer.isHighlighted ? 'border-primary border-2' : ''}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    {offer.title.includes('Free OPD') && (
-                      <div className="mt-1 text-green-500 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                    )}
-                    <div>
-                      <h4 className="font-semibold text-lg mb-1">{offer.title}</h4>
-                      <p className="text-gray-600 text-sm mb-2">{offer.description}</p>
-                      {offer.validUntil && (
-                        <p className="text-xs text-gray-500">
-                          {t('valid_until')}: {new Date(offer.validUntil).toLocaleDateString()}
-                        </p>
-                      )}
-                      {offer.title.includes('Free OPD') && (
-                        <Button 
-                          className="mt-3 w-full" 
-                          size="sm"
-                          onClick={() => window.location.href = `/appointment/book?hospital=${hospital.id}&type=opd&free=true`}
-                        >
-                          {t('book_free_opd')}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* No Special offers section */}
     </div>
   );
 };

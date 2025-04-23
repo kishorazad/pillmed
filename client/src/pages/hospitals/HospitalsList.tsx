@@ -223,18 +223,7 @@ const HospitalsList: React.FC = () => {
           <p className="text-gray-600">{t('find_hospitals_near_you')}</p>
         </div>
         
-        <div className="flex items-center space-x-2 mt-4 md:mt-0">
-          {/* Integrated search bar */}
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder={t('search_hospitals')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
+        <div>
           {/* Filter button */}
           <Sheet>
             <SheetTrigger asChild>
@@ -304,6 +293,17 @@ const HospitalsList: React.FC = () => {
             </SheetContent>
           </Sheet>
         </div>
+      </div>
+      
+      {/* Search bar */}
+      <div className="relative mb-8">
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+        <Input
+          placeholder={t('search_hospitals')}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
       </div>
       
       {/* Filter pills - show active filters */}
