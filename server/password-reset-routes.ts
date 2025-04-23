@@ -3,6 +3,7 @@ import { storage } from './storage';
 import { mongoDBStorage } from './mongodb-storage';
 import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
+import { v4 as uuidv4 } from 'uuid';
 import { sendPasswordResetOTP, sendPasswordResetConfirmation } from './email-service';
 
 const router = Router();
@@ -218,6 +219,145 @@ router.post('/reset', async (req: Request, res: Response) => {
     return res.json({ success: true, message: 'Password reset successfully' });
   } catch (error) {
     console.error('Password reset error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred while resetting your password' });
+  }
+});
+
+// Token-based password reset flow
+// Route to request a password reset token (alternative to OTP-based reset)
+router.post('/request-token', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+    
+    // Get the appropriate storage service
+    const storageService = getStorageService();
+    
+    // Check if the user exists
+    const user = await storageService.getUserByEmail(email);
+    if (!user) {
+      // For security reasons, we still return a success response even if the email doesn't exist
+      // This prevents email enumeration attacks
+      console.log(`Password reset token requested for non-existent email: ${email}`);
+      return res.json({ success: true, message: 'If your email is registered, you will receive a password reset link' });
+    }
+    
+    // Generate a unique token
+    const token = uuidv4();
+    
+    // Set token expiration (24 hours from now)
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    
+    // Save the token in the database
+    await storageService.savePasswordResetToken({
+      userId: user.id,
+      token,
+      expiresAt,
+      used: false
+    });
+    
+    // Typically, we would send an email with a link that includes the token
+    // The link would direct the user to a page where they can reset their password
+    // Something like: https://yourdomain.com/reset-password?token=<TOKEN>
+    console.log(`Generated password reset token for ${email}: ${token}`);
+    
+    // For now, we'll just log the token for testing
+    // In a real implementation, we would send an email with the reset link
+    console.log(`Password reset link: https://pillnow.app/reset-password?token=${token}`);
+    
+    return res.json({ success: true, message: 'If your email is registered, you will receive a password reset link' });
+  } catch (error) {
+    console.error('Token-based password reset request error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred while processing your request' });
+  }
+});
+
+// Route to verify a password reset token
+router.post('/verify-token', async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Token is required' });
+    }
+    
+    // Get the appropriate storage service
+    const storageService = getStorageService();
+    
+    // Get the token from the database
+    const resetToken = await storageService.getPasswordResetToken(token);
+    
+    // Check if the token exists and is not used
+    if (!resetToken || resetToken.used) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+    }
+    
+    // Check if the token is expired
+    const now = new Date();
+    if (resetToken.expiresAt < now) {
+      return res.status(400).json({ success: false, message: 'Token has expired. Please request a new one.' });
+    }
+    
+    // Token is valid
+    return res.json({ success: true, message: 'Token is valid' });
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred while verifying the token' });
+  }
+});
+
+// Route to reset password using a token
+router.post('/reset-with-token', async (req: Request, res: Response) => {
+  try {
+    const { token, password } = req.body;
+    
+    if (!token || !password) {
+      return res.status(400).json({ success: false, message: 'Token and new password are required' });
+    }
+    
+    // Get the appropriate storage service
+    const storageService = getStorageService();
+    
+    // Get the token from the database
+    const resetToken = await storageService.getPasswordResetToken(token);
+    
+    // Check if the token exists and is not used
+    if (!resetToken || resetToken.used) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+    }
+    
+    // Check if the token is expired
+    const now = new Date();
+    if (resetToken.expiresAt < now) {
+      return res.status(400).json({ success: false, message: 'Token has expired. Please request a new one.' });
+    }
+    
+    // Get the user
+    const user = await storageService.getUser(resetToken.userId);
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'User not found' });
+    }
+    
+    // Hash the new password
+    const hashedPassword = await hashPassword(password);
+    
+    // Update the user's password
+    await storageService.updateUserPassword(user.id, hashedPassword);
+    
+    // Invalidate the token
+    await storageService.invalidatePasswordResetToken(token);
+    
+    // Send confirmation email
+    await sendPasswordResetConfirmation(user.email);
+    
+    console.log(`Password reset successful for user ID: ${user.id}`);
+    
+    return res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Token-based password reset error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred while resetting your password' });
   }
 });

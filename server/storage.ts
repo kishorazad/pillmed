@@ -731,6 +731,37 @@ export class MemStorage implements IStorage {
     this.users.set(id, updatedUser);
     return updatedUser;
   }
+  
+  // Password reset token methods
+  async savePasswordResetToken(data: InsertPasswordResetToken): Promise<PasswordResetToken> {
+    const newToken: PasswordResetToken = {
+      id: Math.floor(Math.random() * 1000000), // Just for in-memory storage
+      userId: data.userId,
+      token: data.token,
+      expiresAt: data.expiresAt,
+      used: false,
+      createdAt: new Date()
+    };
+    
+    this.passwordResetTokens.set(data.token, newToken);
+    return newToken;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    return this.passwordResetTokens.get(token);
+  }
+
+  async invalidatePasswordResetToken(token: string): Promise<boolean> {
+    const resetToken = this.passwordResetTokens.get(token);
+    if (!resetToken) {
+      return false;
+    }
+    
+    // Update the token to mark it as used
+    const updatedToken = { ...resetToken, used: true };
+    this.passwordResetTokens.set(token, updatedToken);
+    return true;
+  }
 
   // Product methods
   async getProducts(): Promise<Product[]> {
