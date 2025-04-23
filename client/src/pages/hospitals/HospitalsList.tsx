@@ -223,84 +223,87 @@ const HospitalsList: React.FC = () => {
           <p className="text-gray-600">{t('find_hospitals_near_you')}</p>
         </div>
         
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="mt-4 md:mt-0 flex items-center"
-              size="sm"
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              {t('filter')}
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>{t('filter_hospitals')}</SheetTitle>
-              <SheetDescription>
-                {t('adjust_filters_to_find')}
-              </SheetDescription>
-            </SheetHeader>
-            
-            <div className="py-4 space-y-6">
-              <div>
-                <h3 className="text-sm font-medium mb-3">{t('sort_by')}</h3>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('sort_by')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="distance">{t('distance')}</SelectItem>
-                    <SelectItem value="rating">{t('rating')}</SelectItem>
-                    <SelectItem value="name">{t('name')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <div className="flex items-center space-x-2 mb-4">
-                  <Checkbox 
-                    id="emergency-only" 
-                    checked={showEmergencyOnly}
-                    onCheckedChange={(checked) => setShowEmergencyOnly(checked as boolean)}
-                  />
-                  <Label htmlFor="emergency-only">{t('emergency_care_only')}</Label>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium mb-3">{t('specialties')}</h3>
-                <div className="space-y-2">
-                  {allSpecialties.map((specialty) => (
-                    <div key={specialty} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`specialty-${specialty}`}
-                        checked={selectedSpecialties.includes(specialty)}
-                        onCheckedChange={() => toggleSpecialty(specialty)}
-                      />
-                      <Label htmlFor={`specialty-${specialty}`}>{specialty}</Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <Button onClick={resetFilters} variant="outline" className="w-full mt-4">
-                {t('reset_filters')}
+        <div className="flex items-center space-x-2 mt-4 md:mt-0">
+          {/* Integrated search bar */}
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder={t('search_hospitals')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          {/* Filter button */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="flex items-center"
+                size="sm"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                {t('filter')}
               </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-      
-      {/* Search bar */}
-      <div className="relative mb-8">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-        <Input
-          placeholder={t('search_hospitals')}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>{t('filter_hospitals')}</SheetTitle>
+                <SheetDescription>
+                  {t('adjust_filters_to_find')}
+                </SheetDescription>
+              </SheetHeader>
+              
+              <div className="py-4 space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium mb-3">{t('sort_by')}</h3>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('sort_by')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="distance">{t('distance')}</SelectItem>
+                      <SelectItem value="rating">{t('rating')}</SelectItem>
+                      <SelectItem value="name">{t('name')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Checkbox 
+                      id="emergency-only" 
+                      checked={showEmergencyOnly}
+                      onCheckedChange={(checked) => setShowEmergencyOnly(checked as boolean)}
+                    />
+                    <Label htmlFor="emergency-only">{t('emergency_care_only')}</Label>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium mb-3">{t('specialties')}</h3>
+                  <div className="space-y-2">
+                    {allSpecialties.map((specialty) => (
+                      <div key={specialty} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`specialty-${specialty}`}
+                          checked={selectedSpecialties.includes(specialty)}
+                          onCheckedChange={() => toggleSpecialty(specialty)}
+                        />
+                        <Label htmlFor={`specialty-${specialty}`}>{specialty}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <Button onClick={resetFilters} variant="outline" className="w-full mt-4">
+                  {t('reset_filters')}
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
       
       {/* Filter pills - show active filters */}

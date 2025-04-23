@@ -83,7 +83,20 @@ export default function AddressAutocomplete({
             }
           }
         }
+        
+        // Fallback for postal code extraction if not found in components
+        // Sometimes the postal code is embedded in the address string
+        if (!newAddressData.postalCode) {
+          // Try to extract 6-digit pincode (common in India)
+          const pincodeMatch = place.formatted_address.match(/\b(\d{6})\b/);
+          if (pincodeMatch && pincodeMatch[1]) {
+            newAddressData.postalCode = pincodeMatch[1];
+          }
+        }
 
+        // Log the extracted data for debugging
+        console.log('Extracted address data:', newAddressData);
+        
         setAddressComponents(newAddressData);
         setInputValue(place.formatted_address);
         onAddressSelect(newAddressData);
