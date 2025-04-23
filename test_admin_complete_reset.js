@@ -6,7 +6,7 @@ import axios from 'axios';
 
 const baseUrl = 'http://localhost:5000';
 const adminEmail = 'admin@pillnow.info'; // Correct admin email
-const otp = '347345'; // OTP from logs
+const otp = '528214'; // Latest OTP from logs
 const newPassword = 'admin123'; // New password to set
 
 // Helper to pause execution
@@ -14,23 +14,57 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function testAdminPasswordReset() {
   try {
-    console.log('Starting admin password reset test...');
+    console.log('Starting admin password reset test with correct admin email...');
     
-    // Step 1: Request password reset
-    console.log('\n1. Requesting password reset...');
-    const requestResetResponse = await axios.post(`${baseUrl}/api/password-reset/request`, {
-      email: adminEmail
+    // Skip the request step since it generates a new OTP
+    console.log('\n1. Using existing OTP:', otp);
+    console.log('(Skipping request step to avoid generating a new OTP)');
+    
+    // Wait 2 seconds
+    await delay(2000);
+    
+    // Step 2: Verify OTP
+    console.log('\n2. Verifying OTP...');
+    const verifyResponse = await axios.post(`${baseUrl}/api/password-reset/verify-otp`, { 
+      email: adminEmail, 
+      otp 
     });
-    console.log('Response:', requestResetResponse.data);
+    console.log('Response:', verifyResponse.data);
     
-    console.log('\nPassword reset request sent to admin email.');
-    console.log('Please check the server logs to get the OTP, then update this script with the correct OTP.');
-    console.log('The OTP will be in a line like: "Generated OTP xxxxxx for admin@pillnow.info"');
+    if (!verifyResponse.data.success) {
+      throw new Error('OTP verification failed');
+    }
     
-    console.log('\nOnce you have the OTP, you can continue testing with:');
-    console.log(`1. Verify OTP: POST /api/password-reset/verify-otp with { "email": "${adminEmail}", "otp": "OTP_FROM_LOGS" }`);
-    console.log(`2. Reset password: POST /api/password-reset/reset with { "email": "${adminEmail}", "otp": "OTP_FROM_LOGS", "password": "${newPassword}" }`);
-    console.log(`3. Login with: email=${adminEmail}, password=${newPassword}`);
+    // Wait 2 seconds
+    await delay(2000);
+    
+    // Step 3: Reset password
+    console.log('\n3. Setting new password...');
+    const resetResponse = await axios.post(`${baseUrl}/api/password-reset/reset`, {
+      email: adminEmail,
+      otp,
+      password: newPassword
+    });
+    console.log('Response:', resetResponse.data);
+    
+    if (!resetResponse.data.success) {
+      throw new Error('Password reset failed');
+    }
+    
+    // Wait 2 seconds
+    await delay(2000);
+    
+    // Step 4: Login with new password
+    console.log('\n4. Logging in with new password...');
+    const loginResponse = await axios.post(`${baseUrl}/api/auth/login`, {
+      email: adminEmail,
+      password: newPassword
+    });
+    console.log('Login successful!');
+    console.log('User data:', loginResponse.data.username);
+    
+    console.log('\nCOMPLETE PASSWORD RESET FLOW TEST PASSED! ✅');
+    console.log(`The password for ${adminEmail} has been successfully reset to: ${newPassword}`);
     
   } catch (error) {
     console.error('\nPASSWORD RESET TEST FAILED');
