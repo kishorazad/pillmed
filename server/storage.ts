@@ -15,6 +15,7 @@ import {
   orderItems, type OrderItem, type InsertOrderItem,
   healthTips, type HealthTip, type InsertHealthTip,
   notificationTokens, type NotificationToken, type InsertNotificationToken,
+  passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken,
   type OTPRecord, type Session
 } from "@shared/schema";
 
@@ -68,6 +69,11 @@ export interface IStorage {
   getUsers(): Promise<User[]>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
   updateUserPassword(id: number, password: string): Promise<User | undefined>;
+  
+  // Password reset methods
+  savePasswordResetToken(data: InsertPasswordResetToken): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  invalidatePasswordResetToken(token: string): Promise<boolean>;
   
   // Notification related methods
   saveNotificationToken(token: InsertNotificationToken): Promise<NotificationToken>;
@@ -231,6 +237,7 @@ export class MemStorage implements IStorage {
   private orderItems: Map<number, OrderItem>;
   private healthTips: Map<number, HealthTip>;
   private notificationTokens: Map<number, NotificationToken>;
+  private passwordResetTokens: Map<string, PasswordResetToken>;
   private otpRecords: Map<string, OTPRecord>;
   private seoSettings: SeoSettings | undefined;
   private seoAnalytics: SeoAnalytics | undefined;
@@ -269,6 +276,7 @@ export class MemStorage implements IStorage {
     this.orderItems = new Map();
     this.healthTips = new Map();
     this.notificationTokens = new Map();
+    this.passwordResetTokens = new Map();
     this.otpRecords = new Map();
     
     this.currentUserId = 1;

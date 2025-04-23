@@ -50,6 +50,25 @@ export const insertNotificationTokenSchema = createInsertSchema(notificationToke
 export type InsertNotificationToken = z.infer<typeof insertNotificationTokenSchema>;
 export type NotificationToken = typeof notificationTokens.$inferSelect;
 
+// Password reset tokens
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).pick({
+  userId: true,
+  token: true,
+  expiresAt: true
+});
+
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
