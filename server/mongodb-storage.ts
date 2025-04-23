@@ -268,19 +268,37 @@ class MongoDBStorage implements IStorage {
 
   async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
     if (!this.isConnected(this.collections.users)) {
+      console.warn(`MongoDB not connected for updateUser(${id}). Will fall back to in-memory storage.`);
       return undefined; // Will fall back to in-memory storage
     }
 
     const collection = mongoDBService.getCollection(this.collections.users);
-    if (!collection) return undefined;
+    if (!collection) {
+      console.error('MongoDB collection not available for updateUser');
+      return undefined;
+    }
 
-    const result = await collection.findOneAndUpdate(
-      { id: id },
-      { $set: userData },
-      { returnDocument: 'after' }
-    );
+    console.log(`Updating user in MongoDB for user ID: ${id}`);
+    console.log(`Update data:`, JSON.stringify(userData));
 
-    return result as User | undefined;
+    try {
+      const result = await collection.findOneAndUpdate(
+        { id: id },
+        { $set: userData },
+        { returnDocument: 'after' }
+      );
+
+      if (!result) {
+        console.error(`MongoDB updateUser: No document found or updated with ID: ${id}`);
+        return undefined;
+      }
+
+      console.log(`MongoDB updateUser: Successfully updated user with ID: ${id}`);
+      return result as User;
+    } catch (error) {
+      console.error(`MongoDB updateUser error for user ID ${id}:`, error);
+      return undefined;
+    }
   }
 
   async updateUserPassword(id: number, password: string): Promise<User | undefined> {

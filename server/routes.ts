@@ -629,7 +629,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         trackingNumber: `TRK${Math.floor(Math.random() * 1000000)}`
       });
       
-      // Add the order items
+      // Prepare items for email and add order items
+      const enhancedItems = [];
       for (const item of cartItems) {
         await dbStorage.createOrderItem({
           orderId: newOrder.id,
@@ -637,10 +638,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
           quantity: item.quantity,
           price: item.product.discountedPrice || item.product.price
         });
+        
+        // Add product details for the email
+        enhancedItems.push({
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.product.discountedPrice || item.product.price
+        });
       }
       
       // Clear the cart after creating the order
       await dbStorage.clearCart(userId);
+      
+      // Send order confirmation email if user has an email
+      const user = await dbStorage.getUser(userId);
+      if (user && user.email) {
+        // Import and use the email service
+        const { sendOrderConfirmation } = await import('./email-service');
+        
+        // Prepare order data for email
+        const orderData = {
+          orderNumber: `ORD${newOrder.id}`,
+          customerName: user.name || user.username,
+          estimatedDelivery: '2-3 business days',
+          items: enhancedItems,
+          subtotal: totalAmount,
+          shipping: 0, // Assuming free shipping
+          tax: 0,      // Assuming tax included
+          total: totalAmount,
+          address: shippingAddress || "Default Shipping Address"
+        };
+        
+        console.log(`Sending order confirmation email to ${user.email} for order ${newOrder.id}`);
+        
+        // Send the order confirmation email
+        try {
+          const emailResult = await sendOrderConfirmation(user.email, orderData);
+          console.log(`Order confirmation email result: ${emailResult ? 'Success' : 'Failed'}`);
+        } catch (emailError) {
+          console.error('Error sending order confirmation email:', emailError);
+          // Don't fail the order creation if email fails
+        }
+      } else {
+        console.warn(`No email found for user ${userId}. Cannot send order confirmation.`);
+      }
       
       res.status(201).json({ 
         message: "Order created successfully",
@@ -2628,7 +2669,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orderDate: new Date()
       });
       
-      // Create order items
+      // Create order items and prepare enhanced items for email
+      const enhancedItems = [];
       for (const item of items) {
         await dbStorage.createOrderItem({
           orderId: order.id,
@@ -2636,10 +2678,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
           quantity: item.quantity,
           price: item.price
         });
+        
+        // Get product details for the email
+        const product = await dbStorage.getProductById(item.productId);
+        if (product) {
+          enhancedItems.push({
+            name: product.name,
+            quantity: item.quantity,
+            price: item.price
+          });
+        }
       }
       
       // Clear the user's cart after successful order
       await dbStorage.clearCart(userId);
+      
+      // Get user info for the email
+      const user = await dbStorage.getUser(userId);
+      if (user && user.email) {
+        // Import and use the email service
+        const { sendOrderConfirmation } = await import('./email-service');
+        
+        // Prepare order data for email
+        const orderData = {
+          orderNumber: `ORD${order.id}`,
+          customerName: user.name || user.username,
+          estimatedDelivery: '2-3 business days',
+          items: enhancedItems,
+          subtotal: totalAmount,
+          shipping: 0, // Assuming free shipping
+          tax: 0,      // Assuming tax included
+          total: totalAmount,
+          address: shippingAddress
+        };
+        
+        console.log(`Sending order confirmation email to ${user.email} for order ${order.id}`);
+        
+        // Send the order confirmation email
+        try {
+          const emailResult = await sendOrderConfirmation(user.email, orderData);
+          console.log(`Order confirmation email result: ${emailResult ? 'Success' : 'Failed'}`);
+        } catch (emailError) {
+          console.error('Error sending order confirmation email:', emailError);
+          // Don't fail the order creation if email fails
+        }
+      } else {
+        console.warn(`No email found for user ${userId}. Cannot send order confirmation.`);
+      }
       
       res.status(201).json(order);
     } catch (error) {

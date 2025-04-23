@@ -651,15 +651,16 @@ const AdminDoctorManagement = () => {
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
-            <Card>
-              <CardHeader className="py-4">
-                <CardTitle>Doctor List</CardTitle>
-                <CardDescription>
-                  Showing all doctors ({data?.totalDoctors || 0} total)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
+            {tabsInitialized.all && (
+              <Card>
+                <CardHeader className="py-4">
+                  <CardTitle>Doctor List</CardTitle>
+                  <CardDescription>
+                    Showing all doctors ({data?.totalDoctors || 0} total)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
@@ -767,13 +768,14 @@ const AdminDoctorManagement = () => {
           </TabsContent>
 
           <TabsContent value="pending" className="space-y-4">
-            <Card>
-              <CardHeader className="py-4">
-                <CardTitle>Pending Approval</CardTitle>
-                <CardDescription>
-                  Doctors waiting for verification and approval
-                </CardDescription>
-              </CardHeader>
+            {tabsInitialized.pending && (
+              <Card>
+                <CardHeader className="py-4">
+                  <CardTitle>Pending Approval</CardTitle>
+                  <CardDescription>
+                    Doctors waiting for verification and approval
+                  </CardDescription>
+                </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <Table>
@@ -847,13 +849,14 @@ const AdminDoctorManagement = () => {
           </TabsContent>
 
           <TabsContent value="approved" className="space-y-4">
-            <Card>
-              <CardHeader className="py-4">
-                <CardTitle>Approved Doctors</CardTitle>
-                <CardDescription>
-                  Active and verified doctor accounts
-                </CardDescription>
-              </CardHeader>
+            {tabsInitialized.approved && (
+              <Card>
+                <CardHeader className="py-4">
+                  <CardTitle>Approved Doctors</CardTitle>
+                  <CardDescription>
+                    Active and verified doctor accounts
+                  </CardDescription>
+                </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <Table>
@@ -921,13 +924,14 @@ const AdminDoctorManagement = () => {
           </TabsContent>
 
           <TabsContent value="rejected" className="space-y-4">
-            <Card>
-              <CardHeader className="py-4">
-                <CardTitle>Rejected Doctors</CardTitle>
-                <CardDescription>
-                  Doctors that didn't meet verification criteria
-                </CardDescription>
-              </CardHeader>
+            {tabsInitialized.rejected && (
+              <Card>
+                <CardHeader className="py-4">
+                  <CardTitle>Rejected Doctors</CardTitle>
+                  <CardDescription>
+                    Doctors that didn't meet verification criteria
+                  </CardDescription>
+                </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <Table>
