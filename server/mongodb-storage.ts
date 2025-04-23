@@ -392,6 +392,64 @@ class MongoDBStorage implements IStorage {
     const result = await collection.deleteOne({ email: email });
     return result.deletedCount === 1;
   }
+  
+  // ---------- Password Reset Token Methods ----------
+  
+  async savePasswordResetToken(data: {
+    userId: number;
+    token: string;
+    expiresAt: Date;
+    used: boolean;
+  }): Promise<any> {
+    if (!this.isConnected(this.collections.passwordResetTokens)) {
+      return undefined; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.passwordResetTokens);
+    if (!collection) return undefined;
+
+    const tokenData = {
+      userId: data.userId,
+      token: data.token,
+      expiresAt: data.expiresAt,
+      used: data.used,
+      createdAt: new Date()
+    };
+
+    const result = await collection.insertOne(tokenData);
+    if (result.acknowledged) {
+      return tokenData;
+    }
+    return undefined;
+  }
+
+  async getPasswordResetToken(token: string): Promise<any> {
+    if (!this.isConnected(this.collections.passwordResetTokens)) {
+      return undefined; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.passwordResetTokens);
+    if (!collection) return undefined;
+
+    const resetToken = await collection.findOne({ token: token });
+    return resetToken;
+  }
+
+  async invalidatePasswordResetToken(token: string): Promise<boolean> {
+    if (!this.isConnected(this.collections.passwordResetTokens)) {
+      return false; // Will fall back to in-memory storage
+    }
+
+    const collection = mongoDBService.getCollection(this.collections.passwordResetTokens);
+    if (!collection) return false;
+
+    const result = await collection.updateOne(
+      { token: token },
+      { $set: { used: true } }
+    );
+
+    return result.modifiedCount === 1;
+  }
 
   // ---------- Product Management ----------
 

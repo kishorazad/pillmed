@@ -186,6 +186,11 @@ export interface IStorage {
   getOtpRecord(email: string): Promise<OTPRecord | undefined>;
   updateOtpRecord(email: string, updates: Partial<OTPRecord>): Promise<boolean>;
   deleteOtpRecord(email: string): Promise<boolean>;
+  
+  // Password Reset Token related methods
+  savePasswordResetToken(data: { userId: number; token: string; expiresAt: Date; used: boolean; }): Promise<any>;
+  getPasswordResetToken(token: string): Promise<any>;
+  invalidatePasswordResetToken(token: string): Promise<boolean>;
 
   // Pharmacy inventory related methods
   getPharmacyInventory(pharmacyId: number): Promise<any[]>;
