@@ -144,7 +144,16 @@ const NearbyHospitals: React.FC = () => {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl md:text-2xl font-bold">{t('nearby_hospitals')}</h2>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="link" 
+              className="flex items-center gap-1 text-primary"
+              onClick={() => window.location.href = '/hospitals'}
+            >
+              {t('view_all')}
+              <ArrowRightIcon className="h-4 w-4" />
+            </Button>
+            
             {!isMobile && (
               <div className="flex gap-2 mr-4">
                 <button 
@@ -249,11 +258,25 @@ const NearbyHospitals: React.FC = () => {
           {hospitals.map((hospital) => (
             <div 
               key={hospital.id} 
-              className={`snap-start min-w-[300px] md:min-w-[350px] flex-shrink-0 rounded-lg shadow-sm p-4 ${hospital.isEmergency ? 'bg-red-50 border-l-4 border-red-500' : 'bg-white'} transition-shadow hover:shadow-md flex flex-col`}
+              className={`snap-start min-w-[90px] md:min-w-[350px] max-w-[118px] md:max-w-none flex-shrink-0 rounded-lg shadow-sm p-4 ${hospital.isEmergency ? 'bg-red-50 border-l-4 border-red-500' : 'bg-white'} transition-shadow hover:shadow-md flex flex-col cursor-pointer`}
+              onClick={() => window.location.href = `/hospitals/${hospital.id}`}
             >
+              {/* Image container with fixed 88.4x72.33 dimensions for mobile consistency */}
+              <div className="w-[88.4px] h-[72.33px] bg-gray-100 rounded-lg mb-2 overflow-hidden flex items-center justify-center mx-auto">
+                <img 
+                  src={`/hospital-${hospital.id}.jpg`} 
+                  alt={hospital.name}
+                  className="object-cover w-full h-full"
+                  onError={(e) => {
+                    // Fallback for missing images
+                    (e.target as HTMLImageElement).src = '/hospital-placeholder.jpg';
+                  }}
+                />
+              </div>
+              
               <div className="flex justify-between items-start">
-                <h3 className="text-lg font-semibold">{hospital.name}</h3>
-                <div className="text-sm text-gray-500 flex items-center">
+                <h3 className="text-sm md:text-lg font-semibold line-clamp-2">{hospital.name}</h3>
+                <div className="text-xs md:text-sm text-gray-500 flex items-center">
                   <MapPin className="h-3 w-3 mr-1" />
                   {hospital.distance}
                 </div>
@@ -266,17 +289,17 @@ const NearbyHospitals: React.FC = () => {
                 </div>
               )}
               
-              <p className="text-sm text-gray-600 mt-2 mb-1 line-clamp-1">
+              <p className="text-xs md:text-sm text-gray-600 mt-2 mb-1 line-clamp-1">
                 <MapPin className="h-3 w-3 inline mr-1" />
                 {hospital.address}
               </p>
               
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-xs md:text-sm text-gray-600 mb-3 hidden md:block">
                 <Phone className="h-3 w-3 inline mr-1" />
                 {hospital.phone}
               </p>
               
-              <div className="flex flex-wrap gap-1 mt-2">
+              <div className="flex flex-wrap gap-1 mt-2 hidden md:flex">
                 {hospital.specialties.slice(0, 3).map((specialty, index) => (
                   <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
                     {specialty}
@@ -287,9 +310,24 @@ const NearbyHospitals: React.FC = () => {
                 )}
               </div>
               
-              <div className="mt-auto pt-3 flex justify-end">
-                <a href={`tel:${hospital.phone.replace(/[^\d]/g, '')}`} className="text-primary text-sm font-medium hover:underline">
-                  {t('call_now')}
+              <div className="mt-auto pt-3 flex justify-between w-full">
+                <a 
+                  href={`/hospitals/${hospital.id}`}
+                  className="text-primary text-xs md:text-sm font-medium hover:underline flex items-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  {t('view_details')}
+                </a>
+                <a 
+                  href={`tel:${hospital.phone.replace(/[^\d]/g, '')}`} 
+                  className="text-primary text-xs md:text-sm font-medium hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  {t('call')}
                 </a>
               </div>
             </div>
