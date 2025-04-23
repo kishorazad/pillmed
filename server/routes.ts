@@ -17,6 +17,7 @@ import adminRoutes from './admin-routes'; // Admin panel routes
 import adminCustomerRoutes from './admin-customer-routes'; // Admin customer management routes
 import adminSeoRoutes from './admin-seo-routes'; // Admin SEO management routes
 import adminEmailRoutes from './admin-email-routes'; // Admin email tracking and management routes
+import adminSalesRoutes from './admin-sales-routes'; // Admin sales dashboard routes
 import mongodbUsersRoutes from './api-mongodb-users'; // MongoDB direct user management
 import pincodeRoutes from './pincode-routes'; // Pincode location detection routes
 import appointmentRoutes from './appointment-routes'; // Doctor appointment booking routes
@@ -111,6 +112,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount admin email management routes
   app.use('/api/admin/email', adminEmailRoutes);
+  
+  // Mount admin sales dashboard routes
+  app.use('/api/admin', adminSalesRoutes);
   
   // Mount doctor appointment routes
   app.use('/api/appointments', appointmentRoutes);

@@ -157,6 +157,7 @@ export interface IStorage {
   
   // Order related methods
   getOrders(): Promise<Order[]>;
+  getAllOrders(): Promise<Order[]>; // Method to get all orders for sales analysis
   getOrderById(id: number): Promise<Order | undefined>;
   getOrdersByUser(userId: number): Promise<Order[]>;
   createOrder(order: InsertOrder): Promise<Order>;

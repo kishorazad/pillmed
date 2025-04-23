@@ -40,6 +40,9 @@ const AdminPanel = lazy(() => import("./pages/admin"));
 const AdminUserManagement = lazy(() => import("./pages/admin/users"));
 const AdminCustomerManagement = lazy(() => import("./pages/admin/customers"));
 const AdminPharmacyManagement = lazy(() => import("./pages/admin/pharmacies"));
+const AdminProductManagement = lazy(() => import("./pages/admin/products"));
+const AdminHealthTipsManagement = lazy(() => import("./pages/admin/health-tips"));
+const AdminTestimonialsManagement = lazy(() => import("./pages/admin/testimonials"));
 const AdminDoctorManagement = lazy(() => import("./pages/admin/doctors"));
 const AdminAnalytics = lazy(() => import("./pages/admin/analytics"));
 const EmailManagement = lazy(() => import("./pages/admin/EmailManagement"));
@@ -53,6 +56,7 @@ const DeliveryDashboard = lazy(() => import("./pages/Delivery/Dashboard"));
 const NearbyHospitalsPage = lazy(() => import("./pages/Hospitals/NearbyHospitalsPage"));
 const HospitalsList = lazy(() => import("./pages/hospitals/HospitalsList"));
 const HospitalDetail = lazy(() => import("./pages/hospitals/HospitalDetail"));
+const HospitalAppointment = lazy(() => import("./pages/hospitals/HospitalAppointment"));
 
 // Lazily load services
 const ServicesPage = lazy(() => import("./pages/services"));
@@ -188,6 +192,7 @@ function Router() {
       <SuspenseRoute path="/nearby-hospitals" component={NearbyHospitalsPage} />
       <SuspenseRoute path="/hospitals" component={HospitalsList} />
       <SuspenseRoute path="/hospitals/:id" component={HospitalDetail} />
+      <SuspenseRoute path="/hospitals/:id/appointment" component={HospitalAppointment} />
       <SuspenseRoute path="/achievements" component={Achievements} />
       <SuspenseRoute path="/medication-tracking" component={MedicationTracking} />
       <SuspenseRoute path="/orders" component={OrderHistory} />
@@ -212,6 +217,9 @@ function Router() {
       <RoleBasedRoute path="/admin" component={AdminPanel} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/users" component={AdminUserManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/customers" component={AdminCustomerManagement} allowedRoles={['admin', 'subadmin']} />
+      <RoleBasedRoute path="/admin/products" component={AdminProductManagement} allowedRoles={['admin', 'subadmin']} />
+      <RoleBasedRoute path="/admin/health-tips" component={AdminHealthTipsManagement} allowedRoles={['admin', 'subadmin']} />
+      <RoleBasedRoute path="/admin/testimonials" component={AdminTestimonialsManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/pharmacies" component={AdminPharmacyManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/doctors" component={AdminDoctorManagement} allowedRoles={['admin', 'subadmin']} />
       <RoleBasedRoute path="/admin/analytics" component={AdminAnalytics} allowedRoles={['admin', 'subadmin']} />
