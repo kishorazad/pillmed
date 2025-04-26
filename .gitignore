@@ -4,3 +4,18 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Node.js
+node_modules/
+dist/
+.env
+.DS_Store
+.vscode/
+*.log
+
+# Vite
+client/dist/
+client/.vite/
+
+# System
+Thumbs.db
