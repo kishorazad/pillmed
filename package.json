@@ -4,8 +4,7 @@
   "type": "module",
   "license": "MIT",
   "main": "index",
-  "private": true,
-  "homepage": "./",
+  
 
   "scripts": {
     "dev": "tsx server/index.ts",
