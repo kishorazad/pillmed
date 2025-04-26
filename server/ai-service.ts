@@ -1,14 +1,13 @@
-import OpenAI from "openai";
+import OpenAI from 'openai';
+import dotenv from 'dotenv';
 
-// Initialize OpenAI client
-// The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Load environment variables
+dotenv.config();
 
-interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
+// Initialize OpenAI client (only if enabled)
+const openai = process.env.USE_OPENAI === 'true' ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
+// System prompt for AI assistant
 const systemPrompt = `You are MedAssist, an AI healthcare assistant for Medadock, an online pharmacy platform.
 
 Your purpose is to provide accurate, helpful and concise information about:
@@ -40,6 +39,10 @@ export async function processHealthQuery(
   query: string,
   messageHistory: ChatMessage[] = []
 ): Promise<string> {
+  if (!openai) {
+    return "OpenAI is currently disabled. Please try again later.";
+  }
+
   try {
     // Add system prompt if this is the start of the conversation
     const messages: ChatMessage[] = messageHistory.length === 0
@@ -72,6 +75,10 @@ export async function processHealthQuery(
  * @returns Structured information about the medication
  */
 export async function getMedicationInfo(medicationName: string): Promise<any> {
+  if (!openai) {
+    return null; // Return null if OpenAI is disabled
+  }
+
   try {
     const prompt = `Provide a concise overview of the medication "${medicationName}" with the following information in JSON format:
     1. generic_name: The generic name of the medication
@@ -91,7 +98,6 @@ export async function getMedicationInfo(medicationName: string): Promise<any> {
       ],
       temperature: 0.3,
       max_tokens: 800,
-      response_format: { type: "json_object" }
     });
 
     const jsonResponse = response.choices[0].message.content;
@@ -108,6 +114,10 @@ export async function getMedicationInfo(medicationName: string): Promise<any> {
  * @returns Information about potential interactions
  */
 export async function analyzeMedicationInteractions(medications: string[]): Promise<any> {
+  if (!openai) {
+    return { interactions: [] }; // Return an empty interactions object if OpenAI is disabled
+  }
+
   if (medications.length < 2) {
     return { interactions: [] };
   }
@@ -137,7 +147,6 @@ export async function analyzeMedicationInteractions(medications: string[]): Prom
       ],
       temperature: 0.3,
       max_tokens: 1000,
-      response_format: { type: "json_object" }
     });
 
     const jsonResponse = response.choices[0].message.content;
