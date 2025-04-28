@@ -13,9 +13,9 @@ interface SearchResult {
   manufacturer?: string | null;
 }
 
-// Placeholder search suggestions that rotate like PharmEasy
+// Placeholder search suggestions that rotate like medadock
 const searchSuggestions = [
-  "Search for medicines", 
+  "Search for Medicines", 
   "Search for Cardiology", 
   "Search for Orthopedic", 
   "Search for Gynecology",
