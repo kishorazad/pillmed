@@ -25,7 +25,7 @@ const SEO: React.FC<SEOProps> = ({
   structuredData,
 }) => {
   // Format the title to include brand name
-  const formattedTitle = `${title} | PillNow Online Pharmacy`;
+  const formattedTitle = `${title} | medadock Online Pharmacy`;
   
   // Create default canonical URL if not provided
   const siteUrl = window.location.origin;
@@ -52,7 +52,7 @@ const SEO: React.FC<SEOProps> = ({
       <meta property="og:title" content={formattedTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage || defaultOgImage} />
-      <meta property="og:site_name" content="PillNow" />
+      <meta property="og:site_name" content="medadock" />
       
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
