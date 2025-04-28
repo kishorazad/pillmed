@@ -89,7 +89,6 @@ const NearbyHospitalsPage: React.FC = () => {
     }, 800);
   }, []);
 
-  // Filter hospitals based on search term
   const filteredHospitals = hospitals.filter(hospital => 
     hospital.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     hospital.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -158,9 +157,20 @@ const NearbyHospitalsPage: React.FC = () => {
           {filteredHospitals.map(hospital => (
             <div 
               key={hospital.id} 
-              className={`rounded-lg shadow-sm p-6 ${hospital.isEmergency ? 'bg-red-50 border-l-4 border-red-500' : 'bg-white'} cursor-pointer hover:shadow-md transition-shadow`}
+              className={`rounded-lg shadow-sm p-6 flex flex-col ${hospital.isEmergency ? 'bg-red-50 border-l-4 border-red-500' : 'bg-white'} cursor-pointer hover:shadow-md transition-shadow`}
               onClick={() => navigate(`/hospitals/${hospital.id}`)}
             >
+              {/* Hospital Placeholder Image */}
+              <img 
+                src="/hospital-placeholder.jpg"
+                alt="Hospital Placeholder"
+                className="w-full h-40 object-cover rounded mb-4"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/fallback-placeholder.jpg'; // fallback
+                }}
+              />
+
               <h3 className="text-lg font-semibold mb-2">{hospital.name}</h3>
               <p className="text-sm text-gray-600 mb-1 flex items-start">
                 <MapPin className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
@@ -171,7 +181,7 @@ const NearbyHospitalsPage: React.FC = () => {
                   {hospital.distance} away
                 </span>
               </p>
-              
+
               <div className="flex flex-wrap gap-1 mb-4">
                 {hospital.specialties.slice(0, 3).map((specialty, index) => (
                   <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
@@ -182,7 +192,7 @@ const NearbyHospitalsPage: React.FC = () => {
                   <span className="text-xs text-gray-500">+{hospital.specialties.length - 3} {t('more')}</span>
                 )}
               </div>
-              
+
               <div className="mt-auto">
                 <Button 
                   className="w-full" 
@@ -199,7 +209,7 @@ const NearbyHospitalsPage: React.FC = () => {
           ))}
         </div>
       )}
-      
+
       {!loading && filteredHospitals.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">{t('no_hospitals_matching')}</p>
