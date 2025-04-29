@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import themePlugin from "@replit/vite-plugin-shadcn-theme-json";
 import path from "path";
+import themePlugin from "@replit/vite-plugin-shadcn-theme-json";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig(async ({ command, mode }) => {
@@ -11,6 +11,7 @@ export default defineConfig(async ({ command, mode }) => {
     themePlugin(),
   ];
 
+  // Optional plugin for Replit-specific development environment
   if (process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined) {
     const { cartographer } = await import("@replit/vite-plugin-cartographer");
     plugins.push(cartographer());
@@ -18,6 +19,7 @@ export default defineConfig(async ({ command, mode }) => {
 
   return {
     base: '/',
+    root: path.resolve(import.meta.dirname, "client"),
     plugins,
     resolve: {
       alias: {
@@ -26,10 +28,14 @@ export default defineConfig(async ({ command, mode }) => {
         "@assets": path.resolve(import.meta.dirname, "attached_assets"),
       },
     },
-    root: path.resolve(import.meta.dirname, "client"),
     build: {
       outDir: path.resolve(import.meta.dirname, "dist/public"),
       emptyOutDir: true,
+      chunkSizeWarningLimit: 1500, // suppress large chunk warnings
+    },
+    server: {
+      port: 5173,
+      open: true,
     },
   };
 });
