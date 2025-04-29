@@ -283,8 +283,7 @@ const NearbyHospitals: React.FC = () => {
                 <a href={`/hospitals/${hospital.id}`} className="text-primary text-xs md:text-sm font-medium hover:underline flex items-center" onClick={(e) => e.stopPropagation()}>
                   {t('view_details')}
                 </a>
-                <a href={`tel:${hospital.phone.replace(/[^
-\d]/g, '')}`} className="text-primary text-xs md:text-sm font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
+                <a href={`tel:${hospital.phone.replace(/[^\d]/g, '')}`} className="text-primary text-xs md:text-sm font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
                   {t('call')}
                 </a>
               </div>
