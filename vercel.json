@@ -1,7 +1,14 @@
 {
-  "rewrites":
-  [
-    {"source": "client/src/pages/Login.tsx", "destination": "server.js"}
+  "version": 2,
+  "builds":[
+    {
+      "src": "*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {"src": "/(.*)",
+      "dest": "/"
+    }
   ]
-      
 }
