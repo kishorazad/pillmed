@@ -6,6 +6,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
+            <h3>
             <div class="flex items-center text-orange-500 cursor-pointer"><span class="text-orange-500 font-bold text-xl">PILL<span class="text-amber-400">NOW</span></span></div>
              
             </h3>
