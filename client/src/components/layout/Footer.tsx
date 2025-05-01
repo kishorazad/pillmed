@@ -6,8 +6,8 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-4">
-              <span className="text-[#10847e]">PillNow</span>
+            <div class="flex items-center text-orange-500 cursor-pointer"><span class="text-orange-500 font-bold text-xl">PILL<span class="text-amber-400">NOW</span></span></div>
+             
             </h3>
             <p className="text-gray-400 text-sm mb-4">India's leading online pharmacy & healthcare platform</p>
             <div className="flex space-x-4">
@@ -47,11 +47,11 @@ const Footer = () => {
             <ul className="space-y-2 text-sm text-gray-400">
               <li className="flex items-start">
                 <i className="fas fa-envelope mt-1 mr-2"></i>
-                <span>support@pillnow.com</span>
+                <span>support@pillnow.in</span>
               </li>
               <li className="flex items-start">
                 <i className="fas fa-phone-alt mt-1 mr-2"></i>
-                <span>1800-1234-5678</span>
+                <span>8770762307</span>
               </li>
               <li className="flex items-start">
                 <i className="fas fa-map-marker-alt mt-1 mr-2"></i>
