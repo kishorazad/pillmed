@@ -15,7 +15,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'medium' }) => {
   return (
     <Link href="/">
       <div className={`flex items-center ${className} cursor-pointer`}>
-        <span className="text-orange-500 font-bold text-xl">PILL<span className="text-amber-400">NOW</span></span>
+        <span className="text-orange-500 font-bold text-xl">MEDA<span className="text-amber-400">DOCK</span></span>
       </div>
     </Link>
   );
