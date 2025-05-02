@@ -33,37 +33,37 @@ const BrandPromotions: React.FC = () => {
     {
       id: 1,
       name: 'Himalaya',
-      imageUrl: '/pillnow.png',
+      imageUrl: '/medadock.png',
       description: 'Natural healthcare products'
     },
     {
       id: 2,
       name: 'Dabur',
-      imageUrl: '/pillnow.png',
+      imageUrl: '/medadock.png',
       description: 'Ayurvedic healthcare'
     },
     {
       id: 3,
       name: 'Baidyanath',
-      imageUrl: '/pillnow.png',
+      imageUrl: '/medadock.png',
       description: 'Traditional remedies'
     },
     {
       id: 4,
       name: 'Dr. Morepen',
-      imageUrl: '/pillnow.png',
+      imageUrl: '/medadock.png',
       description: 'Healthcare devices'
     },
     {
       id: 5,
       name: 'Zandu',
-      imageUrl: '/pillnow.png',
+      imageUrl: '/medadock.png',
       description: 'Ayurvedic healthcare'
     },
     {
       id: 6,
       name: 'Patanjali',
-      imageUrl: '/pillnow.png',
+      imageUrl: '/medadock.png',
       description: 'Ayurvedic products'
     }
   ];
