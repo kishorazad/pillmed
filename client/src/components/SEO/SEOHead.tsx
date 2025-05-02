@@ -20,16 +20,16 @@ const SEOHead = ({
   description,
   canonicalUrl,
   keywords = [],
-  ogImage = '/pillnow.png',
+  ogImage = '/medadock.png',
   ogType = 'website',
   structuredData,
   noIndex = false,
 }: SEOHeadProps) => {
   // Generate the full title with brand name
-  const fullTitle = `${title} | PillNow - Online Pharmacy & Healthcare`;
+  const fullTitle = `${title} | medadock - Online Pharmacy & Healthcare`;
   
   // Default host - would be replaced with actual domain in production
-  const host = typeof window !== 'undefined' ? window.location.origin : 'https://pillnow.com';
+  const host = typeof window !== 'undefined' ? window.location.origin : 'https://medadock.com';
   
   // Calculate canonical URL
   const canonical = canonicalUrl 
@@ -61,7 +61,7 @@ const SEOHead = ({
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={canonical} />
       <meta property="og:image" content={ogImage.startsWith('http') ? ogImage : `${host}${ogImage}`} />
-      <meta property="og:site_name" content="PillNow" />
+      <meta property="og:site_name" content="medadock" />
       
       {/* Twitter Card Tags */}
       <meta name="twitter:card" content="summary_large_image" />
