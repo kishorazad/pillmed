@@ -69,7 +69,7 @@ const DoctorSEO: React.FC<DoctorSEOProps> = ({
         }
       },
       "image": doctor.image,
-      "url": `https://pillnow.com/doctors/${doctor.id}`
+      "url": `https://medadock.com/doctors/${doctor.id}`
     };
   } else if (isSearchPage) {
     // Doctor search page SEO
@@ -122,7 +122,7 @@ const DoctorSEO: React.FC<DoctorSEOProps> = ({
             "name": `How to find the best ${specialty || 'doctors'} ${locationText}?`,
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": `You can find the best ${specialty || 'doctors'} ${locationText} on PillNow by checking their qualifications, experience, and patient reviews. Book video consultations or in-person appointments easily.`
+              "text": `You can find the best ${specialty || 'doctors'} ${locationText} on medadock by checking their qualifications, experience, and patient reviews. Book video consultations or in-person appointments easily.`
             }
           },
           {
@@ -162,7 +162,7 @@ const DoctorSEO: React.FC<DoctorSEOProps> = ({
       "mainContentOfPage": {
         "@type": "WebPageElement",
         "isPartOf": {
-          "@id": "https://pillnow.com/doctors"
+          "@id": "https://medadock.com/doctors"
         }
       }
     };
