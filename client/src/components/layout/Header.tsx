@@ -38,7 +38,7 @@ const Header = () => {
         <div className="container mx-auto flex justify-between items-center">
           <div>
             <span className="mr-4">
-              <i className="fas fa-phone-alt mr-1"></i> 1800-1234-5678
+              <i className="fas fa-phone-alt mr-1"></i> 8770762307
             </span>
             <span>
               <i className="fas fa-download mr-1"></i> Download App
