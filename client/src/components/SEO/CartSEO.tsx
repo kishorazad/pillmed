@@ -19,14 +19,14 @@ const CartSEO: React.FC<{ itemCount?: number }> = ({ itemCount = 0 }) => {
     description: 'Review your shopping cart',
     isPartOf: {
       '@type': 'WebSite',
-      name: 'PillNow',
+      name: 'medadock',
       url: window.location.origin
     }
   };
 
   return (
     <SEO
-      title={`Your Cart ${itemCount > 0 ? `(${itemCount} items)` : ''} | PillNow`}
+      title={`Your Cart ${itemCount > 0 ? `(${itemCount} items)` : ''} | medadock`}
       description={description}
       // Add meta robots noindex tag for cart pages
       meta={[
