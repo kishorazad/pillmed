@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <h3>
-            <div class="flex items-center text-orange-500 cursor-pointer"><span class="text-orange-500 font-bold text-xl">PILL<span class="text-amber-400">NOW</span></span></div>
+            <div class="flex items-center text-orange-500 cursor-pointer"><span class="text-orange-500 font-bold text-xl">MEDA<span class="text-amber-400">DOCK</span></span></div>
              
             </h3>
             <p className="text-gray-400 text-sm mb-4">India's leading online pharmacy & healthcare platform</p>
@@ -25,7 +25,7 @@ const Footer = () => {
               <li><Link href="/about" className="hover:text-white">About Us</Link></li>
               <li><Link href="/careers" className="hover:text-white">Careers</Link></li>
               <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
-              <li><Link href="/partner" className="hover:text-white">Partner with PillNow</Link></li>
+              <li><Link href="/partner" className="hover:text-white">Partner with medadock</Link></li>
               <li><Link href="/terms" className="hover:text-white">Terms & Conditions</Link></li>
               <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
             </ul>
@@ -48,7 +48,7 @@ const Footer = () => {
             <ul className="space-y-2 text-sm text-gray-400">
               <li className="flex items-start">
                 <i className="fas fa-envelope mt-1 mr-2"></i>
-                <span>support@pillnow.in</span>
+                <span>support@medadock.in</span>
               </li>
               <li className="flex items-start">
                 <i className="fas fa-phone-alt mt-1 mr-2"></i>
@@ -63,7 +63,7 @@ const Footer = () => {
         </div>
         
         <div className="mt-10 pt-6 border-t border-gray-700 text-center text-gray-400 text-sm">
-          <p>© 2025 PillNow. All Rights Reserved.</p>
+          <p>© 2025 medadock. All Rights Reserved.</p>
           <p className="mt-2">The content is for informational purposes only and not intended to be a substitute for professional medical advice.</p>
         </div>
       </div>
