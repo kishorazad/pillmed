@@ -23,11 +23,11 @@ const CategorySEO: React.FC<CategorySEOProps> = ({
 }) => {
   // Create a description for the category
   let description = category.description || 
-    `Buy ${category.name} online at PillNow with doorstep delivery and amazing discounts. Wide range of products available.`;
+    `Buy ${category.name} online at medadock with doorstep delivery and amazing discounts. Wide range of products available.`;
   
   // Enhance the description with product count and top brands if available
   if (productsCount > 0) {
-    description = `Explore ${productsCount}+ ${category.name} products online at PillNow. ${description}`;
+    description = `Explore ${productsCount}+ ${category.name} products online at medadock. ${description}`;
   }
   
   if (topBrands.length > 0) {
@@ -46,7 +46,7 @@ const CategorySEO: React.FC<CategorySEOProps> = ({
     'buy online',
     'medicine',
     'pharmacy',
-    'PillNow',
+    'medadock',
     'discount',
     'delivery',
     'healthcare',
@@ -67,7 +67,7 @@ const CategorySEO: React.FC<CategorySEOProps> = ({
         item: {
           '@type': 'Product',
           name: `${category.name} Products`,
-          description: `Online shopping for ${category.name} at PillNow`,
+          description: `Online shopping for ${category.name} at medadock`,
           url: `${window.location.origin}/products/category/${category.id}`
         }
       }
