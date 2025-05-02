@@ -26,13 +26,13 @@ const CommunicationSEO: React.FC = () => {
   ];
 
   // Create communication page description with special focus on key services
-  const description = 'Communicate securely with doctors and healthcare providers. Send messages, have video consultations, and manage your healthcare tasks in one place. PillNow offers secure, encrypted communication for all your healthcare needs.';
+  const description = 'Communicate securely with doctors and healthcare providers. Send messages, have video consultations, and manage your healthcare tasks in one place. medadock offers secure, encrypted communication for all your healthcare needs.';
 
   // Create structured data for the Organization and WebApplication
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: 'PillNow Communication Center',
+    name: 'medadock Communication Center',
     applicationCategory: 'HealthApplication',
     operatingSystem: 'Web',
     offers: {
@@ -51,7 +51,7 @@ const CommunicationSEO: React.FC = () => {
 
   return (
     <SEO
-      title="Secure Healthcare Communication | Chat, Video & Tasks | PillNow"
+      title="Secure Healthcare Communication | Chat, Video & Tasks | medadock"
       description={description}
       keywords={keywords}
       structuredData={structuredData}
