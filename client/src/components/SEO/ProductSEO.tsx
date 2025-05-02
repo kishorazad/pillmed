@@ -32,7 +32,7 @@ const ProductSEO: React.FC<ProductSEOProps> = ({ product, reviews = [] }) => {
     ? (product.description.length > 160 
         ? product.description.substring(0, 157) + '...' 
         : product.description)
-    : `Buy ${product.name} online at PillNow with doorstep delivery. Available now with free shipping and COD.`;
+    : `Buy ${product.name} online at medadock with doorstep delivery. Available now with free shipping and COD.`;
   
   // Create comprehensive product-specific keywords using industry best practices
   // This follows the pattern of top pharmacy sites like 1mg, PharmEasy and Netmeds
@@ -48,7 +48,7 @@ const ProductSEO: React.FC<ProductSEOProps> = ({ product, reviews = [] }) => {
       'buy medicine online',
       'online pharmacy',
       'medicine delivery',
-      'PillNow',
+      'medadock',
       'discount',
       'pharmacy',
       'healthcare',
@@ -126,12 +126,12 @@ const ProductSEO: React.FC<ProductSEOProps> = ({ product, reviews = [] }) => {
     '@type': 'Product',
     name: product.name,
     description: product.description || shortDescription,
-    sku: `PILLNOW-${product.id}`,
+    sku: `medadock-${product.id}`,
     mpn: `MPN-${product.id}`,
     image: product.imageUrl || `${window.location.origin}/assets/default-product.jpg`,
     brand: {
       '@type': 'Brand',
-      name: product.brand || product.manufacturer || 'PillNow'
+      name: product.brand || product.manufacturer || 'medadock'
     },
     offers: {
       '@type': 'Offer',
@@ -142,8 +142,8 @@ const ProductSEO: React.FC<ProductSEOProps> = ({ product, reviews = [] }) => {
       availability: 'https://schema.org/InStock',
       seller: {
         '@type': 'Organization',
-        name: 'PillNow',
-        logo: `${window.location.origin}/assets/pillnow.png`
+        name: 'medadock',
+        logo: `${window.location.origin}/assets/medadock.png`
       },
       itemCondition: 'https://schema.org/NewCondition',
       deliveryLeadTime: {
@@ -195,7 +195,7 @@ const ProductSEO: React.FC<ProductSEOProps> = ({ product, reviews = [] }) => {
     nonProprietaryName: product.composition?.split('+').map(c => c.trim()).join(', '),
     manufacturer: {
       '@type': 'Organization',
-      name: product.manufacturer || product.brand || 'PillNow',
+      name: product.manufacturer || product.brand || 'medadock',
       url: `${window.location.origin}/brands/${product.brand?.toLowerCase().replace(/\s+/g, '-') || 'all-brands'}`
     },
     
@@ -376,7 +376,7 @@ const ProductSEO: React.FC<ProductSEOProps> = ({ product, reviews = [] }) => {
     }
     
     // Add information about delivery
-    baseDescription += ' Fast delivery with PillNow.';
+    baseDescription += ' Fast delivery with medadock.';
     
     // Add prescription requirement information based on likely status
     const rxPatterns = ['rx', 'prescription'];
