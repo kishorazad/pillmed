@@ -37,7 +37,7 @@ export function setupSeoRoutes(router: Router) {
     
     if (enableIndexing) {
       robotsTxt = `
-# Website: PillNow - India's Leading Online Pharmacy & Healthcare Platform
+# Website: medadock - India's Leading Online Pharmacy & Healthcare Platform
 # Updated: ${new Date().toISOString().split('T')[0]}
 
 # Allow all crawlers (default)
@@ -101,7 +101,7 @@ Host: ${req.get('host')}
     } else {
       // If indexing is disabled in settings, disallow all bots
       robotsTxt = `
-# Website: PillNow - India's Leading Online Pharmacy & Healthcare Platform
+# Website: medadock - India's Leading Online Pharmacy & Healthcare Platform
 # Indexing currently disabled
 
 User-agent: *
@@ -473,7 +473,7 @@ async function generateSitemap(req: Request, res: Response) {
                   {
                     url: doctorImage,
                     caption: `Dr. ${doctorName}, ${doctorSpecialization}`,
-                    title: `Dr. ${doctorName} - ${doctorSpecialization} at PillNow`,
+                    title: `Dr. ${doctorName} - ${doctorSpecialization} at medadock`,
                     geoLocation: 'India'
                   }
                 ],
