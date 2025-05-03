@@ -302,7 +302,7 @@ const Profile = () => {
   return (
     <>
       <Helmet>
-        <title>{auth.user ? `${auth.user.name}'s Profile` : 'Sign In'} - PillNow</title>
+        <title>{auth.user ? `${auth.user.name}'s Profile` : 'Sign In'} - medadock</title>
         <meta name="description" content="Manage your profile, orders, and account information" />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
