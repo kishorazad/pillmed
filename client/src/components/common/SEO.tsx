@@ -56,8 +56,8 @@ const SEO = ({
   preventIndexing = false,
 }: SEOProps) => {
   // Format title to ensure it includes the brand name (like PharmEasy, 1mg do)
-  const formattedTitle = !title.includes('PillNow') 
-    ? `${title} | PillNow - Online Pharmacy & Healthcare`
+  const formattedTitle = !title.includes('medadock') 
+    ? `${title} | medadock - Online Pharmacy & Healthcare`
     : title;
 
   const baseUrl = window.location.origin;
@@ -65,7 +65,7 @@ const SEO = ({
   const canonicalLink = canonicalUrl || currentUrl;
   
   // Default image if none provided
-  const image = ogImage || `${baseUrl}/pillnow.png`;
+  const image = ogImage || `${baseUrl}/medadock.png`;
 
   // Generate robots meta tag content based on indexing preference
   const robotsContent = preventIndexing 
@@ -110,7 +110,7 @@ const SEO = ({
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={currentUrl} />
       <meta property="og:image" content={image} />
-      <meta property="og:site_name" content="PillNow" />
+      <meta property="og:site_name" content="medadock" />
       <meta property="og:locale" content={languageRegion} />
       {alternateLanguages.map((altLang, index) => (
         <meta 
@@ -132,7 +132,7 @@ const SEO = ({
       
       {/* Mobile App Tags */}
       <meta name="apple-itunes-app" content="app-id=myAppStoreID" />
-      <meta name="google-play-app" content="app-id=com.pillnow.android" />
+      <meta name="google-play-app" content="app-id=com.medadock.android" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <meta name="mobile-web-app-capable" content="yes" />
 
@@ -179,9 +179,9 @@ const SEO = ({
         {JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'Organization',
-          'name': 'PillNow',
+          'name': 'medadock',
           'url': baseUrl,
-          'logo': `${baseUrl}/pillnow.png`,
+          'logo': `${baseUrl}/medadock.png`,
           'contactPoint': [
             {
               '@type': 'ContactPoint',
@@ -192,10 +192,10 @@ const SEO = ({
             }
           ],
           'sameAs': [
-            'https://www.facebook.com/pillnow',
-            'https://www.twitter.com/pillnow',
-            'https://www.instagram.com/pillnow',
-            'https://www.linkedin.com/company/pillnow'
+            'https://www.facebook.com/medadock',
+            'https://www.twitter.com/medadock',
+            'https://www.instagram.com/medadock',
+            'https://www.linkedin.com/company/medadock'
           ]
         })}
       </script>
