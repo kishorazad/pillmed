@@ -368,7 +368,7 @@ const Login = () => {
           {/* Information Section */}
           <div className="bg-gradient-to-r from-orange-100 to-orange-50 p-6 rounded-lg hidden md:flex flex-col justify-center">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold mb-2 text-orange-700">Welcome to PillNow</h2>
+              <h2 className="text-2xl font-bold mb-2 text-orange-700">Welcome to medadock</h2>
               <p className="text-gray-600">Your One-Stop Healthcare Solution</p>
             </div>
             
