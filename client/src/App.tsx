@@ -315,7 +315,7 @@ function AppContent() {
           <FloatingContactButtons 
             phoneNumber="8770762307"
             whatsappNumber="918770762307"
-            message="Hello! I'm interested in ordering medicines from PillNow."
+            message="Hello! I'm interested in ordering medicines from medadock."
           />
         </Suspense>
       )}
