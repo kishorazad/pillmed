@@ -112,8 +112,8 @@ const Login = () => {
   return (
     <>
       <Helmet>
-        <title>Sign In or Register - PillNow</title>
-        <meta name="description" content="Sign in to your PillNow account or create a new account" />
+        <title>Sign In or Register - medadock</title>
+        <meta name="description" content="Sign in to your medadock account or create a new account" />
       </Helmet>
       
       <div className="container mx-auto px-4 py-8">
