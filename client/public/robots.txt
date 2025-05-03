@@ -83,4 +83,4 @@ Sitemap: https://pillnow.com/health-conditions-sitemap.xml
 Sitemap: https://pillnow.com/locations-sitemap.xml
 
 # Host directive for canonical domain
-Host: pillnow.com
+Host: medadock.com
