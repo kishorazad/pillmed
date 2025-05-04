@@ -43,7 +43,7 @@ const ArticleSEO: React.FC<ArticleSEOProps> = ({ article, relatedArticles = [] }
     'medicine',
     'pharmacy',
     'health information',
-    'PillNow',
+    'Medadock',
     'healthcare blog',
     article.category || 'health tips',
   ];
@@ -64,11 +64,11 @@ const ArticleSEO: React.FC<ArticleSEOProps> = ({ article, relatedArticles = [] }
     dateModified: publishDate,
     author: {
       '@type': 'Person',
-      name: article.authorName || 'PillNow Healthcare Team'
+      name: article.authorName || 'medadock Healthcare Team'
     },
     publisher: {
       '@type': 'Organization',
-      name: 'PillNow',
+      name: 'medadock',
       logo: {
         '@type': 'ImageObject',
         url: `${window.location.origin}/pillnow.png`
