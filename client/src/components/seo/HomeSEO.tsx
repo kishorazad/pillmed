@@ -32,7 +32,7 @@ const HomeSEO: React.FC<HomeSEOProps> = ({
     'healthcare',
     'prescription drugs',
     'health products',
-    'PillNow',
+    'medadock',
     'medicine order online',
     'discount medicine',
     'healthcare app',
@@ -47,17 +47,17 @@ const HomeSEO: React.FC<HomeSEOProps> = ({
   ];
 
   // Create home page description with special focus on key services
-  const description = `PillNow - India's leading online pharmacy and healthcare platform. Order prescription medicines, OTC products, and health foods online. Get doorstep delivery with amazing discounts. Book lab tests and doctor consultations. ${
+  const description = `medadock - India's leading online pharmacy and healthcare platform. Order prescription medicines, OTC products, and health foods online. Get doorstep delivery with amazing discounts. Book lab tests and doctor consultations. ${
     featuredProducts > 0 ? `Explore ${featuredProducts}+ healthcare products.` : ''
-  } Download the PillNow app for a better healthcare experience.`;
+  } Download the medadock app for a better healthcare experience.`;
 
   // Create structured data for the organization
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'PillNow',
+    name: 'medadock',
     url: window.location.origin,
-    logo: `${window.location.origin}/pillnow.png`,
+    logo: `${window.location.origin}/medadock.png`,
     contactPoint: [
       {
         '@type': 'ContactPoint',
@@ -68,10 +68,10 @@ const HomeSEO: React.FC<HomeSEOProps> = ({
       }
     ],
     sameAs: [
-      'https://www.facebook.com/pillnow',
-      'https://twitter.com/pillnow',
-      'https://www.instagram.com/pillnow',
-      'https://www.linkedin.com/company/pillnow'
+      'https://www.facebook.com/medadock',
+      'https://twitter.com/medadock',
+      'https://www.instagram.com/medadock',
+      'https://www.linkedin.com/company/medadock'
     ]
   };
 
@@ -79,7 +79,7 @@ const HomeSEO: React.FC<HomeSEOProps> = ({
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'PillNow',
+    name: 'medadock',
     url: window.location.origin,
     potentialAction: {
       '@type': 'SearchAction',
@@ -94,7 +94,7 @@ const HomeSEO: React.FC<HomeSEOProps> = ({
     '@type': 'MedicalWebPage',
     about: {
       '@type': 'MedicalBusiness',
-      name: 'PillNow Online Pharmacy'
+      name: 'medadock Online Pharmacy'
     },
     audience: {
       '@type': 'Audience',
@@ -136,14 +136,14 @@ const HomeSEO: React.FC<HomeSEOProps> = ({
   // Create pharmacy-specific link tags for better discovery
   const pharmaLinks = [
     { rel: 'manifest', href: '/manifest.json' },
-    { rel: 'apple-touch-icon', href: '/pillnow-icon.png' },
+    { rel: 'apple-touch-icon', href: '/medadock-icon.png' },
     { rel: 'mask-icon', href: '/safari-pinned-tab.svg', color: '#5bbad5' }
   ];
 
   return (
     <>
       <SEO
-        title="PillNow: Online Pharmacy & Healthcare Platform | Order Medicines & Lab Tests"
+        title="medadock: Online Pharmacy & Healthcare Platform | Order Medicines & Lab Tests"
         description={description}
         keywords={completeKeywords}
         structuredData={organizationSchema}
@@ -173,18 +173,18 @@ const HomeSEO: React.FC<HomeSEOProps> = ({
             'mainEntity': [
               {
                 '@type': 'Question',
-                'name': 'How do I order medicines on PillNow?',
+                'name': 'How do I order medicines on medadock?',
                 'acceptedAnswer': {
                   '@type': 'Answer',
-                  'text': 'You can order medicines on PillNow by uploading your prescription, searching for medicines, or browsing categories. Add products to cart and proceed to checkout for home delivery.'
+                  'text': 'You can order medicines on medadock by uploading your prescription, searching for medicines, or browsing categories. Add products to cart and proceed to checkout for home delivery.'
                 }
               },
               {
                 '@type': 'Question',
-                'name': 'Does PillNow deliver to my location?',
+                'name': 'Does medadock deliver to my location?',
                 'acceptedAnswer': {
                   '@type': 'Answer',
-                  'text': 'PillNow delivers to most cities and towns across India. You can check delivery availability by entering your pincode on the product page or during checkout.'
+                  'text': 'medadock delivers to most cities and towns across India. You can check delivery availability by entering your pincode on the product page or during checkout.'
                 }
               },
               {
