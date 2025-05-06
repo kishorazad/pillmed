@@ -52,7 +52,7 @@ const Footer = () => {
               </li>
               <li className="flex items-start">
                 <i className="fas fa-phone-alt mt-1 mr-2"></i>
-                <span>8770762307</span>
+                <span>877</span>
               </li>
               <li className="flex items-start">
                 <i className="fas fa-map-marker-alt mt-1 mr-2"></i>
