@@ -378,11 +378,11 @@ const HospitalsList: React.FC = () => {
                   <a className="block bg-white shadow-sm hover:shadow-md transition-shadow rounded-lg overflow-hidden cursor-pointer">
                     <div className="relative h-48 w-full bg-gray-100">
                       <img 
-                        src={hospital.imageUrl || '/hospital-placeholder.jpg'} 
+                        src={hospital.imageUrl || 'attached_assets/hospital-placeholder.jpg'} 
                         alt={hospital.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/hospital-placeholder.jpg';
+                          (e.target as HTMLImageElement).src = 'attached_assets/hospital-placeholder.jpg';
                         }}
                       />
                       {hospital.isEmergency && (
