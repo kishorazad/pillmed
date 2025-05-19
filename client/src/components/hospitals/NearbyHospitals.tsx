@@ -230,8 +230,18 @@ const NearbyHospitals: React.FC = () => {
           {hospitals.map((hospital) => (
             <div key={hospital.id} onClick={() => window.location.href = `/hospitals/${hospital.id}`} className={`snap-start min-w-[90px] md:min-w-[350px] max-w-[118px] md:max-w-none flex-shrink-0 rounded-lg shadow-sm p-4 ${hospital.isEmergency ? 'bg-red-50 border-l-4 border-red-500' : 'bg-white'} transition-shadow hover:shadow-md flex flex-col cursor-pointer`}>
               <div className="w-[88.4px] h-[72.33px] bg-gray-100 rounded-lg mb-2 overflow-hidden flex items-center justify-center mx-auto">
-                <img src={`/hospital-${hospital.id}.jpg`} alt={hospital.name} className="object-cover w-full h-full" onError={(e) => { (e.target as HTMLImageElement).src = '/hospital-placeholder.jpg'; }} />
-              </div>
+                <img
+  src={`/hospital-${hospital.id}.jpg`}
+  alt={hospital.name}
+  className="object-cover w-full h-full"
+  onError={(e) => {
+    const img = e.target as HTMLImageElement;
+    if (img.src !== window.location.origin + '/hospital-placeholder.jpg') {
+      img.src = '/hospital-placeholder.jpg';
+    }
+  }}
+/>
+
 
               <div className="flex justify-between items-start">
                 <h3 className="text-sm md:text-lg font-semibold line-clamp-2">{hospital.name}</h3>
