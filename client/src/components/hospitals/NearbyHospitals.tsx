@@ -272,12 +272,17 @@ const NearbyHospitals: React.FC = () => {
               </p>
 
               {hospital.offers && hospital.offers.length > 0 && hospital.offers.some(offer => offer.isHighlighted) && (
-                <div className="my-2">
-                  {hospital.offers.filter(offer => offer.isHighlighted).slice(0, 1).map((offer, index) => (
-                    <div key={index} className="bg-primary/10 border border-primary/30 rounded-md px-2 py-1.5 text-xs">
-                      <p className="font-medium text-primary">{offer.title}</p>
-                      <p className="text-gray-600 line-clamp-1 md:line-clamp-2 text-[10px] md:text-xs">{offer.description}</p>
-                    </div>
+  <div className="my-2">
+    {hospital.offers
+      .filter(offer => offer.isHighlighted)
+      .slice(0, 1)
+      .map((offer, index) => (
+        <div key={index} className="bg-primary/10 border border-primary/30 rounded-md px-2 py-1.5 text-xs">
+          <p className="font-medium text-primary">{offer.title}</p>
+          <p className="text-gray-600 line-clamp-1 md:line-clamp-2 text-[10px] md:text-xs">
+            {offer.description}
+          </p>
+        </div>
                   ))}
                 </div>
               )}
