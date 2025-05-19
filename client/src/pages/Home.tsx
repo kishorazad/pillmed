@@ -90,19 +90,19 @@ const Home = () => {
   const offerSlides = [
     {
       id: 1,
-      imageUrl: '/pillnow.png',
+      imageUrl: '/medadock.png',
       alt: 'Flat 20% off on medicines',
       link: '/products'
     },
     {
       id: 2,
-      imageUrl: '/pillnow.png',
+      imageUrl: '/medadock.png',
       alt: 'Up to 60% off on lab tests',
       link: '/lab-tests'
     },
     {
       id: 3,
-      imageUrl: '/pillnow.png',
+      imageUrl: '/medadock.png',
       alt: 'Wellness Products',
       link: '/products'
     }
