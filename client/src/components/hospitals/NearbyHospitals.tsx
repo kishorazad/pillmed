@@ -2,11 +2,11 @@ import React, { useState, useRef } from 'react';
 import { useLanguage } from '../LanguageSwitcher';
 import { MapPin, Phone, Heart, Upload, Plus, ArrowRightIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
@@ -36,19 +36,20 @@ const NearbyHospitals: React.FC = () => {
   const [open, setOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
-
+  
   const handleScrollLeft = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
     }
   };
-
+  
   const handleScrollRight = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
     }
   };
-
+  
+  // Sample hospital data - would be replaced with API data
   const hospitals: Hospital[] = [
     {
       id: 1,
@@ -137,23 +138,25 @@ const NearbyHospitals: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setNewHospital(prev => ({
-      ...prev,
+    setNewHospital({
+      ...newHospital,
       [name]: value
-    }));
+    });
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewHospital(prev => ({
-      ...prev,
+    setNewHospital({
+      ...newHospital,
       isEmergency: e.target.checked
-    }));
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Here would be API call to save the hospital data
     console.log('Hospital data submitted:', newHospital);
     setOpen(false);
+    // Reset form
     setNewHospital({
       name: '',
       address: '',
@@ -169,16 +172,29 @@ const NearbyHospitals: React.FC = () => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl md:text-2xl font-bold">{t('nearby_hospitals')}</h2>
           <div className="flex items-center gap-2">
-            <Button variant="link" className="flex items-center gap-1 text-primary" onClick={() => window.location.href = '/hospitals'}>
+            <Button 
+              variant="link" 
+              className="flex items-center gap-1 text-primary"
+              onClick={() => window.location.href = '/hospitals'}
+            >
               {t('view_all')}
               <ArrowRightIcon className="h-4 w-4" />
             </Button>
+            
             {!isMobile && (
               <div className="flex gap-2 mr-4">
-                <button onClick={handleScrollLeft} className="p-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+                <button 
+                  onClick={handleScrollLeft}
+                  className="p-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors"
+                  aria-label="Scroll left"
+                >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
-                <button onClick={handleScrollRight} className="p-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors">
+                <button 
+                  onClick={handleScrollRight}
+                  className="p-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors"
+                  aria-label="Scroll right"
+                >
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
@@ -197,22 +213,53 @@ const NearbyHospitals: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                   <div className="grid gap-2">
                     <Label htmlFor="name">{t('hospital_name')}</Label>
-                    <Input id="name" name="name" value={newHospital.name} onChange={handleInputChange} required />
+                    <Input 
+                      id="name" 
+                      name="name" 
+                      value={newHospital.name} 
+                      onChange={handleInputChange} 
+                      required 
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="address">{t('address')}</Label>
-                    <Textarea id="address" name="address" value={newHospital.address} onChange={handleInputChange} required />
+                    <Textarea 
+                      id="address" 
+                      name="address" 
+                      value={newHospital.address} 
+                      onChange={handleInputChange} 
+                      required 
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="phone">{t('phone_number')}</Label>
-                    <Input id="phone" name="phone" value={newHospital.phone} onChange={handleInputChange} required />
+                    <Input 
+                      id="phone" 
+                      name="phone" 
+                      value={newHospital.phone} 
+                      onChange={handleInputChange} 
+                      required 
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="specialties">{t('specialties')}</Label>
-                    <Input id="specialties" name="specialties" value={newHospital.specialties} onChange={handleInputChange} placeholder={t('comma_separated')} />
+                    <Input 
+                      id="specialties" 
+                      name="specialties" 
+                      value={newHospital.specialties} 
+                      onChange={handleInputChange} 
+                      placeholder={t('comma_separated')}
+                    />
                   </div>
                   <div className="flex items-center gap-2">
-                    <input type="checkbox" id="isEmergency" name="isEmergency" checked={newHospital.isEmergency} onChange={handleCheckboxChange} className="h-4 w-4" />
+                    <input 
+                      type="checkbox" 
+                      id="isEmergency" 
+                      name="isEmergency" 
+                      checked={newHospital.isEmergency} 
+                      onChange={handleCheckboxChange} 
+                      className="h-4 w-4"
+                    />
                     <Label htmlFor="isEmergency">{t('provides_emergency_care')}</Label>
                   </div>
                   <DialogFooter>
@@ -223,30 +270,40 @@ const NearbyHospitals: React.FC = () => {
             </Dialog>
           </div>
         </div>
-
+        
         <p className="text-gray-600 mb-4">{t('emergency_healthcare_facilities_nearby')}</p>
-
-        <div ref={scrollContainerRef} className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+        
+        <div 
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory"
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
           {hospitals.map((hospital) => (
-            <div
-              key={hospital.id}
-              onClick={() => window.location.href = `/hospitals/${hospital.id}`}
+            <div 
+              key={hospital.id} 
               className={`snap-start min-w-[90px] md:min-w-[350px] max-w-[118px] md:max-w-none flex-shrink-0 rounded-lg shadow-sm p-4 ${hospital.isEmergency ? 'bg-red-50 border-l-4 border-red-500' : 'bg-white'} transition-shadow hover:shadow-md flex flex-col cursor-pointer`}
+              onClick={() => window.location.href = `/hospitals/${hospital.id}`}
             >
+              {/* Image container with fixed 88.4x72.33 dimensions for mobile consistency */}
               <div className="w-[88.4px] h-[72.33px] bg-gray-100 rounded-lg mb-2 overflow-hidden flex items-center justify-center mx-auto">
                 <img
-                  src={`/hospital-${hospital.id}.jpg`}
-                  alt={hospital.name}
-                  className="object-cover w-full h-full"
-                  onError={(e) => {
-                    const img = e.target as HTMLImageElement;
-                    if (img.src !== window.location.origin + '/hospital-placeholder.jpg') {
-                      img.src = '/hospital-placeholder.jpg';
-                    }
-                  }}
-                />
-              </div>
+  src={`/hospital-${hospital.id}.jpg`}
+  alt={hospital.name}
+  className="object-cover w-full h-full"
+  onError={(e) => {
+    const img = e.target as HTMLImageElement;
+    if (img.src !== window.location.origin + '/hospital-placeholder.jpg') {
+      img.src = '/hospital-placeholder.jpg';
+    }
+  }}
+/>
 
+              </div>
+              
               <div className="flex justify-between items-start">
                 <h3 className="text-sm md:text-lg font-semibold line-clamp-2">{hospital.name}</h3>
                 <div className="text-xs md:text-sm text-gray-500 flex items-center">
@@ -254,39 +311,36 @@ const NearbyHospitals: React.FC = () => {
                   {hospital.distance}
                 </div>
               </div>
-
+              
               {hospital.isEmergency && (
                 <div className="inline-flex items-center mt-1 mb-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded w-fit">
                   <Heart className="h-3 w-3 mr-1" />
                   {t('emergency_care')}
                 </div>
               )}
-
+              
               <p className="text-xs md:text-sm text-gray-600 mt-2 mb-1 line-clamp-1">
                 <MapPin className="h-3 w-3 inline mr-1" />
                 {hospital.address}
               </p>
+              
               <p className="text-xs md:text-sm text-gray-600 mb-3 hidden md:block">
                 <Phone className="h-3 w-3 inline mr-1" />
                 {hospital.phone}
               </p>
-
+              
+              {/* Display highlighted offer if available */}
               {hospital.offers && hospital.offers.length > 0 && hospital.offers.some(offer => offer.isHighlighted) && (
-  <div className="my-2">
-    {hospital.offers
-      .filter(offer => offer.isHighlighted)
-      .slice(0, 1)
-      .map((offer, index) => (
-        <div key={index} className="bg-primary/10 border border-primary/30 rounded-md px-2 py-1.5 text-xs">
-          <p className="font-medium text-primary">{offer.title}</p>
-          <p className="text-gray-600 line-clamp-1 md:line-clamp-2 text-[10px] md:text-xs">
-            {offer.description}
-          </p>
-        </div>
+                <div className="my-2">
+                  {hospital.offers.filter(offer => offer.isHighlighted).slice(0, 1).map((offer, index) => (
+                    <div key={index} className="bg-primary/10 border border-primary/30 rounded-md px-2 py-1.5 text-xs">
+                      <p className="font-medium text-primary">{offer.title}</p>
+                      <p className="text-gray-600 line-clamp-1 md:line-clamp-2 text-[10px] md:text-xs">{offer.description}</p>
+                    </div>
                   ))}
                 </div>
               )}
-
+              
               <div className="flex flex-wrap gap-1 mt-2 hidden md:flex">
                 {hospital.specialties.slice(0, 3).map((specialty, index) => (
                   <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
@@ -297,25 +351,41 @@ const NearbyHospitals: React.FC = () => {
                   <span className="text-xs text-gray-500">+{hospital.specialties.length - 3} {t('more')}</span>
                 )}
               </div>
-
+              
               <div className="mt-auto pt-3 flex justify-between w-full">
-                <a href={`/hospitals/${hospital.id}`} className="text-primary text-xs md:text-sm font-medium hover:underline flex items-center" onClick={(e) => e.stopPropagation()}>
+                <a 
+                  href={`/hospitals/${hospital.id}`}
+                  className="text-primary text-xs md:text-sm font-medium hover:underline flex items-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
                   {t('view_details')}
                 </a>
-                <a href={`tel:${hospital.phone.replace(/[^\d]/g, '')}`} className="text-primary text-xs md:text-sm font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
+                <a 
+                  href={`tel:${hospital.phone.replace(/[^\d]/g, '')}`} 
+                  className="text-primary text-xs md:text-sm font-medium hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
                   {t('call')}
                 </a>
               </div>
             </div>
           ))}
         </div>
-
+        
         <div className="mt-6 flex justify-center">
           <div className="bg-blue-50 p-4 rounded-lg max-w-md text-center">
             <Upload className="h-10 w-10 mx-auto text-blue-500 mb-2" />
             <h3 className="text-lg font-semibold">{t('add_local_hospital')}</h3>
             <p className="text-sm text-gray-600 mt-1 mb-3">{t('help_community_by_adding')}</p>
-            <Button variant="outline" className="flex items-center gap-1" onClick={() => setOpen(true)}>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-1"
+              onClick={() => setOpen(true)}
+            >
               <Plus className="h-4 w-4" />
               {t('add_hospital')}
             </Button>
