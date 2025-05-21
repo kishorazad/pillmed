@@ -13,7 +13,7 @@ let zohomailInitialized = false;
 
 // Resend webhook and domain configuration
 const RESEND_WEBHOOK_SECRET = 'whsec_vCgU7bJn+iXjrIqA1lOQ5kW3WYkOiEnx';
-const VERIFIED_DOMAIN = 'pillnow.com';
+const VERIFIED_DOMAIN = 'medadock.com';
 const USE_VERIFIED_DOMAIN = true; // Set to true to use actual recipient email
 const FORCE_USER_EMAIL = ''; // Set this to an email address to force all emails to that address for testing
 
@@ -114,7 +114,7 @@ console.log(`Email service status: Resend [${resendInitialized ? 'READY' : 'NOT 
 export async function sendEmail(to: string, subject: string, text: string, html?: string): Promise<boolean> {
   try {
     const timestamp = new Date().toISOString();
-    const fromEmail = process.env.EMAIL_FROM || 'no-reply@pillnow.com';
+    const fromEmail = process.env.EMAIL_FROM || 'no-reply@medadock.com';
     
     // Only force emails to test address if FORCE_USER_EMAIL is set
     const originalToEmail = to;
@@ -422,14 +422,14 @@ export function generateOTP(length: number = 6): string {
  * @returns Promise resolving to true if successful
  */
 export async function sendPasswordResetOTP(email: string, otp: string): Promise<boolean> {
-  const subject = 'PillNow Password Reset OTP';
-  const text = `Your one-time password (OTP) for resetting your PillNow account password is: ${otp}. This code will expire in 15 minutes. If you did not request this reset, please ignore this email.`;
+  const subject = 'medadock Password Reset OTP';
+  const text = `Your one-time password (OTP) for resetting your medadock account password is: ${otp}. This code will expire in 15 minutes. If you did not request this reset, please ignore this email.`;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-      <h2 style="color: #FF8F00; text-align: center;">PillNow Password Reset</h2>
+      <h2 style="color: #FF8F00; text-align: center;">medadock Password Reset</h2>
       <p>Dear user,</p>
-      <p>We received a request to reset your password for your PillNow account.</p>
+      <p>We received a request to reset your password for your medadock account.</p>
       <p>Your one-time password (OTP) is:</p>
       <div style="background-color: #f8f8f8; padding: 15px; text-align: center; font-size: 24px; letter-spacing: 5px; font-weight: bold; margin: 20px 0; border-radius: 4px;">
         ${otp}
@@ -437,7 +437,7 @@ export async function sendPasswordResetOTP(email: string, otp: string): Promise<
       <p>This code will expire in <strong>15 minutes</strong>.</p>
       <p>If you did not request this password reset, please ignore this email or contact our support team if you have concerns.</p>
       <p style="margin-top: 40px; font-size: 12px; color: #888; text-align: center;">
-        &copy; ${new Date().getFullYear()} PillNow. All rights reserved.
+        &copy; ${new Date().getFullYear()} medadock. All rights reserved.
       </p>
     </div>
   `;
@@ -452,8 +452,8 @@ export async function sendPasswordResetOTP(email: string, otp: string): Promise<
  * @returns Promise resolving to true if successful
  */
 export async function sendLoginOTP(email: string, otp: string): Promise<boolean> {
-  const subject = 'PillNow Login Verification Code';
-  const text = `Your verification code for logging into your PillNow account is: ${otp}. This code will expire in 10 minutes. If you did not attempt to log in, please ignore this email or contact our support team.`;
+  const subject = 'medadock Login Verification Code';
+  const text = `Your verification code for logging into your medadock account is: ${otp}. This code will expire in 10 minutes. If you did not attempt to log in, please ignore this email or contact our support team.`;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
@@ -463,7 +463,7 @@ export async function sendLoginOTP(email: string, otp: string): Promise<boolean>
       
       <div style="padding: 20px;">
         <p>Hello,</p>
-        <p>You're trying to log in to your PillNow account. For your security, we need to verify it's really you.</p>
+        <p>You're trying to log in to your medadock account. For your security, we need to verify it's really you.</p>
         
         <div style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;">
           <p style="margin: 0 0 10px; font-size: 16px;">Your verification code is:</p>
@@ -476,11 +476,11 @@ export async function sendLoginOTP(email: string, otp: string): Promise<boolean>
         <p>If you didn't request this code, you can safely ignore this email.</p>
         
         <p style="margin-top: 30px; margin-bottom: 5px;">Stay healthy,</p>
-        <p style="margin-top: 0;"><strong>The PillNow Team</strong></p>
+        <p style="margin-top: 0;"><strong>The medadock Team</strong></p>
       </div>
       
       <div style="background-color: #f2f2f2; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #666;">
-        <p>&copy; ${new Date().getFullYear()} PillNow. All rights reserved.</p>
+        <p>&copy; ${new Date().getFullYear()} medadock. All rights reserved.</p>
         <p>This email was sent to ${email}</p>
       </div>
     </div>
@@ -496,13 +496,13 @@ export async function sendLoginOTP(email: string, otp: string): Promise<boolean>
  * @returns Promise resolving to true if successful
  */
 export async function sendWelcomeEmail(email: string, name: string): Promise<boolean> {
-  const subject = 'Welcome to PillNow - Your Healthcare Partner';
+  const subject = 'Welcome to medadock - Your Healthcare Partner';
   const text = `
-    Welcome to PillNow, ${name}!
+    Welcome to medadock, ${name}!
     
     Thank you for creating an account with us. We're excited to help you with all your healthcare needs.
     
-    With your PillNow account, you can:
+    With your medadock account, you can:
     - Order prescription and OTC medicines for delivery
     - Book doctor appointments
     - Schedule lab tests
@@ -511,21 +511,21 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<boo
     
     If you have any questions or need assistance, our customer support team is available 24/7.
     
-    Thank you for choosing PillNow!
+    Thank you for choosing medadock!
   `;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
       <div style="background-color: #FF8F00; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">Welcome to PillNow!</h1>
+        <h1 style="color: white; margin: 0; font-size: 24px;">Welcome to medadock!</h1>
       </div>
       
       <div style="padding: 20px;">
         <p>Hello ${name},</p>
-        <p>Thank you for creating an account with PillNow. We're excited to be your partner in healthcare!</p>
+        <p>Thank you for creating an account with medadock. We're excited to be your partner in healthcare!</p>
         
         <div style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin: 25px 0;">
-          <h3 style="color: #FF8F00; margin-top: 0;">With your PillNow account, you can:</h3>
+          <h3 style="color: #FF8F00; margin-top: 0;">With your medadock account, you can:</h3>
           <ul style="padding-left: 20px; margin-bottom: 0;">
             <li style="margin-bottom: 10px;">Order prescription and OTC medicines for delivery</li>
             <li style="margin-bottom: 10px;">Book doctor appointments and video consultations</li>
@@ -536,17 +536,17 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<boo
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://pillnow.com/explore" style="background-color: #FF8F00; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Explore PillNow</a>
+          <a href="https://medadock.com/explore" style="background-color: #FF8F00; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Explore medadock</a>
         </div>
         
-        <p>If you have any questions or need assistance, our customer support team is available 24/7 at <a href="mailto:support@pillnow.com" style="color: #FF8F00; text-decoration: none;">support@pillnow.com</a> or <a href="tel:+918888888888" style="color: #FF8F00; text-decoration: none;">+91 8888 888 888</a>.</p>
+        <p>If you have any questions or need assistance, our customer support team is available 24/7 at <a href="mailto:support@medadock.com" style="color: #FF8F00; text-decoration: none;">support@medadock.com</a> or <a href="tel:+918888888888" style="color: #FF8F00; text-decoration: none;">+91 8888 888 888</a>.</p>
         
         <p style="margin-top: 30px; margin-bottom: 5px;">We're glad to have you with us!</p>
-        <p style="margin-top: 0;"><strong>The PillNow Team</strong></p>
+        <p style="margin-top: 0;"><strong>The medadock Team</strong></p>
       </div>
       
       <div style="background-color: #f2f2f2; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #666;">
-        <p>&copy; ${new Date().getFullYear()} PillNow. All rights reserved.</p>
+        <p>&copy; ${new Date().getFullYear()} medadock. All rights reserved.</p>
         <p>This email was sent to ${email}</p>
       </div>
     </div>
@@ -580,9 +580,9 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<boo
  * @returns Promise resolving to true if successful
  */
 export async function sendPasswordResetToken(email: string, token: string, resetLink: string): Promise<boolean> {
-  const subject = 'Reset Your PillNow Password';
+  const subject = 'Reset Your medadock Password';
   const text = `
-    You requested to reset your PillNow account password.
+    You requested to reset your medadock account password.
     
     Click the link below to reset your password:
     ${resetLink}
@@ -592,14 +592,14 @@ export async function sendPasswordResetToken(email: string, token: string, reset
     If you did not request this reset, please ignore this email or contact support if you have concerns.
     
     Thank you,
-    The PillNow Team
+    The medadock Team
   `;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-      <h2 style="color: #FF8F00; text-align: center;">PillNow Password Reset</h2>
+      <h2 style="color: #FF8F00; text-align: center;">medadock Password Reset</h2>
       <p>Dear user,</p>
-      <p>We received a request to reset your password for your PillNow account.</p>
+      <p>We received a request to reset your password for your medadock account.</p>
       <p>Click the button below to reset your password:</p>
       <div style="text-align: center; margin: 30px 0;">
         <a href="${resetLink}" style="background-color: #FF8F00; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">Reset Password</a>
@@ -611,7 +611,7 @@ export async function sendPasswordResetToken(email: string, token: string, reset
       <p>This link will expire in <strong>24 hours</strong>.</p>
       <p>If you did not request this password reset, please ignore this email or contact our support team if you have concerns.</p>
       <p style="margin-top: 40px; font-size: 12px; color: #888; text-align: center;">
-        &copy; ${new Date().getFullYear()} PillNow. All rights reserved.
+        &copy; ${new Date().getFullYear()} medadock. All rights reserved.
       </p>
     </div>
   `;
@@ -620,13 +620,13 @@ export async function sendPasswordResetToken(email: string, token: string, reset
 }
 
 export async function sendPasswordResetConfirmation(email: string): Promise<boolean> {
-  const subject = 'Your PillNow Password Has Been Reset';
+  const subject = 'Your medadock Password Has Been Reset';
   const text = `
-    Your PillNow account password has been successfully reset.
+    Your medadock account password has been successfully reset.
     
-    If you did not make this change, please contact our support team immediately at support@pillnow.com.
+    If you did not make this change, please contact our support team immediately at support@medadock.com.
     
-    Thank you for using PillNow!
+    Thank you for using medadock!
   `;
   
   const html = `
@@ -637,18 +637,18 @@ export async function sendPasswordResetConfirmation(email: string): Promise<bool
       
       <div style="padding: 20px;">
         <p>Hello,</p>
-        <p>Your PillNow account password has been successfully reset.</p>
+        <p>Your medadock account password has been successfully reset.</p>
         
         <div style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;">
           <p style="margin: 10px 0; font-size: 16px;">If you did not make this change, please contact our support team immediately.</p>
         </div>
         
         <p style="margin-top: 30px; margin-bottom: 5px;">Stay healthy,</p>
-        <p style="margin-top: 0;"><strong>The PillNow Team</strong></p>
+        <p style="margin-top: 0;"><strong>The medadock Team</strong></p>
       </div>
       
       <div style="background-color: #f2f2f2; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #666;">
-        <p>&copy; ${new Date().getFullYear()} PillNow. All rights reserved.</p>
+        <p>&copy; ${new Date().getFullYear()} medadock. All rights reserved.</p>
         <p>This email was sent to ${email}</p>
       </div>
     </div>
@@ -658,11 +658,11 @@ export async function sendPasswordResetConfirmation(email: string): Promise<bool
 }
 
 export async function sendOrderConfirmation(email: string, orderData: any): Promise<boolean> {
-  const subject = 'Your PillNow Order Confirmation';
+  const subject = 'Your medadock Order Confirmation';
   
   // Create text version for fallback
   const text = `
-    Thank you for your order with PillNow!
+    Thank you for your order with medadock!
     
     Order Number: ${orderData.orderNumber || 'N/A'}
     Estimated Delivery: ${orderData.estimatedDelivery || 'Within 2-3 business days'}
@@ -678,9 +678,9 @@ export async function sendOrderConfirmation(email: string, orderData: any): Prom
     Shipping Address:
     ${orderData.address || 'No address provided'}
     
-    You can track your order at pillnow.com/orders/${orderData.orderNumber || '#'}
+    You can track your order at medadock.com/orders/${orderData.orderNumber || '#'}
     
-    Thank you for choosing PillNow for your healthcare needs!
+    Thank you for choosing medadock for your healthcare needs!
   `;
   
   // Create HTML version with improved styling
@@ -692,7 +692,7 @@ export async function sendOrderConfirmation(email: string, orderData: any): Prom
       
       <div style="padding: 20px;">
         <p>Dear ${orderData.customerName || 'Valued Customer'},</p>
-        <p>Thank you for your order with PillNow! We're working on processing your order and will notify you once it ships.</p>
+        <p>Thank you for your order with medadock! We're working on processing your order and will notify you once it ships.</p>
         
         <div style="background-color: #f9f9f9; border-radius: 8px; padding: 15px; margin: 20px 0;">
           <p style="margin: 0; font-weight: bold;">Order Number: ${orderData.orderNumber || 'N/A'}</p>
@@ -740,19 +740,19 @@ export async function sendOrderConfirmation(email: string, orderData: any): Prom
         </div>
         
         <div style="background-color: #f9f9f9; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center;">
-          <p style="margin: 0;">Track your order at: <a href="https://pillnow.com/orders/${orderData.orderNumber || '#'}" style="color: #FF8F00; text-decoration: none; font-weight: bold;">pillnow.com/orders/${orderData.orderNumber || '#'}</a></p>
+          <p style="margin: 0;">Track your order at: <a href="https://medadock.com/orders/${orderData.orderNumber || '#'}" style="color: #FF8F00; text-decoration: none; font-weight: bold;">medadock.com/orders/${orderData.orderNumber || '#'}</a></p>
         </div>
         
-        <p>If you have any questions about your order, please email us at <a href="mailto:support@pillnow.com" style="color: #FF8F00; text-decoration: none;">support@pillnow.com</a> or call us at <a href="tel:+918888888888" style="color: #FF8F00; text-decoration: none;">+91 8888 888 888</a>.</p>
+        <p>If you have any questions about your order, please email us at <a href="mailto:support@medadock.com" style="color: #FF8F00; text-decoration: none;">support@medadock.com</a> or call us at <a href="tel:+918888888888" style="color: #FF8F00; text-decoration: none;">+91 8888 888 888</a>.</p>
         
-        <p>Thank you for choosing PillNow for your healthcare needs!</p>
+        <p>Thank you for choosing medadock for your healthcare needs!</p>
         
         <p style="margin-top: 30px; margin-bottom: 5px;">Best regards,</p>
-        <p style="margin-top: 0;"><strong>The PillNow Team</strong></p>
+        <p style="margin-top: 0;"><strong>The medadock Team</strong></p>
       </div>
       
       <div style="background-color: #f2f2f2; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #666;">
-        <p>&copy; ${new Date().getFullYear()} PillNow. All rights reserved.</p>
+        <p>&copy; ${new Date().getFullYear()} medadock. All rights reserved.</p>
         <p>This email was sent to ${email}</p>
       </div>
     </div>
@@ -768,7 +768,7 @@ export async function sendOrderConfirmation(email: string, orderData: any): Prom
  * @returns Promise resolving to true if successful
  */
 export async function sendAppointmentConfirmation(email: string, appointmentData: any): Promise<boolean> {
-  const subject = 'Your PillNow Doctor Appointment Confirmation';
+  const subject = 'Your medadock Doctor Appointment Confirmation';
   
   // Format date and time
   const appointmentDate = appointmentData.date ? new Date(appointmentData.date) : null;
@@ -782,7 +782,7 @@ export async function sendAppointmentConfirmation(email: string, appointmentData
   
   // Create text version for fallback
   const text = `
-    Your Doctor Appointment has been confirmed with PillNow!
+    Your Doctor Appointment has been confirmed with medadock!
     
     Booking ID: ${appointmentData.bookingId || 'N/A'}
     Doctor: ${appointmentData.doctorName || 'Not specified'} ${appointmentData.doctorSpecialty ? `(${appointmentData.doctorSpecialty})` : ''}
@@ -803,7 +803,7 @@ export async function sendAppointmentConfirmation(email: string, appointmentData
     
     Need to reschedule or cancel? Please do so at least 24 hours in advance to avoid cancellation fees.
     
-    Thank you for choosing PillNow for your healthcare needs!
+    Thank you for choosing medadock for your healthcare needs!
   `;
   
   // Create HTML version with improved styling
@@ -815,7 +815,7 @@ export async function sendAppointmentConfirmation(email: string, appointmentData
       
       <div style="padding: 20px;">
         <p>Dear ${appointmentData.patientName || 'Patient'},</p>
-        <p>Your appointment has been successfully booked with PillNow! Below are the details of your appointment.</p>
+        <p>Your appointment has been successfully booked with medadock! Below are the details of your appointment.</p>
         
         <div style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin: 25px 0;">
           <table style="width: 100%;">
@@ -850,7 +850,7 @@ export async function sendAppointmentConfirmation(email: string, appointmentData
         ${appointmentData.isVideoConsultation ? `
           <div style="border-left: 4px solid #2b7dc0; padding: 15px; background-color: #f0f7ff; margin: 20px 0; border-radius: 0 4px 4px 0;">
             <h3 style="margin-top: 0; margin-bottom: 10px; color: #2b7dc0;">Video Consultation Instructions</h3>
-            <p style="margin-bottom: 0;">Please login to your PillNow account <strong>5 minutes</strong> before your scheduled appointment time. You will see a "Join Consultation" button that will become active at that time.</p>
+            <p style="margin-bottom: 0;">Please login to your medadock account <strong>5 minutes</strong> before your scheduled appointment time. You will see a "Join Consultation" button that will become active at that time.</p>
           </div>
         ` : `
           <div style="margin: 20px 0;">
@@ -880,18 +880,18 @@ export async function sendAppointmentConfirmation(email: string, appointmentData
           <h3 style="margin-top: 0; color: #333;">Need to reschedule or cancel?</h3>
           <p style="margin-bottom: 10px;">Please do so at least 24 hours in advance to avoid cancellation fees.</p>
           <div style="text-align: center;">
-            <a href="https://pillnow.com/appointments/${appointmentData.bookingId || '#'}" style="background-color: #FF8F00; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Manage Your Appointment</a>
+            <a href="https://medadock.com/appointments/${appointmentData.bookingId || '#'}" style="background-color: #FF8F00; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Manage Your Appointment</a>
           </div>
         </div>
         
-        <p>If you have any questions, please call us at <a href="tel:+918888888888" style="color: #FF8F00; text-decoration: none;">+91 8888 888 888</a> or email <a href="mailto:care@pillnow.com" style="color: #FF8F00; text-decoration: none;">care@pillnow.com</a>.</p>
+        <p>If you have any questions, please call us at <a href="tel:+918888888888" style="color: #FF8F00; text-decoration: none;">+91 8888 888 888</a> or email <a href="mailto:care@medadock.com" style="color: #FF8F00; text-decoration: none;">care@medadock.com</a>.</p>
         
         <p style="margin-top: 30px; margin-bottom: 5px;">Wishing you good health,</p>
-        <p style="margin-top: 0;"><strong>The PillNow Team</strong></p>
+        <p style="margin-top: 0;"><strong>The medadock Team</strong></p>
       </div>
       
       <div style="background-color: #f2f2f2; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #666;">
-        <p>&copy; ${new Date().getFullYear()} PillNow. All rights reserved.</p>
+        <p>&copy; ${new Date().getFullYear()} medadock. All rights reserved.</p>
         <p>This email was sent to ${email}</p>
       </div>
     </div>
