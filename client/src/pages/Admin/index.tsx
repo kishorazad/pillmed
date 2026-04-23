@@ -1,4 +1,4 @@
-import AdminLayout from "@/components/admin/AdminLayout";
+import AdminLayout from "@/components/Admin/AdminLayout";
 import AdminDashboard from "./Dashboard";
 
 // This is the main entry point for the Admin Panel

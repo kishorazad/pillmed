@@ -43,7 +43,7 @@ const ArticleSEO: React.FC<ArticleSEOProps> = ({ article, relatedArticles = [] }
     'medicine',
     'pharmacy',
     'health information',
-    'medadock',
+    'Medadock',
     'healthcare blog',
     article.category || 'health tips',
   ];
@@ -71,7 +71,7 @@ const ArticleSEO: React.FC<ArticleSEOProps> = ({ article, relatedArticles = [] }
       name: 'medadock',
       logo: {
         '@type': 'ImageObject',
-        url: `${window.location.origin}/medadock.png`
+        url: `${window.location.origin}/pillnow.png`
       }
     },
     mainEntityOfPage: {

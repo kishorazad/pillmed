@@ -32,7 +32,7 @@ const SEO: React.FC<SEOProps> = ({
   const canonical = canonicalUrl || `${siteUrl}${window.location.pathname}`;
   
   // Default image for social sharing if not provided
-  const defaultOgImage = `${siteUrl}/images/medadock-og-image.jpg`;
+  const defaultOgImage = `${siteUrl}/images/pillnow-og-image.jpg`;
   
   return (
     <Helmet>
