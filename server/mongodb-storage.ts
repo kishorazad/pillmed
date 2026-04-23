@@ -999,9 +999,16 @@ class MongoDBStorage implements IStorage {
 
     try {
       // Generate a numeric ID for compatibility with in-memory storage
-      const lastOrder = await collection.find().sort({ id: -1 }).limit(1).toArray();
-      const id = lastOrder.length > 0 ? lastOrder[0].id + 1 : 1;
-      
+      // const lastOrder = await collection.find().sort({ id: -1 }).limit(1).toArray();
+      // const id = lastOrder.length > 0 ? lastOrder[0].id + 1 : 1;
+      const counter = await mongoDBService.getCollection("counters").findOneAndUpdate(
+  { _id: "orderId" },
+  { $inc: { seq: 1 } },
+  { upsert: true, returnDocument: "after" }
+);
+
+const id = counter.value?.seq || 1;
+const orderId = `ORD${id.toString().padStart(6, "0")}`;
       // Create new order with proper fields
       const newOrder: Order = {
         ...order as any,

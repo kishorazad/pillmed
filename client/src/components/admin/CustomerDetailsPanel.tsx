@@ -177,7 +177,14 @@ const CustomerDetailsPanel = () => {
       try {
         // For development purposes, returning mock data
         // In production, this would be an API call
-        return getMockCustomers();
+        // return getMockCustomers();
+        // const res = await fetch("/api/admin/customers");
+// return res.json();
+const res = await fetch("/api/admin/customers");
+const data = await res.json();
+
+return Array.isArray(data) ? data : data.data || [];
+
       } catch (err) {
         console.error('Error fetching customers:', err);
         throw err;
@@ -276,7 +283,7 @@ const CustomerDetailsPanel = () => {
       
       try {
         // For development, returning mock data
-        return getMockMedicalHistory(selectedCustomer.id);
+        // return getMockMedicalHistory(selectedCustomer.id);
       } catch (err) {
         console.error('Error fetching customer medical history:', err);
         throw err;
@@ -752,8 +759,9 @@ const CustomerDetailsPanel = () => {
   
   // Get filtered customers
   const getFilteredCustomers = () => {
-    return customers.filter(customer => {
-      // Filter by search query
+    // return customers.filter(customer => {
+   return (Array.isArray(customers) ? customers : []).filter(customer => {
+    // Filter by search query
       if (searchQuery && !customer.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
           !customer.email.toLowerCase().includes(searchQuery.toLowerCase()) &&
           !customer.phone.includes(searchQuery)) {

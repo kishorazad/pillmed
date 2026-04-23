@@ -10,7 +10,9 @@ import { optimizeDatabaseForLargeDatasets } from './index-optimizer';
 import { mongoDBService } from './services/mongodb-service';
 import dotenv from 'dotenv';
 import path from 'path';
+
 import { fileURLToPath } from 'url';
+dotenv.config(); // Load environment variables from .env file
 
 console.log("✅ ENV CHECK");
 console.log("MONGODB_URI:", process.env.MONGODB_URI);
@@ -183,7 +185,7 @@ async function setupSessionStore() {
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    throw err;
+    // throw err;
   });
 
   // Set up Vite for development

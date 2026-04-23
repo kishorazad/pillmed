@@ -10,8 +10,10 @@ import { Label } from '@/components/ui/label';
 import { useStore } from '@/lib/store';
 
 const ProductListing = () => {
-  const [location] = useLocation();
-  const params = useParams();
+  const [location] = useLocation() || ['/'];
+  // const [location] = useLocation();
+  // const params = useParams();
+  const params = useParams() || {};
   const { searchQuery } = useStore();
   const [sortBy, setSortBy] = useState('default');
   const [priceFilter, setPriceFilter] = useState<string[]>([]);

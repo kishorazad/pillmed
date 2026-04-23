@@ -19,8 +19,10 @@ router.get('/', async (req: Request, res: Response) => {
     const allUsers = await storage.getUsers();
     
     // Filter only customers
-    const allCustomers = allUsers.filter(user => user.role === 'customer');
-    
+    // const allCustomers = allUsers.filter(user => user.role === 'customer');
+    const allCustomers = allUsers.filter(
+  user => user.role === 'customer' || !user.role
+);
     // Filter customers based on search
     const filteredCustomers = allCustomers.filter(customer => {
       // Search by name, username, email, or phone

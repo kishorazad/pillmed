@@ -19,23 +19,31 @@ export default defineConfig(async ({ command, mode }) => {
 
   return {
     base: '/',
-    root: path.resolve(import.meta.dirname, "client"),
+    // root: path.resolve(import.meta.dirname, "client"),
+    root: path.resolve(__dirname, "client"),
     plugins,
     resolve: {
       alias: {
-        "@": path.resolve(import.meta.dirname, "client", "src"),
-        "@shared": path.resolve(import.meta.dirname, "shared"),
-        "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+        "@": path.resolve(__dirname, "client/src"),
+"@shared": path.resolve(__dirname, "shared"),
+"@assets": path.resolve(__dirname, "attached_assets"),
+        // "@": path.resolve(import.meta.dirname, "client", "src"),
+        // "@shared": path.resolve(import.meta.dirname, "shared"),
+        // "@assets": path.resolve(import.meta.dirname, "attached_assets"),
       },
     },
     build: {
-      outDir: path.resolve(import.meta.dirname, "dist/public"),
+      outDir: path.resolve(__dirname, "dist/public"),
+      // outDir: path.resolve(import.meta.dirname, "dist/public"),
       emptyOutDir: true,
       chunkSizeWarningLimit: 1500, // suppress large chunk warnings
     },
     server: {
       port: 5173,
       open: true,
+       proxy: {
+      "/api": "http://localhost:5000"
+   },
     },
   };
 });
