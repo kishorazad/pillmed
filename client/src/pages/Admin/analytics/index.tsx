@@ -1,5 +1,5 @@
-import AdminLayout from "@/components/Admin/AdminLayout";
-import ProductAnalytics from "../../Admin/ProductAnalytics";
+import AdminLayout from "@/components/admin/AdminLayout";
+import ProductAnalytics from "../ProductAnalytics";
 
 const AnalyticsPage = () => {
   return (
