@@ -189,7 +189,7 @@ const hospitals = [
   { value: 'medanta', label: 'Medanta' }
 ];
 
-import DoctorSEO from '@/components/SEO/DoctorSEO';
+import DoctorSEO from '@/components/seo/DoctorSEO';
 
 const DoctorSearch: React.FC = () => {
   const [, navigate] = useLocation();
