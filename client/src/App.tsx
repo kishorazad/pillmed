@@ -36,17 +36,17 @@ const OrderHistory = lazy(() => import("./pages/OrderHistory"));
 const CommunicationPage = lazy(() => import("./pages/Communication"));
 
 // Lazily load admin dashboards - these are accessed less frequently
-const AdminPanel = lazy(() => import("./pages/admin"));
-const AdminUserManagement = lazy(() => import("./pages/admin/users"));
-const AdminCustomerManagement = lazy(() => import("./pages/admin/customers"));
-const AdminPharmacyManagement = lazy(() => import("./pages/admin/pharmacies"));
-const AdminProductManagement = lazy(() => import("./pages/admin/products"));
-const AdminHealthTipsManagement = lazy(() => import("./pages/admin/health-tips"));
-const AdminTestimonialsManagement = lazy(() => import("./pages/admin/testimonials"));
-const AdminDoctorManagement = lazy(() => import("./pages/admin/doctors"));
-const AdminAnalytics = lazy(() => import("./pages/admin/analytics"));
-const AdminSalesDashboard = lazy(() => import("./pages/admin/sales-dashboard"));
-const EmailManagement = lazy(() => import("./pages/admin/EmailManagement"));
+const AdminPanel = lazy(() => import("./pages/Admin"));
+const AdminUserManagement = lazy(() => import("./pages/Admin/users"));
+const AdminCustomerManagement = lazy(() => import("./pages/Admin/customers"));
+const AdminPharmacyManagement = lazy(() => import("./pages/Admin/pharmacies"));
+const AdminProductManagement = lazy(() => import("./pages/Admin/products"));
+const AdminHealthTipsManagement = lazy(() => import("./pages/Admin/health-tips"));
+const AdminTestimonialsManagement = lazy(() => import("./pages/Admin/testimonials"));
+const AdminDoctorManagement = lazy(() => import("./pages/Admin/doctors"));
+const AdminAnalytics = lazy(() => import("./pages/Admin/analytics"));
+const AdminSalesDashboard = lazy(() => import("./pages/Admin/sales-dashboard"));
+const EmailManagement = lazy(() => import("./pages/Admin/EmailManagement"));
 const PharmacyDashboard = lazy(() => import("./pages/Pharmacy/Dashboard"));
 const DoctorDashboard = lazy(() => import("./pages/Doctor/Dashboard"));
 const LaboratoryDashboard = lazy(() => import("./pages/Laboratory/Dashboard"));
