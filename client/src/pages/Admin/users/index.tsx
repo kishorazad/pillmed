@@ -1,5 +1,5 @@
 import AdminLayout from "@/components/admin/AdminLayout";
-import UserManagement from "../../admin/UserManagement";
+import UserManagement from "../UserManagement";
 
 const UsersPage = () => {
   return (
