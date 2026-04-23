@@ -55,7 +55,7 @@ const ChemistDashboard = lazy(() => import("./pages/dashboard/ChemistDashboard")
 
 // Lazily load new features
 const DeliveryDashboard = lazy(() => import("./pages/Delivery/Dashboard"));
-const NearbyHospitalsPage = lazy(() => import("./pages/Hospitals/NearbyHospitalsPage"));
+const NearbyHospitalsPage = lazy(() => import("./pages/hospitals/NearbyHospitalsPage"));
 const HospitalsList = lazy(() => import("./pages/hospitals/HospitalsList"));
 const HospitalDetail = lazy(() => import("./pages/hospitals/HospitalDetail"));
 const HospitalAppointment = lazy(() => import("./pages/hospitals/HospitalAppointment"));
