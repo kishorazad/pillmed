@@ -63,7 +63,7 @@
     "csv-parser": "^3.2.0",
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
-    "drizzle-orm": "^0.39.1",
+    "drizzle-orm": "^0.45.2",
     "drizzle-zod": "^0.7.0",
     "embla-carousel-react": "^8.3.0",
     "express": "^4.21.2",
@@ -79,7 +79,7 @@
     "multer": "^1.4.5-lts.2",
     "node-fetch": "^2.7.0",
     "node-fetch-cookies": "^2.1.1",
-    "nodemailer": "^6.10.1",
+    "nodemailer": "^8.0.6",
     "openai": "^4.93.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
@@ -96,7 +96,7 @@
     "stripe": "^18.0.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
-    "uuid": "^11.1.0",
+    "uuid": "^14.0.0",
     "vaul": "^1.1.0",
     "wouter": "^3.3.5",
     "ws": "^8.18.0",
@@ -121,14 +121,14 @@
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
-    "drizzle-kit": "^0.30.4",
+    "drizzle-kit": "^0.31.10",
     "esbuild": "^0.25.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.8.3",
-    "vite": "^5.4.14"
+    "vite": "^6.4.2"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
