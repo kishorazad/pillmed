@@ -1,4 +1,3 @@
-
 import { Pool } from "@neondatabase/serverless";
 
 const pool = new Pool({
@@ -6,7 +5,6 @@ const pool = new Pool({
 });
 
 export const neonStorage = {
-  
   async getProducts() {
     const { rows } = await pool.query("SELECT * FROM products");
     return rows;
@@ -19,5 +17,4 @@ export const neonStorage = {
     );
     return rows[0];
   }
-
 };
