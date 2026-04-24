@@ -18,6 +18,9 @@ import {
   passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken,
   type OTPRecord, type Session
 } from "@shared/schema";
+import { neonStorage } from "./neon-storage";
+import { mongoDBStorage } from "./mongodb-storage";
+
 
 // SEO settings type
 export interface SeoSettings {
@@ -1532,4 +1535,10 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// export const storage = new MemStorage();
+export const storage =
+  process.env.DB_PROVIDER === "neon"
+    ? neonStorage
+    : process.env.DB_PROVIDER === "mongo"
+    ? mongoDBStorage
+    : new MemStorage();
