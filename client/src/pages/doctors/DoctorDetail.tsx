@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link, useRoute } from 'wouter';
-import DoctorSEO from '@/components/SEO/DoctorSEO';
+import DoctorSEO from '@/components/seo/DoctorSEO';
 import {
   Calendar,
   Clock,
