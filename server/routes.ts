@@ -369,7 +369,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     // If not in cache, get from storage
-    const allProducts = await dbStorage.getProducts();
+    // const allProducts = await dbStorage.getProducts();
+    const allProducts = await storage.getProducts();
     
     // Calculate pagination values
     const totalProducts = allProducts.length;
