@@ -18,8 +18,9 @@ import {
   passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken,
   type OTPRecord, type Session
 } from "@shared/schema";
-import { neonStorage } from "./neon-storage";
+import { DB_PROVIDER } from "./config";
 import { mongoDBStorage } from "./mongodb-storage";
+import { neonStorage } from "./neon-storage";
 
 
 // SEO settings type
