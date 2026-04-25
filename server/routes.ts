@@ -1,6 +1,7 @@
 import express, { type Express, type Request, type Response } from "express";
 import { createServer, type Server } from "http";
-import { storage as memStorage } from "./storage"; // In-memory storage
+import { storage } from "./storage";
+// import { storage as memStorage } from "./storage"; // In-memory storage
 import { mongoDBStorage } from "./mongodb-storage"; // MongoDB storage
 import { mongoDBService } from "./services/mongodb-service"; // MongoDB service for connection status
 import { insertCartItemSchema, insertUserSchema } from "@shared/schema";
