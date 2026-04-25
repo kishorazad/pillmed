@@ -67,18 +67,41 @@ const Home = () => {
   const { user } = useAuth(); // Get user from auth context
   
   // Using useQueries to parallelize API calls for better performance
-  const results = useQueries({
-    queries: [
-      {
-        queryKey: ['/api/categories'],
-        staleTime: 10 * 60 * 1000, // 10 minutes
+  // const results = useQueries({
+  //   queries: [
+  //     {
+  //       queryKey: ['/api/categories'],
+  //       staleTime: 10 * 60 * 1000, // 10 minutes
+  //     },
+  //     {
+  //       queryKey: ['/api/products/featured'],
+  //       staleTime: 5 * 60 * 1000, // 5 minutes
+  //     }
+  //   ]
+  // });
+const results = useQueries({
+  queries: [
+    {
+      queryKey: ['categories'],
+      queryFn: async () => {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        return data.data || [];
       },
-      {
-        queryKey: ['/api/products/featured'],
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      }
-    ]
-  });
+      staleTime: 10 * 60 * 1000,
+    },
+    {
+      queryKey: ['products'],
+      queryFn: async () => {
+        const res = await fetch('/api/products');   // ✅ YOUR WORKING API
+        const data = await res.json();
+        return data.data || [];
+      },
+      staleTime: 5 * 60 * 1000,
+    }
+  ]
+});
+  
   
   const categories = results[0].data || [];
   const categoriesLoading = results[0].isLoading;
