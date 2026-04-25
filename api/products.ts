@@ -1,4 +1,4 @@
-import { VercelRequest, VercelResponse } from "@vercel/node";
+
 import { Pool } from "@neondatabase/serverless";
 
 export default async function handler(
