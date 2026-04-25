@@ -1,6 +1,10 @@
-import { Pool } from "@neondatabase/serverless";
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Pool } from '@neondatabase/serverless';
 
-export default async function handler(req, res) {
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse
+) {
   console.log("🚀 API CALLED");
 
   try {
@@ -23,12 +27,12 @@ export default async function handler(req, res) {
       data: result.rows,
     });
 
-  } catch (err) {
+  } catch (err: any) {
     console.error("❌ ERROR:", err);
 
     res.status(500).json({
       success: false,
-      error: err.message,
+      error: err.message || "Unknown error",
     });
   }
 }
