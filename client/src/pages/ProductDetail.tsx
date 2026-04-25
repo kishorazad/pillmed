@@ -284,7 +284,8 @@ const ProductDetail = () => {
             {/* Price */}
             <div className="mb-4">
               <span className="text-2xl font-bold mr-2">
-                ₹{product.discountedPrice || product.price}
+                {/* ₹{product.discountedPrice || product.price} */ mongodb}
+                ₹{((product.discountedPrice || product.price) / parseFloat(product.quantity.replace(/[^0-9.]/g, '') || 1)).toFixed(2)}/ml
               </span>
               {product.discountedPrice && (
                 <>
@@ -1373,7 +1374,8 @@ const ProductDetail = () => {
                       {/* Basic details */}
                       <div className="grid grid-cols-3 border-b pb-2">
                         <div className="text-gray-500">Offer Price</div>
-                        <div className="col-span-2 font-medium">₹{product.discountedPrice || product.price}</div>
+                      <div className="col-span-2 font-medium"> ₹{Number(product.discountedPrice || product.price || 0).toFixed(2)}</div>
+                        {/* <div className="col-span-2 font-medium">₹{product.discountedPrice || product.price}</div> */}
                       </div>
                       <div className="grid grid-cols-3 border-b pb-2">
                         <div className="text-gray-500">You Save</div>
