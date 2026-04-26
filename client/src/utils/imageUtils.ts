@@ -44,7 +44,8 @@ const imageUrlCache = new Map<string, string>();
  * Gets the appropriate image format based on URL and browser support
  * Prioritizes WebP for better compression when possible
  */
-const getOptimalFormat = (url: string): string => {
+// const getOptimalFormat = (url: string): string => {
+const getOptimalFormat = (url?: string): string => {
   // For local images, assume we can convert to WebP
    if (!url) return 'webp';  // ✅ ADD THIS LINE
   if (!url.startsWith('http') && !url.startsWith('data:')) {
@@ -102,8 +103,9 @@ export const getSafeImageUrl = (
   //let processedUrl = imageUrl;
   let processedUrl = imageUrl || DEFAULT_MEDICINE_IMAGE;
   // If size is specified and the image is from our domain, apply size parameters for optimization
-  if (size && !imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
-    const dimensions = IMAGE_SIZES[size];
+  // if (size && !imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
+   if (size && imageUrl && !imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
+  const dimensions = IMAGE_SIZES[size];
     const format = getOptimalFormat(imageUrl);
     
     // Create an optimized URL with width, height, quality and cache parameters
@@ -115,7 +117,8 @@ export const getSafeImageUrl = (
   }
   
   // Add cache version to local images
-  if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http') && !imageUrl.includes('?')) {
+  // if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http') && !imageUrl.includes('?')) {
+  if (imageUrl && !imageUrl.startsWith('data:') && !imageUrl.startsWith('http') && !imageUrl.includes('?')) {
     processedUrl = `${imageUrl}?v=${CACHE_VERSION}`;
   }
   
