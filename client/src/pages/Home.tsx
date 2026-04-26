@@ -375,48 +375,189 @@
 //   );
 // };
 
-import { useEffect, lazy, Suspense } from 'react';
-import { useMediaQuery } from '../hooks/use-media-query';
-import { HomeSEO } from '@/components/seo';
+// import { useEffect, lazy, Suspense } from 'react';
+// import { useMediaQuery } from '../hooks/use-media-query';
+// import { HomeSEO } from '@/components/seo';
+// import { useAuth } from '@/lib/auth-provider';
+
+// // Interfaces
+// interface Category {
+//   id: number;
+//   name: string;
+//   imageUrl?: string;
+// }
+
+// interface Product {
+//   id: number;
+//   name: string;
+//   price: number;
+//   discountedPrice?: number | null;
+//   imageUrl?: string | null;
+// }
+
+// // Components
+// import HeroSection from '@/components/home/HeroSection';
+// import ServicesSection from '@/components/home/ServicesSection';
+// import QuickLinks from '@/components/home/QuickLinks';
+// import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
+// import MedicineCategorySlider from '@/components/home/MedicineCategorySlider';
+// import MedicineSpecialtyCategories from '@/components/home/MedicineSpecialtyCategories';
+// import PrescriptionUpload from '@/components/home/PrescriptionUpload';
+// import FeaturedProductsSlider from '@/components/home/FeaturedProductsSlider';
+// import CategoryCard from '@/components/categories/CategoryCard';
+// import EmergencyCallButton from '@/components/EmergencyCallButton';
+// import EmergencyServicesSection from '@/components/emergency/EmergencyServicesSection';
+
+// // Lazy
+// const ConsultDoctors = lazy(() => import('@/components/services/ConsultDoctors'));
+// const TopDeals = lazy(() => import('@/components/home/TopDeals'));
+// const PreviouslyBrowsedItems = lazy(() => import('@/components/browsing/PreviouslyBrowsedItems'));
+// const HealthServices = lazy(() => import('@/components/home/HealthServices'));
+// const NearbyHospitals = lazy(() => import('@/components/hospitals/NearbyHospitals'));
+
+// // API
+// import { useQueries } from '@tanstack/react-query';
+
+// const Home = () => {
+//   const isMobile = useMediaQuery('(max-width: 768px)');
+//   const { user } = useAuth();
+
+//   const results = useQueries({
+//     queries: [
+//       {
+//         queryKey: ['categories'],
+//         queryFn: async () => {
+//           const res = await fetch('/api/categories');
+//           const data = await res.json();
+//           return Array.isArray(data) ? data : data?.data || [];
+//         },
+//       },
+//       {
+//         queryKey: ['products'],
+//         queryFn: async () => {
+//           const res = await fetch('/api/products');
+//           const data = await res.json();
+//           return Array.isArray(data) ? data : data?.data || [];
+//         },
+//       }
+//     ]
+//   });
+
+//   const categories = Array.isArray(results[0].data) ? results[0].data : [];
+//   const categoriesLoading = results[0].isLoading;
+
+//   const featuredProducts = Array.isArray(results[1].data) ? results[1].data : [];
+//   const productsLoading = results[1].isLoading;
+
+//   useEffect(() => {
+//     window.scrollTo(0, 0);
+//   }, []);
+
+//   const categoryNames = categories.map((c: Category) => c.name);
+
+//   return (
+//     <>
+//       <HomeSEO 
+//         featuredProducts={featuredProducts.length}
+//         featuredCategories={categoryNames}
+//       />
+
+//       <div className="container mx-auto px-4 pt-2 pb-16">
+//         {isMobile ? (
+//           <>
+//             <QuickLinks />
+//             <MobileBannerCarousel />
+
+//             <Suspense fallback={<div className="h-40 bg-gray-100" />}>
+//               <ConsultDoctors />
+//             </Suspense>
+
+//             {!categoriesLoading && categories.length > 0 && (
+//               <MedicineCategorySlider 
+//                 categories={categories.map((cat: Category) => ({
+//                   id: cat.id,
+//                   name: cat.name,
+//                   imageUrl: cat.imageUrl || '',
+//                   link: `/products/category/${cat.id}`
+//                 }))}
+//               />
+//             )}
+
+//             <PrescriptionUpload />
+//             <MedicineSpecialtyCategories title="Medicines by Specialty" />
+
+//             <FeaturedProductsSlider 
+//               products={featuredProducts} 
+//               loading={productsLoading} 
+//             />
+
+//             <Suspense fallback={<div className="h-40 bg-gray-100" />}>
+//               <TopDeals />
+//               <PreviouslyBrowsedItems />
+//               <HealthServices />
+//               <NearbyHospitals />
+//             </Suspense>
+
+//             <EmergencyCallButton />
+//           </>
+//         ) : (
+//           <>
+//             <HeroSection />
+//             <ServicesSection />
+
+//             <Suspense fallback={<div className="h-40 bg-gray-100" />}>
+//               <ConsultDoctors />
+//             </Suspense>
+
+//             <section className="py-8">
+//               <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>
+
+//               {categoriesLoading ? (
+//                 <div>Loading...</div>
+//               ) : (
+//                 <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+//                   {categories.map((cat: Category) => (
+//                     <CategoryCard key={cat.id} category={cat} />
+//                   ))}
+//                 </div>
+//               )}
+//             </section>
+
+//             <PrescriptionUpload />
+//             <MedicineSpecialtyCategories title="Medicines by Specialty" />
+
+//             <FeaturedProductsSlider 
+//               products={featuredProducts} 
+//               loading={productsLoading} 
+//             />
+
+//             <Suspense fallback={<div className="h-40 bg-gray-100" />}>
+//               <TopDeals />
+//               <PreviouslyBrowsedItems />
+//               <HealthServices />
+//               <NearbyHospitals />
+//             </Suspense>
+
+//             <EmergencyCallButton />
+//           </>
+//         )}
+//       </div>
+//     </>
+//   );
+// };
+import { useEffect, Suspense, lazy } from 'react';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAuth } from '@/lib/auth-provider';
-
-// Interfaces
-interface Category {
-  id: number;
-  name: string;
-  imageUrl?: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  discountedPrice?: number | null;
-  imageUrl?: string | null;
-}
+import { useQueries } from '@tanstack/react-query';
 
 // Components
 import HeroSection from '@/components/home/HeroSection';
 import ServicesSection from '@/components/home/ServicesSection';
-import QuickLinks from '@/components/home/QuickLinks';
-import MobileBannerCarousel from '@/components/home/MobileBannerCarousel';
-import MedicineCategorySlider from '@/components/home/MedicineCategorySlider';
-import MedicineSpecialtyCategories from '@/components/home/MedicineSpecialtyCategories';
-import PrescriptionUpload from '@/components/home/PrescriptionUpload';
 import FeaturedProductsSlider from '@/components/home/FeaturedProductsSlider';
 import CategoryCard from '@/components/categories/CategoryCard';
-import EmergencyCallButton from '@/components/EmergencyCallButton';
-import EmergencyServicesSection from '@/components/emergency/EmergencyServicesSection';
 
 // Lazy
-const ConsultDoctors = lazy(() => import('@/components/services/ConsultDoctors'));
 const TopDeals = lazy(() => import('@/components/home/TopDeals'));
-const PreviouslyBrowsedItems = lazy(() => import('@/components/browsing/PreviouslyBrowsedItems'));
-const HealthServices = lazy(() => import('@/components/home/HealthServices'));
-const NearbyHospitals = lazy(() => import('@/components/hospitals/NearbyHospitals'));
-
-// API
-import { useQueries } from '@tanstack/react-query';
 
 const Home = () => {
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -439,113 +580,71 @@ const Home = () => {
           const data = await res.json();
           return Array.isArray(data) ? data : data?.data || [];
         },
-      }
-    ]
+      },
+    ],
   });
 
+  // ✅ SAFE EXTRACTION
   const categories = Array.isArray(results[0].data) ? results[0].data : [];
-  const categoriesLoading = results[0].isLoading;
+  const products = Array.isArray(results[1].data) ? results[1].data : [];
 
-  const featuredProducts = Array.isArray(results[1].data) ? results[1].data : [];
+  const categoriesLoading = results[0].isLoading;
   const productsLoading = results[1].isLoading;
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const categoryNames = categories.map((c: Category) => c.name);
-
   return (
-    <>
-      <HomeSEO 
-        featuredProducts={featuredProducts.length}
-        featuredCategories={categoryNames}
-      />
+    <div className="container mx-auto px-4 pb-16">
 
-      <div className="container mx-auto px-4 pt-2 pb-16">
-        {isMobile ? (
-          <>
-            <QuickLinks />
-            <MobileBannerCarousel />
+      {/* Desktop */}
+      {!isMobile && (
+        <>
+          <HeroSection />
+          <ServicesSection />
+        </>
+      )}
 
-            <Suspense fallback={<div className="h-40 bg-gray-100" />}>
-              <ConsultDoctors />
-            </Suspense>
+      {/* Categories */}
+      <section className="py-8">
+        <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>
 
-            {!categoriesLoading && categories.length > 0 && (
-              <MedicineCategorySlider 
-                categories={categories.map((cat: Category) => ({
-                  id: cat.id,
-                  name: cat.name,
-                  imageUrl: cat.imageUrl || '',
-                  link: `/products/category/${cat.id}`
-                }))}
-              />
-            )}
-
-            <PrescriptionUpload />
-            <MedicineSpecialtyCategories title="Medicines by Specialty" />
-
-            <FeaturedProductsSlider 
-              products={featuredProducts} 
-              loading={productsLoading} 
-            />
-
-            <Suspense fallback={<div className="h-40 bg-gray-100" />}>
-              <TopDeals />
-              <PreviouslyBrowsedItems />
-              <HealthServices />
-              <NearbyHospitals />
-            </Suspense>
-
-            <EmergencyCallButton />
-          </>
+        {categoriesLoading ? (
+          <p>Loading...</p>
         ) : (
-          <>
-            <HeroSection />
-            <ServicesSection />
-
-            <Suspense fallback={<div className="h-40 bg-gray-100" />}>
-              <ConsultDoctors />
-            </Suspense>
-
-            <section className="py-8">
-              <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>
-
-              {categoriesLoading ? (
-                <div>Loading...</div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                  {categories.map((cat: Category) => (
-                    <CategoryCard key={cat.id} category={cat} />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <PrescriptionUpload />
-            <MedicineSpecialtyCategories title="Medicines by Specialty" />
-
-            <FeaturedProductsSlider 
-              products={featuredProducts} 
-              loading={productsLoading} 
-            />
-
-            <Suspense fallback={<div className="h-40 bg-gray-100" />}>
-              <TopDeals />
-              <PreviouslyBrowsedItems />
-              <HealthServices />
-              <NearbyHospitals />
-            </Suspense>
-
-            <EmergencyCallButton />
-          </>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            {Array.isArray(categories) &&
+              categories.map((cat: any) => (
+                <CategoryCard key={cat.id} category={cat} />
+              ))}
+          </div>
         )}
-      </div>
-    </>
+      </section>
+
+      {/* Products */}
+      <section className="py-8">
+        <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
+
+        {productsLoading ? (
+          <p>Loading...</p>
+        ) : (
+          <FeaturedProductsSlider
+            products={Array.isArray(products) ? products : []}
+            loading={productsLoading}
+          />
+        )}
+      </section>
+
+      {/* Lazy */}
+      <Suspense fallback={<div>Loading...</div>}>
+        <TopDeals />
+      </Suspense>
+    </div>
   );
 };
 
 export default Home;
+// export default Home;
 
 // export default Home;
