@@ -1,10 +1,6 @@
-import { VercelRequest, VercelResponse } from "@vercel/node";
 import { Pool } from "@neondatabase/serverless";
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+export default async function handler(req: any, res: any) {
   try {
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
@@ -24,19 +20,18 @@ export default async function handler(
       LIMIT 20
     `);
 
-    // ✅ Always return safe JSON
     return res.status(200).json({
       success: true,
       data: result.rows || [],
     });
 
   } catch (err: any) {
-    console.error("❌ PRODUCTS API ERROR:", err);
+    console.error("❌ PRODUCTS ERROR:", err);
 
     return res.status(500).json({
       success: false,
       data: [],
-      error: err.message || "Internal Server Error",
+      error: err.message,
     });
   }
 }
