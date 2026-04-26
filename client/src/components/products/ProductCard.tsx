@@ -98,11 +98,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <div className="flex items-center justify-between">
           <div>
             <span className="font-bold">
-              ₹{product.discountedPrice || product.price}
+              {/* ₹{product.discountedPrice || product.price} */}
+              ₹{Number(product.discountedPrice || product.price || 0).toFixed(2)}
             </span>
             {product.discountedPrice && (
               <span className="text-xs text-gray-500 line-through ml-1">
-                ₹{product.price}
+                {/* ₹{product.price} */}
+                ₹{Number(product.price || 0).toFixed(2)}
               </span>
             )}
           </div>
