@@ -12,19 +12,17 @@ export default async function handler(req, res) {
         name,
         description,
         price::float as price,
-        image_url as "imageUrl",
-        brand,
-        quantity
+        image_url as "imageUrl"
       FROM products
       LIMIT 10
     `);
 
-    // ✅ RETURN ARRAY ONLY (IMPORTANT)
     res.status(200).json(result.rows);
 
   } catch (err) {
-    console.error("❌ FEATURED ERROR:", err);
+    console.error(err);
 
-    res.status(500).json([]);
+    // ✅ fallback to prevent crash
+    res.status(200).json([]);
   }
 }
