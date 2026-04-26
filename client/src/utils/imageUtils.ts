@@ -46,6 +46,7 @@ const imageUrlCache = new Map<string, string>();
  */
 const getOptimalFormat = (url: string): string => {
   // For local images, assume we can convert to WebP
+   if (!url) return 'webp';  // ✅ ADD THIS LINE
   if (!url.startsWith('http') && !url.startsWith('data:')) {
     return 'webp';
   }
