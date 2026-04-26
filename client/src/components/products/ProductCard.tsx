@@ -49,8 +49,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
             
             {/* Actual image with advanced loading optimization */}
             <img 
-              src={getSafeImageUrl(product.imageUrl, 'MEDIUM')} 
-              alt={product.name} 
+              {/* src={getSafeImageUrl(product.imageUrl, 'MEDIUM')}  */}
+             getSafeImageUrl(product.imageUrl || "", 'MEDIUM') 
+            alt={product.name} 
               className="w-full h-40 object-contain relative z-10 transition-opacity duration-300"
               loading="lazy"
               decoding="async"
