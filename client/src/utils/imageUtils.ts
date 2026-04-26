@@ -99,8 +99,8 @@ export const getSafeImageUrl = (
   }
   
   // Process image URL with optimization parameters
-  let processedUrl = imageUrl;
-  
+  //let processedUrl = imageUrl;
+  let processedUrl = imageUrl || DEFAULT_MEDICINE_IMAGE;
   // If size is specified and the image is from our domain, apply size parameters for optimization
   if (size && !imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
     const dimensions = IMAGE_SIZES[size];
