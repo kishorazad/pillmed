@@ -1,10 +1,6 @@
-import { VercelRequest, VercelResponse } from "@vercel/node";
 import { Pool } from "@neondatabase/serverless";
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+export default async function handler(req: any, res: any) {
   try {
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
@@ -16,7 +12,6 @@ export default async function handler(
         name,
         image_url as "imageUrl"
       FROM categories
-      ORDER BY id DESC
     `);
 
     return res.status(200).json({
@@ -25,12 +20,10 @@ export default async function handler(
     });
 
   } catch (err: any) {
-    console.error("❌ CATEGORIES API ERROR:", err);
-
     return res.status(500).json({
       success: false,
       data: [],
-      error: err.message || "Internal Server Error",
+      error: err.message,
     });
   }
 }
