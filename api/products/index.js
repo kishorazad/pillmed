@@ -1,13 +1,25 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Pool } from "@neondatabase/serverless";
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
-  res.status(200).json([
-    {
-      id: 1,
-      name: "Paracetamol",
-      description: "Fever medicine",
-      price: 50,
-      imageUrl: "img1.jpg"
-    }
-  ]);
+export default async function handler(req, res) {
+  try {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+
+    const result = await pool.query(`
+      SELECT 
+        id,
+        name,
+        description,
+        price::float,
+        image_url as "imageUrl"
+      FROM products
+    `);
+
+    res.status(200).json(result.rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json([]);
+  }
 }
