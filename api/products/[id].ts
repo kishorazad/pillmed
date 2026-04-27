@@ -1,13 +1,9 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool } from "@neondatabase/serverless";
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
-  try {
-    const { id } = req.query;
+export default async function handler(req, res) {
+  const { id } = req.query;
 
+  try {
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
     });
@@ -17,14 +13,14 @@ export default async function handler(
         id,
         name,
         description,
-        price::float as price,
+        price::float,
         image_url as "imageUrl"
-       FROM products
-       WHERE id = $1`,
+      FROM products WHERE id = $1`,
       [id]
     );
 
     res.status(200).json(result.rows[0] || {});
+
   } catch (err) {
     console.error(err);
     res.status(500).json({});
