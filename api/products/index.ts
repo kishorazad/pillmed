@@ -1,37 +1,25 @@
-import { Pool } from "@neondatabase/serverless";
-
-export default async function handler(req: any, res: any) {
-  try {
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-    });
-
-    const result = await pool.query(`
-      SELECT 
-        id,
-        name,
-        description,
-        price::float as price,
-        image_url as "imageUrl",
-        brand,
-        quantity
-      FROM products
-      ORDER BY id DESC
-      LIMIT 20
-    `);
-
-    return res.status(200).json({
-      success: true,
-      data: result.rows || [],
-    });
-
-  } catch (err: any) {
-    console.error("❌ PRODUCTS ERROR:", err);
-
-    return res.status(500).json({
-      success: false,
-      data: [],
-      error: err.message,
-    });
-  }
+export default function handler(req, res) {
+  res.status(200).json([
+    {
+      id: 1,
+      name: "Paracetamol",
+      description: "Fever medicine",
+      price: 50,
+      imageUrl: "img1.jpg"
+    },
+    {
+      id: 2,
+      name: "Dolo 650",
+      description: "Pain relief",
+      price: 60,
+      imageUrl: "img2.jpg"
+    },
+    {
+      id: 3,
+      name: "Crocin",
+      description: "Cold & fever",
+      price: 45,
+      imageUrl: "img3.jpg"
+    }
+  ]);
 }
